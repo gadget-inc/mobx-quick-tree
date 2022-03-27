@@ -1,7 +1,11 @@
 import { IAnyType, Instance } from "mobx-state-tree";
 import { $quickType } from "./symbols";
 
-export abstract class BaseType<InputType, InstanceType, MSTType extends IAnyType> {
+export abstract class BaseType<
+  InputType,
+  InstanceType,
+  MSTType extends IAnyType
+> {
   readonly [$quickType]: undefined;
   readonly InputType: InputType;
   readonly InstanceType: InstanceType;

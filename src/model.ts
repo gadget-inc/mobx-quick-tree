@@ -32,8 +32,10 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     super(name, mstModel);
   }
 
-  views<Views extends Object>(fn: (self: this["CreateType"]) => Views): ModelType<Props, Others & Views> {
-    const init = (self: any) => {
+  views<Views extends Record<string, unknown>>(
+    fn: (self: this["CreateType"]) => Views
+  ): ModelType<Props, Others & Views> {
+    const init = (self: this["CreateType"]) => {
       this.initializeViewsAndActions(self);
       Object.assign(self, fn(self));
       return self;
@@ -42,7 +44,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   }
 
   actions<Actions extends ModelActions>(fn: (self: this["CreateType"]) => Actions): ModelType<Props, Others & Actions> {
-    const init = (self: any) => {
+    const init = (self: this["CreateType"]) => {
       this.initializeViewsAndActions(self);
 
       const actions = fn(self);

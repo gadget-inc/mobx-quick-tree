@@ -1,7 +1,7 @@
 import { getParent as mstGetParent, getRoot as mstGetRoot, isStateTreeNode } from "mobx-state-tree";
 import { $parent } from "./symbols";
 
-export const getParent = (value: any, depth = 1): Object | undefined => {
+export const getParent = (value: any, depth = 1): Record<string, unknown> | undefined => {
   if (isStateTreeNode(value)) {
     return mstGetParent(value, depth);
   }
@@ -18,7 +18,7 @@ export const getParent = (value: any, depth = 1): Object | undefined => {
   return value;
 };
 
-export const getRoot = (value: any): Object | undefined => {
+export const getRoot = (value: any): Record<string, unknown> | undefined => {
   if (isStateTreeNode(value)) {
     return mstGetRoot(value);
   }
