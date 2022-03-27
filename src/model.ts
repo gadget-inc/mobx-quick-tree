@@ -1,6 +1,6 @@
 import { IModelType, ModelActions, types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
-import { $parent } from "./symbols";
+import { $parent, $type } from "./symbols";
 
 export interface ModelProperties {
   [key: string]: BaseType<any, any, any>;
@@ -57,8 +57,23 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return new ModelType<Props, Others & Actions>(this.name, this.properties, init, this.mstType.actions(fn));
   }
 
+  is(value: any): value is this["CreateType"] {
+    if (typeof value !== "object") {
+      return false;
+    }
+
+    // Fast path for read-only types
+    if ($type in value) {
+      return value[$type] === this;
+    }
+
+    return this.mstType.is(value);
+  }
+
   createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
     const instance = {} as this["InstanceType"];
+
+    Reflect.set(instance, $type, this);
 
     for (const [k, v] of Object.entries(this.properties)) {
       const propValue = v.createReadOnly(snapshot?.[k]);

@@ -56,6 +56,33 @@ describe("can create", () => {
   });
 });
 
+describe("is", () => {
+  test("can verify a simple type", () => {
+    expect(types.boolean.is(true)).toEqual(true);
+    expect(types.boolean.is(false)).toEqual(true);
+    expect(types.boolean.is("")).toEqual(false);
+    expect(types.boolean.is({})).toEqual(false);
+  });
+
+  test("can verify a read-only instance", () => {
+    const value = TestModel.createReadOnly(snapshot);
+    expect(TestModel.is(value)).toEqual(true);
+    expect(TestModel.is(snapshot)).toEqual(true);
+    expect(TestModel.is(true)).toEqual(false);
+    expect(TestModel.is({})).toEqual(false);
+    expect(TestModel.is({})).toEqual(false);
+  });
+
+  test("can verify an MST instance", () => {
+    const value = TestModel.create(snapshot);
+    expect(TestModel.is(value)).toEqual(TestModel.mstType.is(value));
+    expect(TestModel.is(snapshot)).toEqual(TestModel.mstType.is(snapshot));
+    expect(TestModel.is(true)).toEqual(TestModel.mstType.is(true));
+    expect(TestModel.is({})).toEqual(TestModel.mstType.is({}));
+    expect(TestModel.is({})).toEqual(TestModel.mstType.is({}));
+  });
+});
+
 describe("actions", () => {
   test("throw on a read-only instance", () => {
     const m = TestModel.createReadOnly(snapshot);

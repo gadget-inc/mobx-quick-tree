@@ -6,6 +6,10 @@ export class SimpleType<T, MSTType extends ISimpleType<any>> extends BaseType<T,
     return new SimpleType(mstType.name, mstType);
   }
 
+  is(value: any): value is this["CreateType"] {
+    return this.mstType.is(value);
+  }
+
   createReadOnly(snapshot?: T): this["CreateType"] {
     return snapshot;
   }
