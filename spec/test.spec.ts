@@ -1,5 +1,6 @@
 import { isStateTreeNode } from "mobx-state-tree";
 import { types } from "../src";
+import { getParent, getRoot } from "../src/api";
 
 const NamedThing = types
   .model("BooleanWrapper", {
@@ -66,6 +67,36 @@ describe("actions", () => {
     const m = TestModel.create(snapshot);
     m.setB(false);
     expect(m.b).toEqual(false);
+  });
+});
+
+describe("tree API", () => {
+  describe("getParent", () => {
+    test("returns the proper root for a read-only instance", () => {
+      const m = TestModel.createReadOnly(snapshot);
+      expect(() => getParent(m)).toThrow();
+      expect(getParent(m.nested)).toEqual(m);
+    });
+
+    test("returns the proper root for an MST instance", () => {
+      const m = TestModel.create(snapshot);
+      expect(() => getParent(m)).toThrow();
+      expect(getParent(m.nested)).toEqual(m);
+    });
+  });
+
+  describe("getRoot", () => {
+    test("returns the proper root for a read-only instance", () => {
+      const m = TestModel.createReadOnly(snapshot);
+      expect(getRoot(m)).toEqual(m);
+      expect(getRoot(m.nested)).toEqual(m);
+    });
+
+    test("returns the proper root for an MST instance", () => {
+      const m = TestModel.create(snapshot);
+      expect(getRoot(m)).toEqual(m);
+      expect(getRoot(m.nested)).toEqual(m);
+    });
   });
 });
 

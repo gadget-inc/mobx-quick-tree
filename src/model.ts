@@ -1,5 +1,6 @@
 import { IModelType, ModelActions, types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
+import { $parent } from "./symbols";
 
 export interface ModelProperties {
   [key: string]: BaseType<any, any, any>;
@@ -60,7 +61,12 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     const instance = {} as this["InstanceType"];
 
     for (const [k, v] of Object.entries(this.properties)) {
-      Reflect.set(instance, k, v.createReadOnly(snapshot?.[k]));
+      const propValue = v.createReadOnly(snapshot?.[k]);
+      if (typeof propValue == "object") {
+        propValue[$parent] = instance;
+      }
+
+      Reflect.set(instance, k, propValue);
     }
 
     this.initializeViewsAndActions(instance);
