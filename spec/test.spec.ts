@@ -18,27 +18,33 @@ const NamedThing = types
 
 const TestModel = types
   .model("TestModel", {
-    b: types.boolean,
+    bool: types.boolean,
+    frozen: types.frozen<{ test: "string" }>(),
     nested: NamedThing,
   })
   .views((self) => ({
-    get notB() {
-      return !self.b;
+    get notBool() {
+      return !self.bool;
     },
   }))
   .actions((self) => ({
     setB(v: boolean) {
-      self.b = v;
+      self.bool = v;
     },
   }));
 
-const snapshot = { b: true, nested: { name: "MiXeD CaSe" } };
+const snapshot: typeof TestModel["InputType"] = {
+  bool: true,
+  frozen: { test: "string" },
+  nested: { name: "MiXeD CaSe" },
+};
 
 describe("can create", () => {
   test("a read-only instance", () => {
     const m = TestModel.createReadOnly(snapshot);
-    expect(m.b).toEqual(true);
-    expect(m.notB).toEqual(false);
+    expect(m.bool).toEqual(true);
+    expect(m.notBool).toEqual(false);
+    expect(m.frozen.test).toEqual("string");
     expect(m.nested.name).toEqual("MiXeD CaSe");
     expect(m.nested.lowerCasedName()).toEqual("mixed case");
     expect(m.nested.upperCasedName()).toEqual("MIXED CASE");
@@ -47,8 +53,9 @@ describe("can create", () => {
 
   test("an MST instance", () => {
     const m = TestModel.create(snapshot);
-    expect(m.b).toEqual(true);
-    expect(m.notB).toEqual(false);
+    expect(m.bool).toEqual(true);
+    expect(m.notBool).toEqual(false);
+    expect(m.frozen.test).toEqual("string");
     expect(m.nested.name).toEqual("MiXeD CaSe");
     expect(m.nested.lowerCasedName()).toEqual("mixed case");
     expect(m.nested.upperCasedName()).toEqual("MIXED CASE");
@@ -87,13 +94,13 @@ describe("actions", () => {
   test("throw on a read-only instance", () => {
     const m = TestModel.createReadOnly(snapshot);
     expect(() => m.setB(false)).toThrow();
-    expect(m.b).toEqual(true);
+    expect(m.bool).toEqual(true);
   });
 
   test("succeed on an MST instance", () => {
     const m = TestModel.create(snapshot);
     m.setB(false);
-    expect(m.b).toEqual(false);
+    expect(m.bool).toEqual(false);
   });
 });
 

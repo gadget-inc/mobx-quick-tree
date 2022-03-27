@@ -1,6 +1,6 @@
 import { IModelType, ModelActions, types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
-import { $parent, $type } from "./symbols";
+import { $modelType, $parent, $type } from "./symbols";
 
 export interface ModelProperties {
   [key: string]: BaseType<any, any, any>;
@@ -23,6 +23,8 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   InstanceTypes<Props> & Others,
   IModelType<MSTProperties<Props>, Others>
 > {
+  readonly [$modelType] = undefined;
+
   constructor(
     name: string,
     readonly properties: Props,
@@ -79,7 +81,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 
     for (const [k, v] of Object.entries(this.properties)) {
       const propValue = v.createReadOnly(snapshot?.[k]);
-      if (typeof propValue == "object") {
+      if (typeof propValue == "object" && $type in propValue && $modelType in propValue[$type]) {
         propValue[$parent] = instance;
       }
 

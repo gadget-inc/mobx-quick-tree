@@ -5,4 +5,7 @@ export const $quickType = Symbol.for("quickType");
 export const $parent = Symbol.for("parent");
 
 /** @hidden */
+export const $modelType = Symbol.for("modelType");
+
+/** @hidden */
 export const $type = Symbol.for("type");
