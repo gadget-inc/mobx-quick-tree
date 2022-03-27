@@ -135,7 +135,7 @@ describe("tree API", () => {
 });
 
 describe("performance", () => {
-  const N = 50_000;
+  const N = 10_000;
 
   test(`can create ${N} quick instances`, () => {
     for (let x = 0; x < N; ++x) {

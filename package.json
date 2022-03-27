@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node node_modules/.bin/jest --runInBand",
+    "test": "jest --runInBand",
     "lint": "yarn run lint:prettier && yarn run lint:eslint",
     "lint:prettier": "prettier --check \"{spec,src}/**/*.{js,ts}\"",
     "lint:eslint": "eslint --quiet --ext ts,tsx spec src",
