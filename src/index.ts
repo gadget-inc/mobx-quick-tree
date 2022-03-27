@@ -5,4 +5,5 @@ import { SimpleType } from "./simple-types";
 export const types = {
   model,
   boolean: SimpleType.for(mstTypes.boolean),
+  string: SimpleType.for(mstTypes.string),
 };

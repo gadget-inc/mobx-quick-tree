@@ -1,4 +1,4 @@
-import { IModelType, types as mstTypes } from "mobx-state-tree";
+import { IModelType, ModelActions, types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
 
 export interface ModelProperties {
@@ -9,13 +9,17 @@ export type ModelCreationProps<T extends ModelProperties> = {
   [K in keyof T]?: T[K]["InputType"];
 };
 
+export type InstanceTypes<T extends ModelProperties> = {
+  [K in keyof T]: T[K]["InstanceType"];
+};
+
 export type MSTProperties<T extends ModelProperties> = {
   [K in keyof T]: T[K]["mstType"];
 };
 
 export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   ModelCreationProps<Props>,
-  Props & Others,
+  InstanceTypes<Props> & Others,
   IModelType<MSTProperties<Props>, Others>
 > {
   constructor(
@@ -27,12 +31,29 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     super(name, mstModel);
   }
 
-  views<Views extends Object>(fn: (self: any) => Views): ModelType<Props, Others & Views> {
+  views<Views extends Object>(fn: (self: this["CreateType"]) => Views): ModelType<Props, Others & Views> {
     const init = (self: any) => {
+      this.initializeViewsAndActions(self);
       Object.assign(self, fn(self));
       return self;
     };
     return new ModelType<Props, Others & Views>(this.name, this.properties, init, this.mstType.views(fn));
+  }
+
+  actions<Actions extends ModelActions>(fn: (self: this["CreateType"]) => Actions): ModelType<Props, Others & Actions> {
+    const init = (self: any) => {
+      this.initializeViewsAndActions(self);
+
+      const actions = fn(self);
+      for (const actionName of Object.keys(actions)) {
+        Reflect.set(self, actionName, () => {
+          throw new Error(`can't execute action "${actionName}" on a read-only instance`);
+        });
+      }
+
+      return self;
+    };
+    return new ModelType<Props, Others & Actions>(this.name, this.properties, init, this.mstType.actions(fn));
   }
 
   createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
