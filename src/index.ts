@@ -1,6 +1,6 @@
 import { types as mstTypes } from "mobx-state-tree";
 import { model } from "./model";
-import { SimpleType } from "./simple-types";
+import { SimpleType } from "./simple";
 
 export const types = {
   model,
