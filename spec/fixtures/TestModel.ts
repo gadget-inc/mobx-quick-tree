@@ -19,6 +19,8 @@ export const TestModel = types
     bool: types.boolean,
     frozen: types.frozen<{ test: "string" }>(),
     nested: NamedThing,
+    array: types.array(NamedThing),
+    map: types.map(NamedThing),
   })
   .views((self) => ({
     get notBool() {
