@@ -19,3 +19,5 @@ export abstract class BaseType<InputType, InstanceType, MSTType extends IAnyType
 
   abstract createReadOnly(snapshot?: InputType): InstanceType;
 }
+
+export type IAnyType = BaseType<any, any, any>;
