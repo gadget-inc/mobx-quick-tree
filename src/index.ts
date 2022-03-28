@@ -1,6 +1,7 @@
 import { types as mstTypes } from "mobx-state-tree";
 import { frozen } from "./frozen";
 import { model } from "./model";
+import { optional } from "./optional";
 import { SimpleType } from "./simple";
 
 export const types = {
@@ -13,4 +14,5 @@ export const types = {
 
   frozen,
   model,
+  optional,
 };
