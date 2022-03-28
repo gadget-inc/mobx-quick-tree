@@ -1,6 +1,6 @@
-import { IModelType, Instance, ModelActions, types as mstTypes } from "mobx-state-tree";
+import { IModelType, Instance, ModelActions, types as mstTypes, types } from "mobx-state-tree";
 import { BaseType, QuickOrMSTInstance, setParent, setType } from "./base";
-import { $modelType } from "./symbols";
+import { $identifier, $modelType } from "./symbols";
 
 export interface ModelProperties {
   [key: string]: BaseType<any, any, any>;
@@ -25,6 +25,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 > {
   readonly [$modelType] = undefined;
   readonly QuickOrSlowInstance: this["InstanceType"] | Instance<this["mstType"]>;
+  private identifierProp: string | undefined;
 
   constructor(
     name: string,
@@ -33,6 +34,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     mstModel: IModelType<MSTProperties<Props>, Others>
   ) {
     super(name, mstModel);
+    this.identifierProp = Object.keys(this.properties).find((name) => properties[name].mstType === types.identifier);
   }
 
   views<Views extends Record<string, unknown>>(
@@ -73,6 +75,10 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
       const propValue = v.createReadOnly(snapshot?.[k]);
       setParent(propValue, instance);
       Reflect.set(instance, k, propValue);
+    }
+
+    if (this.identifierProp) {
+      Reflect.set(instance, $identifier, instance[this.identifierProp]);
     }
 
     this.initializeViewsAndActions(instance);

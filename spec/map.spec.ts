@@ -23,6 +23,22 @@ test("can create a map of complex types", () => {
   );
 });
 
+test("can create a map of complex types that have an identifier attribute", () => {
+  const inventoryType = types.model("Inventory Item", {
+    itemName: types.identifier,
+    amount: types.optional(types.number, 0),
+  });
+
+  const mapType = types.map(inventoryType);
+  expect(mapType.createReadOnly()).toEqual({});
+  expect(mapType.createReadOnly({ itemA: { itemName: "A", amount: 10 }, itemB: { itemName: "B" } })).toEqual(
+    expect.objectContaining({
+      A: expect.objectContaining({ itemName: "A", amount: 10 }),
+      B: expect.objectContaining({ itemName: "B", amount: 0 }),
+    })
+  );
+});
+
 test("is can verify map types", () => {
   const mapType = types.map(types.string);
   expect(mapType.is({})).toEqual(true);

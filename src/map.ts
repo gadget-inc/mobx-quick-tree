@@ -1,6 +1,7 @@
 import { types } from "mobx-state-tree";
 import { IMapType } from "mobx-state-tree/dist/internal";
 import { BaseType, IAnyType, setParent, setType } from "./base";
+import { $identifier } from "./symbols";
 
 export class MapType<T extends IAnyType> extends BaseType<
   Record<string, T["InputType"]>,
@@ -17,7 +18,9 @@ export class MapType<T extends IAnyType> extends BaseType<
       Object.entries(snapshot).forEach(([key, value]) => {
         const item = this.childrenType.createReadOnly(value);
         setParent(item, map);
-        map[key] = item;
+
+        const instanceKey = item[$identifier] ?? key;
+        map[instanceKey] = item;
       });
     }
 

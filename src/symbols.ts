@@ -8,4 +8,7 @@ export const $parent = Symbol.for("parent");
 export const $modelType = Symbol.for("modelType");
 
 /** @hidden */
+export const $identifier = Symbol.for("identifier");
+
+/** @hidden */
 export const $type = Symbol.for("type");
