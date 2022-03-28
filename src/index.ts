@@ -6,7 +6,7 @@ import { map } from "./map";
 import { model } from "./model";
 import { optional } from "./optional";
 import { literal, SimpleType } from "./simple";
-import { union } from "./union";
+import { maybe, maybeNull, union } from "./union";
 
 export const types = {
   boolean: SimpleType.for(mstTypes.boolean),
@@ -22,6 +22,8 @@ export const types = {
   late,
   literal,
   map,
+  maybe,
+  maybeNull,
   model,
   optional,
   union,

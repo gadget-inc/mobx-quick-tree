@@ -18,6 +18,22 @@ describe("can create", () => {
     expect(lateType.createReadOnly({ a: "my value" })).toEqual({ a: "my value" });
   });
 
+  test("a maybe type", () => {
+    const maybeType = types.maybe(types.string);
+    expect(maybeType.createReadOnly()).toEqual(undefined);
+    expect(maybeType.createReadOnly(undefined)).toEqual(undefined);
+    expect(maybeType.createReadOnly("value 2")).toEqual("value 2");
+    expect(() => maybeType.createReadOnly(null as any)).toThrow();
+  });
+
+  test("a maybeNull type", () => {
+    const maybeNullType = types.maybeNull(types.string);
+    expect(maybeNullType.createReadOnly(null)).toEqual(null);
+    expect(maybeNullType.createReadOnly("value 2")).toEqual("value 2");
+    expect(() => maybeNullType.createReadOnly()).toThrow();
+    expect(() => maybeNullType.createReadOnly(undefined)).toThrow();
+  });
+
   test("a union type", () => {
     const unionType = types.union(types.literal("value 1"), types.literal("value 2"));
     expect(unionType.createReadOnly("value 1")).toEqual("value 1");
