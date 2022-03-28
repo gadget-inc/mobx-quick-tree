@@ -33,8 +33,8 @@ export const TestModel = types
     },
   }));
 
-export const TestModelSnapshot: typeof TestModel["InputType"] = {
+export const TestModelSnapshot = {
   bool: true,
   frozen: { test: "string" },
   nested: { name: "MiXeD CaSe" },
-};
+} as const;

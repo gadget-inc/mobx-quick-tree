@@ -12,7 +12,7 @@ export class ArrayType<T extends IAnyType> extends BaseType<
   }
 
   createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
-    const array = [];
+    const array: T["InstanceType"][] = [];
     if (snapshot) {
       snapshot.forEach((child) => {
         const item = this.childrenType.createReadOnly(child);

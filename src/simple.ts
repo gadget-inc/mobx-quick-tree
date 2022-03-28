@@ -8,6 +8,9 @@ export class SimpleType<T, MSTType extends ISimpleType<any>> extends BaseType<T,
   }
 
   createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
+    if (snapshot === undefined) {
+      throw new Error("can't initial simple type with undefined");
+    }
     return snapshot;
   }
 }

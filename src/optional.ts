@@ -1,18 +1,17 @@
-import { BaseType } from "./base";
+import { BaseType, IAnyType } from "./base";
 
 export type ValidOptionalValue = string | boolean | number | null | undefined;
-export type ValidOptionalValues = [ValidOptionalValue, ...ValidOptionalValue[]];
 
-export class OptionalType<T extends BaseType<any, any, any>> extends BaseType<
-  T["InputType"],
+export class OptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> extends BaseType<
+  T["InputType"] | OptionalValues[number],
   T["InstanceType"],
   T["mstType"]
 > {
-  constructor(readonly type: T, readonly defaultValue: T["InputType"], readonly undefinedValues?: ValidOptionalValues) {
+  constructor(readonly type: T, readonly defaultValue: T["InputType"], readonly undefinedValues?: OptionalValues) {
     super(`optional<${type.name}>`, type.mstType);
   }
 
-  createReadOnly(snapshot?: T["InputType"]): T["InstanceType"] {
+  createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
     if (this.undefinedValues) {
       if (this.undefinedValues.includes(snapshot)) {
         snapshot = this.defaultValue;
@@ -25,10 +24,10 @@ export class OptionalType<T extends BaseType<any, any, any>> extends BaseType<
   }
 }
 
-export const optional = <T extends BaseType<any, any, any>>(
+export const optional = <T extends BaseType<any, any, any>, OptionalValues extends ValidOptionalValue[]>(
   type: T,
   defaultValue: T["InputType"],
-  undefinedValues?: ValidOptionalValues
-): BaseType<T["InputType"], T["InstanceType"], T["mstType"]> => {
+  undefinedValues?: OptionalValues
+): OptionalType<T, OptionalValues> => {
   return new OptionalType(type, defaultValue, undefinedValues);
 };

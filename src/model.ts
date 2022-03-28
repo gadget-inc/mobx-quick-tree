@@ -24,7 +24,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   IModelType<MSTProperties<Props>, Others>
 > {
   readonly [$modelType] = undefined;
-  readonly QuickOrSlowInstance: this["InstanceType"] | Instance<this["mstType"]>;
+  readonly QuickOrSlowInstance!: this["InstanceType"] | Instance<this["mstType"]>;
   private identifierProp: string | undefined;
 
   constructor(
@@ -88,9 +88,10 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 }
 
 export const model = <Props extends ModelProperties>(name: string, properties?: Props) => {
-  const mstProperties =
-    properties &&
-    (Object.fromEntries(Object.entries(properties).map(([k, v]) => [k, v.mstType])) as MSTProperties<Props>);
+  const props = properties ?? ({} as Props);
+  const mstProperties = (
+    props ? Object.fromEntries(Object.entries(props).map(([k, v]) => [k, v.mstType])) : {}
+  ) as MSTProperties<Props>;
 
-  return new ModelType(name, properties, (self) => self, mstTypes.model(name, mstProperties));
+  return new ModelType(name, props, (self) => self, mstTypes.model(name, mstProperties));
 };

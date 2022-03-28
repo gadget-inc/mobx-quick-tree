@@ -3,8 +3,8 @@ import { $parent, $quickType, $type } from "./symbols";
 
 export abstract class BaseType<InputType, InstanceType, MSTType extends AnyMSTType> {
   readonly [$quickType]: undefined;
-  readonly InputType: InputType;
-  readonly InstanceType: InstanceType;
+  readonly InputType!: InputType;
+  readonly InstanceType!: InstanceType;
 
   constructor(readonly name: string, readonly mstType: MSTType) {
     Reflect.defineProperty(this, "mstType", {
@@ -31,7 +31,7 @@ export type QuickOrMSTInstance<T extends IAnyType> = T["InstanceType"] | Instanc
 
 /** @hidden */
 export const setType = (value: unknown, type: IAnyType) => {
-  if (typeof value == "object") {
+  if (value && typeof value == "object") {
     Reflect.defineProperty(value, $type, {
       value: type,
       configurable: false,
@@ -43,7 +43,7 @@ export const setType = (value: unknown, type: IAnyType) => {
 
 /** @hidden */
 export const setParent = (value: unknown, parent: any) => {
-  if (typeof value == "object") {
+  if (value && typeof value == "object") {
     Reflect.defineProperty(value, $parent, {
       value: parent,
       configurable: false,

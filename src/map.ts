@@ -13,13 +13,13 @@ export class MapType<T extends IAnyType> extends BaseType<
   }
 
   createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
-    const map = {};
+    const map: Record<string, T["InstanceType"]> = {};
     if (snapshot) {
       Object.entries(snapshot).forEach(([key, value]) => {
         const item = this.childrenType.createReadOnly(value);
         setParent(item, map);
 
-        const instanceKey = item[$identifier] ?? key;
+        const instanceKey: string = item[$identifier] ?? key;
         map[instanceKey] = item;
       });
     }
