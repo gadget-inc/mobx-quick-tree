@@ -1,5 +1,5 @@
-import { IModelType, ModelActions, types as mstTypes } from "mobx-state-tree";
-import { BaseType } from "./base";
+import { IModelType, Instance, ModelActions, types as mstTypes } from "mobx-state-tree";
+import { BaseType, QuickOrMSTInstance } from "./base";
 import { $modelType, $parent, $type } from "./symbols";
 
 export interface ModelProperties {
@@ -24,6 +24,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   IModelType<MSTProperties<Props>, Others>
 > {
   readonly [$modelType] = undefined;
+  readonly QuickOrSlowInstance: this["InstanceType"] | Instance<this["mstType"]>;
 
   constructor(
     name: string,
@@ -35,9 +36,9 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   }
 
   views<Views extends Record<string, unknown>>(
-    fn: (self: this["CreateType"]) => Views
+    fn: (self: QuickOrMSTInstance<this>) => Views
   ): ModelType<Props, Others & Views> {
-    const init = (self: this["CreateType"]) => {
+    const init = (self: QuickOrMSTInstance<this>) => {
       this.initializeViewsAndActions(self);
       Object.assign(self, fn(self));
       return self;
@@ -45,8 +46,10 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return new ModelType<Props, Others & Views>(this.name, this.properties, init, this.mstType.views(fn));
   }
 
-  actions<Actions extends ModelActions>(fn: (self: this["CreateType"]) => Actions): ModelType<Props, Others & Actions> {
-    const init = (self: this["CreateType"]) => {
+  actions<Actions extends ModelActions>(
+    fn: (self: QuickOrMSTInstance<this>) => Actions
+  ): ModelType<Props, Others & Actions> {
+    const init = (self: QuickOrMSTInstance<this>) => {
       this.initializeViewsAndActions(self);
 
       const actions = fn(self);
@@ -61,7 +64,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return new ModelType<Props, Others & Actions>(this.name, this.properties, init, this.mstType.actions(fn));
   }
 
-  is(value: any): value is this["CreateType"] {
+  is(value: any): value is QuickOrMSTInstance<this> {
     if (typeof value !== "object") {
       return false;
     }

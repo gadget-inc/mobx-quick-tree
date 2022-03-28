@@ -7,7 +7,7 @@ export class SimpleType<T, MSTType extends ISimpleType<any>> extends BaseType<T,
     return new SimpleType(mstType.name, mstType);
   }
 
-  createReadOnly(snapshot?: T): this["CreateType"] {
+  createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
     return snapshot;
   }
 }
