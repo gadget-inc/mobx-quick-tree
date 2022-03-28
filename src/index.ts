@@ -2,7 +2,7 @@ import { types as mstTypes } from "mobx-state-tree";
 import { frozen } from "./frozen";
 import { model } from "./model";
 import { optional } from "./optional";
-import { SimpleType } from "./simple";
+import { literal, SimpleType } from "./simple";
 
 export const types = {
   boolean: SimpleType.for(mstTypes.boolean),
@@ -13,6 +13,7 @@ export const types = {
   string: SimpleType.for(mstTypes.string),
 
   frozen,
+  literal,
   model,
   optional,
 };
