@@ -1,6 +1,6 @@
 import { types } from "mobx-state-tree";
 import { IArrayType } from "mobx-state-tree/dist/internal";
-import { BaseType, IAnyType } from "./base";
+import { BaseType, IAnyType, setParent, setType } from "./base";
 
 export class ArrayType<T extends IAnyType> extends BaseType<
   ReadonlyArray<T["InputType"]>,
@@ -12,11 +12,18 @@ export class ArrayType<T extends IAnyType> extends BaseType<
   }
 
   createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
-    if (!snapshot) {
-      return [];
+    const array = [];
+    if (snapshot) {
+      snapshot.forEach((child) => {
+        const item = this.childrenType.createReadOnly(child);
+        setParent(item, array);
+        array.push(item);
+      });
     }
 
-    return snapshot.map((item) => this.childrenType.createReadOnly(item));
+    setType(array, this);
+
+    return array;
   }
 }
 
