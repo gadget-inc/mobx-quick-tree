@@ -1,6 +1,7 @@
 import { types as mstTypes } from "mobx-state-tree";
 import { array } from "./array";
 import { frozen } from "./frozen";
+import { late } from "./late";
 import { map } from "./map";
 import { model } from "./model";
 import { optional } from "./optional";
@@ -17,6 +18,7 @@ export const types = {
 
   array,
   frozen,
+  late,
   literal,
   map,
   model,
