@@ -1,6 +1,7 @@
 import { types as mstTypes } from "mobx-state-tree";
 import { array } from "./array";
 import { compose } from "./compose";
+import { custom } from "./custom";
 import { frozen } from "./frozen";
 import { late } from "./late";
 import { map } from "./map";
@@ -21,6 +22,7 @@ export const types = {
 
   array,
   compose,
+  custom,
   frozen,
   late,
   literal,
