@@ -10,6 +10,41 @@ import {
 import { IAnyType } from "./base";
 import { $parent } from "./symbols";
 
+export {
+  addDisposer,
+  addMiddleware,
+  applyPatch,
+  applySnapshot,
+  cast,
+  clone,
+  createActionTrackingMiddleware2,
+  destroy,
+  detach,
+  flow,
+  getEnv,
+  getParentOfType,
+  getPath,
+  getSnapshot,
+  getType,
+  hasParent,
+  isActionContextThisOrChildOf,
+  isAlive,
+  isStateTreeNode,
+  isValidReference,
+  joinJsonPath,
+  onAction,
+  onPatch,
+  onSnapshot,
+  recordPatches,
+  resolveIdentifier,
+  resolvePath,
+  setLivelinessChecking,
+  splitJsonPath,
+  tryReference,
+  typecheck,
+  walk,
+} from "mobx-state-tree";
+
 export const getParent = (value: any, depth = 1): Record<string, unknown> | undefined => {
   if (isStateTreeNode(value)) {
     return mstGetParent(value, depth);

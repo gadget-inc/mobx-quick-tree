@@ -13,6 +13,8 @@ import { refinement } from "./refinement";
 import { literal, SimpleType } from "./simple";
 import { maybe, maybeNull, union } from "./union";
 
+export * from "./api";
+
 export const types = {
   boolean: SimpleType.for(mstTypes.boolean),
   Date: SimpleType.for(mstTypes.Date),
