@@ -1,5 +1,6 @@
 import { types } from "mobx-state-tree";
-import { BaseType, IAnyType, InstantiateContext } from "./base";
+import { BaseType, InstantiateContext } from "./base";
+import type { IAnyType } from "./types";
 
 export class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["InstanceType"], T["mstType"]> {
   private cachedType: T | undefined;

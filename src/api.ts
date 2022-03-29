@@ -7,8 +7,8 @@ import {
   isRoot as mstIsRoot,
   isStateTreeNode,
 } from "mobx-state-tree";
-import { IAnyType } from "./base";
 import { $parent } from "./symbols";
+import type { IAnyType } from "./types";
 
 export {
   addDisposer,

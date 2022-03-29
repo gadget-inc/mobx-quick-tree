@@ -1,0 +1,49 @@
+import type {
+  IAnyComplexType as AnyComplexMSTType,
+  IAnyType as AnyMSTType,
+  Instance as MSTInstance,
+  ISimpleType as MSTSimpleType,
+  SnapshotOut as MSTSnapshotOut,
+} from "mobx-state-tree";
+import { BaseType } from "./base";
+import { ModelType } from "./model";
+
+export { IAnyStateTreeNode, IMSTArray, IStateTreeNode, ModelPropertiesDeclaration } from "mobx-state-tree";
+
+export type ValidOptionalValue = string | boolean | number | null | undefined;
+export type FuncOrValue<T> = T | (() => T);
+export type Primitives = string | number | boolean | Date | null | undefined;
+
+export type IAnyType = BaseType<any, any, AnyMSTType>;
+export type IAnyComplexType = BaseType<any, any, AnyComplexMSTType>;
+export type IModelType<Props extends ModelProperties, Others> = ModelType<Props, Others>;
+export type IAnyModelType = IModelType<any, any>;
+export type ISimpleType<T> = BaseType<T, T, MSTSimpleType<T>>;
+export type IOptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> = BaseType<
+  T["InputType"] | OptionalValues,
+  T["InstanceType"],
+  T["mstType"]
+>;
+
+export type SnapshotIn<T extends IAnyType> = T["InputType"];
+export type SnapshotOut<T extends IAnyType> = MSTSnapshotOut<T["mstType"]>;
+export type Instance<T extends IAnyType> = T["InstanceType"];
+export type SnapshotOrInstance<T extends IAnyType> = T["InputType"] | T["InstanceType"];
+
+export type QuickOrMSTInstance<T extends IAnyType> = T["InstanceType"] | MSTInstance<T["mstType"]>;
+
+export type ModelProperties = {
+  [key: string]: IAnyType;
+};
+
+export type ModelCreationProps<T extends ModelProperties> = {
+  [K in keyof T]?: T[K]["InputType"];
+};
+
+export type InstanceTypes<T extends ModelProperties> = {
+  [K in keyof T]: T[K]["InstanceType"];
+};
+
+export type MSTProperties<T extends ModelProperties> = {
+  [K in keyof T]: T[K]["mstType"];
+};

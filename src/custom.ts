@@ -1,8 +1,6 @@
 import { CustomTypeOptions, IType, types } from "mobx-state-tree";
 import { BaseType, InstantiateContext } from "./base";
 
-export type Primitives = string | number | boolean | Date | null | undefined;
-
 export class CustomType<InputType, InstanceType> extends BaseType<
   InputType,
   InstanceType,

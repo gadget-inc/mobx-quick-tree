@@ -1,6 +1,7 @@
 import { types as mstTypes, UnionOptions } from "mobx-state-tree";
-import { BaseType, IAnyType, InstantiateContext } from "./base";
+import { BaseType, InstantiateContext } from "./base";
 import { literal } from "./simple";
+import type { IAnyType } from "./types";
 
 export class UnionType<Types extends IAnyType[]> extends BaseType<
   Types[number]["InputType"],

@@ -1,22 +1,7 @@
 import { IModelType, Instance, isReferenceType, ModelActions, types as mstTypes, types } from "mobx-state-tree";
-import { BaseType, InstantiateContext, QuickOrMSTInstance, setParent, setType } from "./base";
+import { BaseType, InstantiateContext, setParent, setType } from "./base";
 import { $identifier, $modelType } from "./symbols";
-
-export interface ModelProperties {
-  [key: string]: BaseType<any, any, any>;
-}
-
-export type ModelCreationProps<T extends ModelProperties> = {
-  [K in keyof T]?: T[K]["InputType"];
-};
-
-export type InstanceTypes<T extends ModelProperties> = {
-  [K in keyof T]: T[K]["InstanceType"];
-};
-
-export type MSTProperties<T extends ModelProperties> = {
-  [K in keyof T]: T[K]["mstType"];
-};
+import type { InstanceTypes, ModelCreationProps, ModelProperties, MSTProperties, QuickOrMSTInstance } from "./types";
 
 export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   ModelCreationProps<Props>,

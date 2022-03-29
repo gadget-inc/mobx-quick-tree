@@ -1,7 +1,8 @@
 import { types } from "mobx-state-tree";
 import { IMapType } from "mobx-state-tree/dist/internal";
-import { BaseType, IAnyType, InstantiateContext, setParent, setType } from "./base";
+import { BaseType, InstantiateContext, setParent, setType } from "./base";
 import { $identifier } from "./symbols";
+import type { IAnyType } from "./types";
 
 export class MapType<T extends IAnyType> extends BaseType<
   Record<string, T["InputType"]>,

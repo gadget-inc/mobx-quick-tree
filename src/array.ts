@@ -1,6 +1,7 @@
 import { types } from "mobx-state-tree";
 import { IArrayType } from "mobx-state-tree/dist/internal";
-import { BaseType, IAnyType, InstantiateContext, setParent, setType } from "./base";
+import { BaseType, InstantiateContext, setParent, setType } from "./base";
+import type { IAnyType } from "./types";
 
 export class ArrayType<T extends IAnyType> extends BaseType<
   ReadonlyArray<T["InputType"]>,

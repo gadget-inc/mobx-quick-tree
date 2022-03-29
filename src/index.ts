@@ -14,6 +14,7 @@ import { literal, SimpleType } from "./simple";
 import { maybe, maybeNull, union } from "./union";
 
 export * from "./api";
+export * from "./types";
 
 export const types = {
   boolean: SimpleType.for(mstTypes.boolean),

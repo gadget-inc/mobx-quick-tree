@@ -1,18 +1,6 @@
 import { types as mstTypes } from "mobx-state-tree";
 import { ModelType } from "./model";
-
-type IAnyModelType = ModelType<any, any>;
-
-type ComposeFactory = {
-  <Types extends [IAnyModelType, ...IAnyModelType[]]>(name: string, ...types: Types): ModelType<
-    PropsFromTypes<Types>,
-    OthersFromTypes<Types>
-  >;
-  <Types extends [IAnyModelType, ...IAnyModelType[]]>(...types: Types): ModelType<
-    PropsFromTypes<Types>,
-    OthersFromTypes<Types>
-  >;
-};
+import type { IAnyModelType } from "./types";
 
 type PropsFromTypes<T> = T extends ModelType<infer P, any>
   ? P
@@ -25,6 +13,17 @@ type OthersFromTypes<T> = T extends ModelType<any, infer O>
   : T extends [ModelType<any, infer O>, ...infer Tail]
   ? O & OthersFromTypes<Tail>
   : {};
+
+type ComposeFactory = {
+  <Types extends [IAnyModelType, ...IAnyModelType[]]>(name: string, ...types: Types): ModelType<
+    PropsFromTypes<Types>,
+    OthersFromTypes<Types>
+  >;
+  <Types extends [IAnyModelType, ...IAnyModelType[]]>(...types: Types): ModelType<
+    PropsFromTypes<Types>,
+    OthersFromTypes<Types>
+  >;
+};
 
 export const compose: ComposeFactory = <Types extends [IAnyModelType, ...IAnyModelType[]]>(
   nameOrType: IAnyModelType | string,

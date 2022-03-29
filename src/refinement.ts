@@ -1,5 +1,6 @@
 import { Instance, types } from "mobx-state-tree";
-import { BaseType, IAnyType, InstantiateContext } from "./base";
+import { BaseType, InstantiateContext } from "./base";
+import type { IAnyType } from "./types";
 
 export class RefinementType<T extends IAnyType> extends BaseType<T["InputType"], T["InstanceType"], T["mstType"]> {
   constructor(readonly type: T, readonly predicate: (snapshot: T["InstanceType"] | Instance<T["mstType"]>) => boolean) {
