@@ -2,12 +2,18 @@ import { BaseType, IAnyType } from "./base";
 
 export type ValidOptionalValue = string | boolean | number | null | undefined;
 
+export type FuncOrValue<T> = T | (() => T);
+
 export class OptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> extends BaseType<
   T["InputType"] | OptionalValues[number],
   T["InstanceType"],
   T["mstType"]
 > {
-  constructor(readonly type: T, readonly defaultValue: T["InputType"], readonly undefinedValues?: OptionalValues) {
+  constructor(
+    readonly type: T,
+    private readonly defaultValueOrFunc: FuncOrValue<T["InputType"]>,
+    private readonly undefinedValues?: OptionalValues
+  ) {
     super(`optional<${type.name}>`, type.mstType);
   }
 
@@ -22,12 +28,19 @@ export class OptionalType<T extends IAnyType, OptionalValues extends ValidOption
 
     return this.type.createReadOnly(snapshot);
   }
+
+  private get defaultValue(): T["InputType"] {
+    return this.defaultValueOrFunc instanceof Function ? this.defaultValueOrFunc() : this.defaultValueOrFunc;
+  }
 }
 
-export const optional = <T extends BaseType<any, any, any>, OptionalValues extends ValidOptionalValue[]>(
+export const optional = <T extends IAnyType, OptionalValues extends ValidOptionalValue[]>(
   type: T,
-  defaultValue: T["InputType"],
+  defaultValue: FuncOrValue<T["InputType"]>,
   undefinedValues?: OptionalValues
 ): OptionalType<T, OptionalValues> => {
+  if (typeof defaultValue === "function") {
+    defaultValue;
+  }
   return new OptionalType(type, defaultValue, undefinedValues);
 };

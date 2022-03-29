@@ -21,6 +21,14 @@ describe("with no undefined values", () => {
     expect(modelInstance.nested.name).toEqual(TestModelSnapshot.nested.name);
     expect(modelInstance.nested.lowerCasedName()).toEqual(TestModelSnapshot.nested.name.toLowerCase());
   });
+
+  test("can create defaults with a function", () => {
+    let x = 0;
+    const optionalType = types.optional(types.string, () => `Item ${++x}`);
+    expect(optionalType.createReadOnly()).toEqual("Item 1");
+    expect(optionalType.createReadOnly("my value")).toEqual("my value");
+    expect(optionalType.createReadOnly()).toEqual("Item 2");
+  });
 });
 
 describe("with undefined values", () => {
@@ -52,5 +60,13 @@ describe("with undefined values", () => {
     expect(modelInstance.frozen.test).toEqual(TestModelSnapshot.frozen.test);
     expect(modelInstance.nested.name).toEqual(TestModelSnapshot.nested.name);
     expect(modelInstance.nested.lowerCasedName()).toEqual(TestModelSnapshot.nested.name.toLowerCase());
+  });
+
+  test("can create defaults with a function", () => {
+    let x = 0;
+    const optionalType = types.optional(types.string, () => `Item ${++x}`, [null, undefined]);
+    expect(optionalType.createReadOnly()).toEqual("Item 1");
+    expect(optionalType.createReadOnly("my value")).toEqual("my value");
+    expect(optionalType.createReadOnly(null)).toEqual("Item 2");
   });
 });
