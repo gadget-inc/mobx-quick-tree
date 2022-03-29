@@ -180,3 +180,44 @@ describe("custom", () => {
     expect(csvType.is({})).toEqual(false);
   });
 });
+
+describe("enumeration", () => {
+  const enumType = types.enumeration<"a" | "b">(["a", "b"]);
+
+  test("can create a read-only instance", () => {
+    expect(enumType.createReadOnly("a")).toEqual("a");
+    expect(enumType.createReadOnly("b")).toEqual("b");
+    expect(() => enumType.createReadOnly("c" as any)).toThrow();
+  });
+
+  test("can create a read-only instance with a name", () => {
+    const enumType = types.enumeration<"a" | "b">("AB", ["a", "b"]);
+    expect(enumType.name).toEqual("AB");
+    expect(enumType.createReadOnly("a")).toEqual("a");
+    expect(enumType.createReadOnly("b")).toEqual("b");
+    expect(() => enumType.createReadOnly("c" as any)).toThrow();
+  });
+
+  test("can create a read-only instance with a TypeScript enum", () => {
+    enum Colors {
+      Red = "Red",
+      Green = "Green",
+    }
+
+    const enumType = types.enumeration<Colors>("Color", Object.values(Colors));
+    expect(enumType.name).toEqual("Color");
+    expect(enumType.createReadOnly(Colors.Red)).toEqual("Red");
+    expect(enumType.createReadOnly(Colors.Green)).toEqual("Green");
+    expect(() => enumType.createReadOnly("c" as any)).toThrow();
+  });
+
+  test("can be verified with is", () => {
+    expect(enumType.is("a")).toEqual(true);
+    expect(enumType.is("b")).toEqual(true);
+    expect(enumType.is("c")).toEqual(false);
+    expect(enumType.is("")).toEqual(false);
+    expect(enumType.is(null)).toEqual(false);
+    expect(enumType.is(true)).toEqual(false);
+    expect(enumType.is({})).toEqual(false);
+  });
+});
