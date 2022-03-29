@@ -1,4 +1,5 @@
 import { isStateTreeNode } from "mobx-state-tree";
+import { types } from "../src";
 import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
 
 describe("can create", () => {
@@ -57,4 +58,25 @@ describe("actions", () => {
     m.setB(false);
     expect(m.bool).toEqual(false);
   });
+});
+
+test("can compose models", () => {
+  const modelAType = types.model("A", { a: types.string }).views((self) => ({
+    lenA() {
+      return self.a.length;
+    },
+  }));
+
+  const modelBType = types.model("B", { b: types.optional(types.number, 10) });
+  const composedType = types.compose("C", modelAType, modelBType);
+
+  expect(composedType.name).toEqual("C");
+
+  let instance = composedType.createReadOnly({ a: "xyz" });
+  expect(instance.a).toEqual("xyz");
+  expect(instance.b).toEqual(10);
+
+  instance = composedType.createReadOnly({ a: "abc", b: 4 });
+  expect(instance.a).toEqual("abc");
+  expect(instance.b).toEqual(4);
 });

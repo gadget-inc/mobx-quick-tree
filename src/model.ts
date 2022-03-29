@@ -24,7 +24,10 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   IModelType<MSTProperties<Props>, Others>
 > {
   readonly [$modelType] = undefined;
+  readonly Props!: Props;
+  readonly Others!: Others;
   readonly QuickOrSlowInstance!: this["InstanceType"] | Instance<this["mstType"]>;
+
   private identifierProp: string | undefined;
 
   constructor(
