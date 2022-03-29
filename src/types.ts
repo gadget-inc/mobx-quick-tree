@@ -29,11 +29,14 @@ export type SnapshotIn<T extends IAnyType> = T["InputType"];
 export type SnapshotOut<T extends IAnyType> = MSTSnapshotOut<T["mstType"]>;
 export type Instance<T extends IAnyType> = T["InstanceType"];
 export type SnapshotOrInstance<T extends IAnyType> = T["InputType"] | T["InstanceType"];
-
 export type QuickOrMSTInstance<T extends IAnyType> = T["InstanceType"] | MSTInstance<T["mstType"]>;
 
 export type ModelProperties = {
   [key: string]: IAnyType;
+};
+
+export type ModelActions = {
+  [key: string]: Function;
 };
 
 export type ModelCreationProps<T extends ModelProperties> = {

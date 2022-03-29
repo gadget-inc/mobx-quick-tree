@@ -1,7 +1,14 @@
-import { IModelType, Instance, isReferenceType, ModelActions, types as mstTypes, types } from "mobx-state-tree";
+import { IModelType, Instance, isReferenceType, types as mstTypes, types } from "mobx-state-tree";
 import { BaseType, InstantiateContext, setParent, setType } from "./base";
 import { $identifier, $modelType } from "./symbols";
-import type { InstanceTypes, ModelCreationProps, ModelProperties, MSTProperties, QuickOrMSTInstance } from "./types";
+import type {
+  InstanceTypes,
+  ModelActions,
+  ModelCreationProps,
+  ModelProperties,
+  MSTProperties,
+  QuickOrMSTInstance,
+} from "./types";
 
 export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   ModelCreationProps<Props>,
@@ -37,12 +44,12 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   }
 
   actions<Actions extends ModelActions>(
-    fn: (self: QuickOrMSTInstance<this>) => Actions
+    fn: (self: Instance<this["mstType"]>) => Actions
   ): ModelType<Props, Others & Actions> {
     const init = (self: QuickOrMSTInstance<this>) => {
       this.initializeViewsAndActions(self);
 
-      const actions = fn(self);
+      const actions = fn(self as any);
       for (const actionName of Object.keys(actions)) {
         Reflect.set(self, actionName, () => {
           throw new Error(`can't execute action "${actionName}" on a read-only instance`);
@@ -51,7 +58,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 
       return self;
     };
-    return new ModelType<Props, Others & Actions>(this.name, this.properties, init, this.mstType.actions(fn));
+    return new ModelType<Props, Others & Actions>(this.name, this.properties, init, this.mstType.actions(fn as any));
   }
 
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
