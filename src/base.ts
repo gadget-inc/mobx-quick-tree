@@ -1,5 +1,8 @@
-import { IAnyType as AnyMSTType, Instance } from "mobx-state-tree";
+import { IAnyComplexType as AnyComplexMSTType, IAnyType as AnyMSTType, Instance } from "mobx-state-tree";
 import { $parent, $quickType, $type } from "./symbols";
+
+/** @hidden */
+export interface InstantiateContext {}
 
 export abstract class BaseType<InputType, InstanceType, MSTType extends AnyMSTType> {
   readonly [$quickType]: undefined;
@@ -23,10 +26,15 @@ export abstract class BaseType<InputType, InstanceType, MSTType extends AnyMSTTy
     return this.mstType.is(value);
   }
 
-  abstract createReadOnly(snapshot?: InputType): InstanceType;
+  createReadOnly(snapshot?: InputType): InstanceType {
+    return this.instantiate(snapshot, {});
+  }
+
+  protected abstract instantiate(snapshot: InputType | undefined, context: InstantiateContext): InstanceType;
 }
 
-export type IAnyType = BaseType<any, any, any>;
+export type IAnyType = BaseType<any, any, AnyMSTType>;
+export type IAnyComplexType = BaseType<any, any, AnyComplexMSTType>;
 export type QuickOrMSTInstance<T extends IAnyType> = T["InstanceType"] | Instance<T["mstType"]>;
 
 /** @hidden */

@@ -1,5 +1,5 @@
 import { IModelType, Instance, ModelActions, types as mstTypes, types } from "mobx-state-tree";
-import { BaseType, QuickOrMSTInstance, setParent, setType } from "./base";
+import { BaseType, InstantiateContext, QuickOrMSTInstance, setParent, setType } from "./base";
 import { $identifier, $modelType } from "./symbols";
 
 export interface ModelProperties {
@@ -69,7 +69,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return new ModelType<Props, Others & Actions>(this.name, this.properties, init, this.mstType.actions(fn));
   }
 
-  createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
+  protected instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
     const instance = {} as this["InstanceType"];
 
     setType(instance, this);

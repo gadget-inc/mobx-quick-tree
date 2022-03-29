@@ -1,5 +1,5 @@
 import { CustomTypeOptions, IType, types } from "mobx-state-tree";
-import { BaseType } from "./base";
+import { BaseType, InstantiateContext } from "./base";
 
 export type Primitives = string | number | boolean | Date | null | undefined;
 
@@ -12,7 +12,7 @@ export class CustomType<InputType, InstanceType> extends BaseType<
     super(options.name, types.custom<InputType, InstanceType>(options));
   }
 
-  createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
+  protected instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
     if (snapshot === undefined) {
       throw new Error("can't initialize custom type with undefined");
     }

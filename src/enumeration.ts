@@ -1,5 +1,5 @@
 import { ISimpleType, types, UnionStringArray } from "mobx-state-tree";
-import { BaseType } from "./base";
+import { BaseType, InstantiateContext } from "./base";
 
 export class EnumerationType<EnumOptions extends string> extends BaseType<
   EnumOptions,
@@ -10,7 +10,7 @@ export class EnumerationType<EnumOptions extends string> extends BaseType<
     super(name, types.enumeration<EnumOptions>(options));
   }
 
-  createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
+  protected instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
     if (typeof snapshot == "string" && this.options.includes(snapshot)) {
       return snapshot;
     }

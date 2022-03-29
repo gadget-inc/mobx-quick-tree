@@ -1,5 +1,5 @@
 import { types } from "mobx-state-tree";
-import { BaseType, IAnyType } from "./base";
+import { BaseType, IAnyType, InstantiateContext } from "./base";
 
 export class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["InstanceType"], T["mstType"]> {
   private cachedType: T | undefined;
@@ -11,7 +11,7 @@ export class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["In
     );
   }
 
-  createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
+  protected instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
     return this.type.createReadOnly(snapshot);
   }
 

@@ -1,4 +1,4 @@
-import { BaseType, IAnyType } from "./base";
+import { BaseType, IAnyType, InstantiateContext } from "./base";
 
 export type ValidOptionalValue = string | boolean | number | null | undefined;
 
@@ -17,7 +17,7 @@ export class OptionalType<T extends IAnyType, OptionalValues extends ValidOption
     super(`optional<${type.name}>`, type.mstType);
   }
 
-  createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
+  protected instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
     if (this.undefinedValues) {
       if (this.undefinedValues.includes(snapshot)) {
         snapshot = this.defaultValue;

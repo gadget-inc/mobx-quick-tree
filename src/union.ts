@@ -1,5 +1,5 @@
 import { types as mstTypes, UnionOptions } from "mobx-state-tree";
-import { BaseType, IAnyType } from "./base";
+import { BaseType, IAnyType, InstantiateContext } from "./base";
 import { literal } from "./simple";
 
 export class UnionType<Types extends IAnyType[]> extends BaseType<
@@ -14,7 +14,7 @@ export class UnionType<Types extends IAnyType[]> extends BaseType<
     );
   }
 
-  createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
+  protected instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
     const type = this.types.find((ty) => ty.is(snapshot));
     if (!type) {
       throw new Error("couldn't find valid type from union for given snapshot");
