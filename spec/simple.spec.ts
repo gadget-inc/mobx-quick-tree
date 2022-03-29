@@ -40,6 +40,13 @@ describe("can create", () => {
     expect(unionType.createReadOnly("value 2")).toEqual("value 2");
     expect(() => unionType.createReadOnly("value 3" as any)).toThrow();
   });
+
+  test("a union type with options", () => {
+    const unionType = types.union({ eager: true }, types.literal("value 1"), types.literal("value 2"));
+    expect(unionType.createReadOnly("value 1")).toEqual("value 1");
+    expect(unionType.createReadOnly("value 2")).toEqual("value 2");
+    expect(() => unionType.createReadOnly("value 3" as any)).toThrow();
+  });
 });
 
 describe("is can verify", () => {

@@ -1,4 +1,4 @@
-import { types as mstTypes } from "mobx-state-tree";
+import { types as mstTypes, UnionOptions } from "mobx-state-tree";
 import { BaseType, IAnyType } from "./base";
 import { literal } from "./simple";
 
@@ -7,8 +7,11 @@ export class UnionType<Types extends IAnyType[]> extends BaseType<
   Types[number]["InstanceType"],
   Types[number]["mstType"]
 > {
-  constructor(private types: Types) {
-    super("union", mstTypes.union(...types.map((x) => x.mstType)));
+  constructor(private types: Types, readonly options?: UnionOptions) {
+    super(
+      "union",
+      options ? mstTypes.union(options, ...types.map((x) => x.mstType)) : mstTypes.union(...types.map((x) => x.mstType))
+    );
   }
 
   createReadOnly(snapshot?: this["InputType"]): this["InstanceType"] {
@@ -20,8 +23,22 @@ export class UnionType<Types extends IAnyType[]> extends BaseType<
   }
 }
 
-export const union = <Types extends IAnyType[]>(...types: Types): UnionType<Types> => {
-  return new UnionType(types);
+type UnionFactory = {
+  <Types extends [IAnyType, ...IAnyType[]]>(options: UnionOptions, ...types: Types): UnionType<Types>;
+  <Types extends [IAnyType, ...IAnyType[]]>(...types: Types): UnionType<Types>;
+};
+
+export const union: UnionFactory = <Types extends [IAnyType, ...IAnyType[]]>(
+  optionsOrType: IAnyType | UnionOptions,
+  ...types: Types
+): UnionType<Types> => {
+  let options;
+  if (optionsOrType instanceof BaseType) {
+    types.unshift(optionsOrType);
+  } else {
+    options = optionsOrType;
+  }
+  return new UnionType(types, options);
 };
 
 export const maybe = <T extends IAnyType>(type: T) => {
