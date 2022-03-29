@@ -6,8 +6,8 @@ class RefinementType<T extends IAnyType> extends BaseType<T["InputType"], T["Ins
     super(type.name, types.refinement(type.mstType, predicate));
   }
 
-  protected instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
-    const instance = this.type.createReadOnly(snapshot);
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+    const instance = this.type.instantiate(snapshot, context);
     if (!this.predicate(instance)) {
       throw new Error("given snapshot isn't valid for refinement type");
     }

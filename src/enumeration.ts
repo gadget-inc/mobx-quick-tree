@@ -10,7 +10,7 @@ export class EnumerationType<EnumOptions extends string> extends BaseType<
     super(name, types.enumeration<EnumOptions>(options));
   }
 
-  protected instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
     if (typeof snapshot == "string" && this.options.includes(snapshot)) {
       return snapshot;
     }

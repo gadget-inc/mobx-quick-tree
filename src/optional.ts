@@ -17,7 +17,7 @@ export class OptionalType<T extends IAnyType, OptionalValues extends ValidOption
     super(`optional<${type.name}>`, type.mstType);
   }
 
-  protected instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
     if (this.undefinedValues) {
       if (this.undefinedValues.includes(snapshot)) {
         snapshot = this.defaultValue;
@@ -26,7 +26,7 @@ export class OptionalType<T extends IAnyType, OptionalValues extends ValidOption
       snapshot = this.defaultValue;
     }
 
-    return this.type.createReadOnly(snapshot);
+    return this.type.instantiate(snapshot, context);
   }
 
   private get defaultValue(): T["InputType"] {

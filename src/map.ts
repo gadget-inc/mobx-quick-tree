@@ -12,11 +12,11 @@ export class MapType<T extends IAnyType> extends BaseType<
     super(`map<${childrenType.name}>`, types.map(childrenType.mstType));
   }
 
-  protected instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
     const map: Record<string, T["InstanceType"]> = {};
     if (snapshot) {
       Object.entries(snapshot).forEach(([key, value]) => {
-        const item = this.childrenType.createReadOnly(value);
+        const item = this.childrenType.instantiate(value, context);
         setParent(item, map);
 
         const instanceKey: string = item[$identifier] ?? key;

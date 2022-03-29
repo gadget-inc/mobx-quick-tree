@@ -12,7 +12,7 @@ export class CustomType<InputType, InstanceType> extends BaseType<
     super(options.name, types.custom<InputType, InstanceType>(options));
   }
 
-  protected instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
     if (snapshot === undefined) {
       throw new Error("can't initialize custom type with undefined");
     }

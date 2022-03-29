@@ -2,7 +2,10 @@ import { IAnyComplexType as AnyComplexMSTType, IAnyType as AnyMSTType, Instance 
 import { $parent, $quickType, $type } from "./symbols";
 
 /** @hidden */
-export interface InstantiateContext {}
+export interface InstantiateContext {
+  referenceCache: Record<string, object>;
+  referencesToResolve: (() => void)[];
+}
 
 export abstract class BaseType<InputType, InstanceType, MSTType extends AnyMSTType> {
   readonly [$quickType]: undefined;
@@ -27,10 +30,19 @@ export abstract class BaseType<InputType, InstanceType, MSTType extends AnyMSTTy
   }
 
   createReadOnly(snapshot?: InputType): InstanceType {
-    return this.instantiate(snapshot, {});
+    const context: InstantiateContext = {
+      referenceCache: {},
+      referencesToResolve: [],
+    };
+
+    const instance = this.instantiate(snapshot, context);
+    for (const resolver of context.referencesToResolve) {
+      resolver();
+    }
+    return instance;
   }
 
-  protected abstract instantiate(snapshot: InputType | undefined, context: InstantiateContext): InstanceType;
+  abstract instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"];
 }
 
 export type IAnyType = BaseType<any, any, AnyMSTType>;

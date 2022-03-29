@@ -11,8 +11,8 @@ export class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["In
     );
   }
 
-  protected instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
-    return this.type.createReadOnly(snapshot);
+  instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
+    return this.type.instantiate(snapshot, context);
   }
 
   private get type() {

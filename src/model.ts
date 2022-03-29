@@ -1,4 +1,4 @@
-import { IModelType, Instance, ModelActions, types as mstTypes, types } from "mobx-state-tree";
+import { IModelType, Instance, isReferenceType, ModelActions, types as mstTypes, types } from "mobx-state-tree";
 import { BaseType, InstantiateContext, QuickOrMSTInstance, setParent, setType } from "./base";
 import { $identifier, $modelType } from "./symbols";
 
@@ -69,19 +69,29 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return new ModelType<Props, Others & Actions>(this.name, this.properties, init, this.mstType.actions(fn));
   }
 
-  protected instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
     const instance = {} as this["InstanceType"];
 
     setType(instance, this);
 
     for (const [k, v] of Object.entries(this.properties)) {
-      const propValue = v.createReadOnly(snapshot?.[k]);
+      if (isReferenceType(v.mstType)) {
+        context.referencesToResolve.push(() => {
+          const propValue = v.instantiate(snapshot?.[k], context);
+          Reflect.set(instance, k, propValue);
+        });
+        continue;
+      }
+
+      const propValue = v.instantiate(snapshot?.[k], context);
       setParent(propValue, instance);
       Reflect.set(instance, k, propValue);
     }
 
     if (this.identifierProp) {
-      Reflect.set(instance, $identifier, instance[this.identifierProp]);
+      const id = instance[this.identifierProp];
+      Reflect.set(instance, $identifier, id);
+      context.referenceCache[id] = instance;
     }
 
     this.initializeViewsAndActions(instance);

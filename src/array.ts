@@ -11,11 +11,11 @@ export class ArrayType<T extends IAnyType> extends BaseType<
     super(`array<${childrenType.name}>`, types.array(childrenType.mstType));
   }
 
-  protected instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
     const array: T["InstanceType"][] = [];
     if (snapshot) {
       snapshot.forEach((child) => {
-        const item = this.childrenType.createReadOnly(child);
+        const item = this.childrenType.instantiate(child, context);
         setParent(item, array);
         array.push(item);
       });
