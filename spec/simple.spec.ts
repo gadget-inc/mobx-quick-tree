@@ -47,6 +47,12 @@ describe("can create", () => {
     expect(unionType.createReadOnly("value 2")).toEqual("value 2");
     expect(() => unionType.createReadOnly("value 3" as any)).toThrow();
   });
+
+  test("a refinement type", () => {
+    const smallStringsType = types.refinement(types.string, (v: string) => v.length <= 5);
+    expect(smallStringsType.createReadOnly("small")).toEqual("small");
+    expect(() => smallStringsType.createReadOnly("too big")).toThrow();
+  });
 });
 
 describe("is can verify", () => {
@@ -82,5 +88,14 @@ describe("is can verify", () => {
     expect(unionType.is(null)).toEqual(false);
     expect(unionType.is(true)).toEqual(false);
     expect(unionType.is({})).toEqual(false);
+  });
+
+  test("a refinement type", () => {
+    const smallStringsType = types.refinement(types.string, (v: string) => v.length <= 5);
+    expect(smallStringsType.is("small")).toEqual(true);
+    expect(smallStringsType.is("too big")).toEqual(false);
+    expect(smallStringsType.is(null)).toEqual(false);
+    expect(smallStringsType.is(true)).toEqual(false);
+    expect(smallStringsType.is({})).toEqual(false);
   });
 });

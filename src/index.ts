@@ -6,6 +6,7 @@ import { late } from "./late";
 import { map } from "./map";
 import { model } from "./model";
 import { optional } from "./optional";
+import { refinement } from "./refinement";
 import { literal, SimpleType } from "./simple";
 import { maybe, maybeNull, union } from "./union";
 
@@ -28,5 +29,6 @@ export const types = {
   maybeNull,
   model,
   optional,
+  refinement,
   union,
 };
