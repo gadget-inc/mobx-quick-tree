@@ -1,4 +1,13 @@
-import { getParent as mstGetParent, getRoot as mstGetRoot, isStateTreeNode } from "mobx-state-tree";
+import {
+  getParent as mstGetParent,
+  getRoot as mstGetRoot,
+  isArrayType as mstIsArrayType,
+  isMapType as mstIsMapType,
+  isModelType as mstIsModelType,
+  isRoot as mstIsRoot,
+  isStateTreeNode,
+} from "mobx-state-tree";
+import { IAnyType } from "./base";
 import { $parent } from "./symbols";
 
 export const getParent = (value: any, depth = 1): Record<string, unknown> | undefined => {
@@ -32,4 +41,24 @@ export const getRoot = (value: any): Record<string, unknown> | undefined => {
       return value;
     }
   }
+};
+
+export const isRoot = (value: any): boolean => {
+  if (isStateTreeNode(value)) {
+    return mstIsRoot(value);
+  }
+
+  return value[$parent] === undefined;
+};
+
+export const isArrayType = (value: IAnyType) => {
+  return mstIsArrayType(value.mstType);
+};
+
+export const isMapType = (value: IAnyType) => {
+  return mstIsMapType(value.mstType);
+};
+
+export const isModelType = (value: IAnyType) => {
+  return mstIsModelType(value.mstType);
 };
