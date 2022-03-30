@@ -1,5 +1,5 @@
 import { types } from "../src";
-import { getParent, getRoot, isArrayType, isMapType, isModelType, isRoot } from "../src/api";
+import { getParent, getParentOfType, getRoot, isArrayType, isMapType, isModelType, isRoot } from "../src/api";
 import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
 
 describe("getParent", () => {
@@ -13,6 +13,20 @@ describe("getParent", () => {
     const m = TestModel.create(TestModelSnapshot);
     expect(() => getParent(m)).toThrow();
     expect(getParent(m.nested)).toEqual(m);
+  });
+});
+
+describe("getParentOfType", () => {
+  test("returns the proper root for a read-only instance", () => {
+    const m = TestModel.createReadOnly(TestModelSnapshot);
+    expect(() => getParentOfType(m, TestModel)).toThrow();
+    expect(getParentOfType(m.nested, TestModel)).toEqual(m);
+  });
+
+  test("returns the proper root for an MST instance", () => {
+    const m = TestModel.create(TestModelSnapshot);
+    expect(() => getParentOfType(m, TestModel)).toThrow();
+    expect(getParentOfType(m.nested, TestModel)).toEqual(m);
   });
 });
 
