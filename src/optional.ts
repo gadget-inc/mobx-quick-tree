@@ -31,13 +31,20 @@ export class OptionalType<T extends IAnyType, OptionalValues extends ValidOption
   }
 }
 
-export const optional = <T extends IAnyType, OptionalValues extends ValidOptionalValue[]>(
+export type OptionalFactory = {
+  <T extends IAnyType>(type: T, defaultValue: FuncOrValue<T["InputType"]>): OptionalType<T, [undefined]>;
+
+  <T extends IAnyType, OptionalValues extends ValidOptionalValue[]>(
+    type: T,
+    defaultValue: FuncOrValue<T["InputType"]>,
+    undefinedValues: OptionalValues
+  ): OptionalType<T, OptionalValues>;
+};
+
+export const optional: OptionalFactory = <T extends IAnyType, OptionalValues extends ValidOptionalValue[]>(
   type: T,
   defaultValue: FuncOrValue<T["InputType"]>,
   undefinedValues?: OptionalValues
 ): OptionalType<T, OptionalValues> => {
-  if (typeof defaultValue === "function") {
-    defaultValue;
-  }
   return new OptionalType(type, defaultValue, undefinedValues);
 };
