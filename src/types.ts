@@ -3,12 +3,14 @@ import type {
   IAnyType as AnyMSTType,
   Instance as MSTInstance,
   ISimpleType as MSTSimpleType,
+  IStateTreeNode as IMSTStateTreeNode,
   SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
 import { BaseType } from "./base";
 import { ModelType } from "./model";
+import { $type } from "./symbols";
 
-export { IAnyStateTreeNode, IMSTArray, IStateTreeNode, ModelPropertiesDeclaration } from "mobx-state-tree";
+export { IMSTArray, ModelPropertiesDeclaration } from "mobx-state-tree";
 
 export type ValidOptionalValue = string | boolean | number | null | undefined;
 export type FuncOrValue<T> = T | (() => T);
@@ -50,3 +52,11 @@ export type InstanceTypes<T extends ModelProperties> = {
 export type MSTProperties<T extends ModelProperties> = {
   [K in keyof T]: T[K]["mstType"];
 };
+
+export interface IQuickTreeNode<T extends IAnyType = IAnyType> {
+  readonly [$type]: T;
+}
+
+export type StateTreeNode<T, IT extends IAnyType> = T extends object ? T & IStateTreeNode<IT> : T;
+export type IStateTreeNode<T extends IAnyType = IAnyType> = IQuickTreeNode<T> | IMSTStateTreeNode<T["mstType"]>;
+export interface IAnyStateTreeNode extends StateTreeNode<any, IAnyType> {}

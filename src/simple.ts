@@ -1,9 +1,9 @@
-import { IAnyType, ISimpleType, SnapshotIn, types } from "mobx-state-tree";
+import { ISimpleType, SnapshotIn, types } from "mobx-state-tree";
 import { BaseType, InstantiateContext } from "./base";
 import type { Primitives } from "./types";
 
 export class SimpleType<T> extends BaseType<T, T, ISimpleType<T>> {
-  static for<MSTType extends IAnyType>(mstType: MSTType): SimpleType<SnapshotIn<MSTType>> {
+  static for<MSTType extends ISimpleType<any>>(mstType: MSTType): SimpleType<SnapshotIn<MSTType>> {
     return new SimpleType(mstType.name, mstType);
   }
 
@@ -11,7 +11,7 @@ export class SimpleType<T> extends BaseType<T, T, ISimpleType<T>> {
     if (snapshot === undefined) {
       throw new Error("can't initialize simple type with undefined");
     }
-    return snapshot;
+    return snapshot as this["InstanceType"];
   }
 }
 
@@ -21,11 +21,11 @@ export class LiteralType<T extends Primitives> extends SimpleType<T> {
     super(mstType.name, mstType);
   }
 
-  instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext): this["InstanceType"] {
     if (snapshot !== this.value) {
       throw new Error(`expected literal type to be initialized with ${this.value}`);
     }
-    return this.value;
+    return this.value as this["InstanceType"];
   }
 }
 

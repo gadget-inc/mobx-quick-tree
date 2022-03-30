@@ -1,17 +1,18 @@
 import type { IAnyType as AnyMSTType, Instance } from "mobx-state-tree";
 import { $parent, $quickType, $type } from "./symbols";
-import type { IAnyType, QuickOrMSTInstance } from "./types";
+import type { IAnyComplexType, IAnyType, QuickOrMSTInstance, StateTreeNode } from "./types";
 
 /** @hidden */
 export interface InstantiateContext {
-  referenceCache: Record<string, object>;
+  referenceCache: StateTreeNode<Record<string, object>, IAnyComplexType>;
   referencesToResolve: (() => void)[];
 }
 
-export abstract class BaseType<InputType, InstanceType, MSTType extends AnyMSTType> {
+export abstract class BaseType<InputType, OutputType, MSTType extends AnyMSTType> {
   readonly [$quickType]: undefined;
   readonly InputType!: InputType;
-  readonly InstanceType!: InstanceType;
+  readonly OutputType!: OutputType;
+  readonly InstanceType!: StateTreeNode<OutputType, this>;
 
   constructor(readonly name: string, readonly mstType: MSTType) {
     Reflect.defineProperty(this, "mstType", {
@@ -30,7 +31,7 @@ export abstract class BaseType<InputType, InstanceType, MSTType extends AnyMSTTy
     return this.mstType.is(value);
   }
 
-  createReadOnly(snapshot?: InputType): InstanceType {
+  createReadOnly(snapshot?: InputType): OutputType {
     const context: InstantiateContext = {
       referenceCache: {},
       referencesToResolve: [],
@@ -43,7 +44,7 @@ export abstract class BaseType<InputType, InstanceType, MSTType extends AnyMSTTy
     return instance;
   }
 
-  abstract instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"];
+  abstract instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["OutputType"];
 }
 
 /** @hidden */

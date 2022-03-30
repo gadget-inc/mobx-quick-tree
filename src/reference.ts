@@ -11,11 +11,11 @@ export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
     super(`reference<${targetType.name}>`, types.reference(targetType.mstType));
   }
 
-  instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
     if (!snapshot || !(snapshot in context.referenceCache)) {
       throw new Error(`can't resolve reference ${snapshot}`);
     }
-    return context.referenceCache[snapshot];
+    return context.referenceCache[snapshot] as this["InstanceType"];
   }
 }
 
@@ -28,8 +28,11 @@ export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseT
     super(`safeReference<${targetType.name}>`, types.safeReference(targetType.mstType));
   }
 
-  instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
-    return context.referenceCache[snapshot];
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+    if (!snapshot) {
+      return undefined as this["InstanceType"];
+    }
+    return context.referenceCache[snapshot] as this["InstanceType"];
   }
 }
 
