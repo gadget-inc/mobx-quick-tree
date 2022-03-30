@@ -76,6 +76,10 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     );
   }
 
+  named(newName: string): ModelType<Props, Others> {
+    return new ModelType(newName, this.properties, this.initializeViewsAndActions, this.mstType);
+  }
+
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
     const instance = {} as this["InstanceType"];
 

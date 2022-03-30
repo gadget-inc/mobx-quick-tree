@@ -42,6 +42,16 @@ describe("can create", () => {
   });
 });
 
+describe("named", () => {
+  test("can rename a model", () => {
+    let model = TestModel;
+    expect(model.name).toEqual("TestModel");
+
+    model = model.named("AnotherModel");
+    expect(model.name).toEqual("AnotherModel");
+  });
+});
+
 describe("is", () => {
   test.skip("can verify a read-only instance", () => {
     // TODO currently we have MST do all of the heavy lifting for our `is` checks, but it doesn't like our map instances. Skipping this test
@@ -56,7 +66,6 @@ describe("is", () => {
 
   test("can verify an MST instance", () => {
     const value = TestModel.create(TestModelSnapshot);
-    console.info(Object.getPrototypeOf(value.map));
     expect(TestModel.is(value)).toEqual(TestModel.mstType.is(value));
     expect(TestModel.is(TestModelSnapshot)).toEqual(TestModel.mstType.is(TestModelSnapshot));
     expect(TestModel.is(true)).toEqual(TestModel.mstType.is(true));
