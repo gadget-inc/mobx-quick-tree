@@ -30,7 +30,7 @@ export class QuickArray<T, M extends IAnyMSTType> extends Array<T> implements IM
 
 export class ArrayType<T extends IAnyType> extends BaseType<
   ReadonlyArray<T["InputType"]>,
-  QuickArray<T["InstanceType"], T["mstType"]>,
+  IMSTArray<T["mstType"]>,
   IArrayType<T["mstType"]>
 > {
   constructor(readonly childrenType: T) {
