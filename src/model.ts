@@ -10,6 +10,12 @@ import type {
   QuickOrMSTInstance,
 } from "./types";
 
+const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): MSTProperties<Props> => {
+  return (
+    props ? Object.fromEntries(Object.entries(props).map(([k, v]) => [k, v.mstType])) : {}
+  ) as MSTProperties<Props>;
+};
+
 export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   ModelCreationProps<Props>,
   InstanceTypes<Props> & Others,
@@ -61,6 +67,15 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return new ModelType<Props, Others & Actions>(this.name, this.properties, init, this.mstType.actions(fn as any));
   }
 
+  props<AdditionalProps extends ModelProperties>(props: AdditionalProps): ModelType<Props & AdditionalProps, Others> {
+    return new ModelType(
+      this.name,
+      { ...this.properties, ...props },
+      this.initializeViewsAndActions,
+      this.mstType.props(mstPropsFromQuickProps(props))
+    );
+  }
+
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
     const instance = {} as this["InstanceType"];
 
@@ -94,9 +109,5 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 
 export const model = <Props extends ModelProperties>(name: string, properties?: Props) => {
   const props = properties ?? ({} as Props);
-  const mstProperties = (
-    props ? Object.fromEntries(Object.entries(props).map(([k, v]) => [k, v.mstType])) : {}
-  ) as MSTProperties<Props>;
-
-  return new ModelType(name, props, (self) => self, mstTypes.model(name, mstProperties));
+  return new ModelType(name, props, (self) => self, mstTypes.model(name, mstPropsFromQuickProps(props)));
 };

@@ -14,6 +14,22 @@ describe("can create", () => {
     expect(isStateTreeNode(m)).toEqual(false);
   });
 
+  test("a read-only instance with new props", () => {
+    const m = TestModel.props({ newThing: types.literal("COOL") }).createReadOnly({
+      ...TestModelSnapshot,
+      newThing: "COOL",
+    });
+
+    expect(m.bool).toEqual(true);
+    expect(m.notBool).toEqual(false);
+    expect(m.frozen.test).toEqual("string");
+    expect(m.nested.name).toEqual("MiXeD CaSe");
+    expect(m.nested.lowerCasedName()).toEqual("mixed case");
+    expect(m.nested.upperCasedName()).toEqual("MIXED CASE");
+    expect(m.newThing).toEqual("COOL");
+    expect(isStateTreeNode(m)).toEqual(false);
+  });
+
   test("an MST instance", () => {
     const m = TestModel.create(TestModelSnapshot);
     expect(m.bool).toEqual(true);
