@@ -35,7 +35,7 @@ describe("getRoot", () => {
     });
 
     const instance = model.createReadOnly({ others: { key: { tests: [TestModelSnapshot] } } });
-    expect(getRoot(Object.values(instance.others)[0].tests[0])).toEqual(instance);
+    expect(getRoot(Array.from(instance.others.values())[0].tests[0])).toEqual(instance);
   });
 });
 
