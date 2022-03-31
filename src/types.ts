@@ -75,7 +75,7 @@ export type IReferenceType<T extends IAnyComplexType> = IType<
 >;
 
 export type IOptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> = IType<
-  T["InputType"] | OptionalValues,
+  T["InputType"] | OptionalValues[number],
   T["InstanceType"],
   T["mstType"]
 >;
