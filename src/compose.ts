@@ -1,25 +1,25 @@
 import { types as mstTypes } from "mobx-state-tree";
 import { ModelType } from "./model";
-import type { IAnyModelType } from "./types";
+import type { IAnyModelType, IModelType } from "./types";
 
-type PropsFromTypes<T> = T extends ModelType<infer P, any>
+type PropsFromTypes<T> = T extends IModelType<infer P, any>
   ? P
-  : T extends [ModelType<infer P, any>, ...infer Tail]
+  : T extends [IModelType<infer P, any>, ...infer Tail]
   ? P & PropsFromTypes<Tail>
   : {};
 
-type OthersFromTypes<T> = T extends ModelType<any, infer O>
+type OthersFromTypes<T> = T extends IModelType<any, infer O>
   ? O
-  : T extends [ModelType<any, infer O>, ...infer Tail]
+  : T extends [IModelType<any, infer O>, ...infer Tail]
   ? O & OthersFromTypes<Tail>
   : {};
 
 type ComposeFactory = {
-  <Types extends [IAnyModelType, ...IAnyModelType[]]>(name: string, ...types: Types): ModelType<
+  <Types extends [IAnyModelType, ...IAnyModelType[]]>(name: string, ...types: Types): IModelType<
     PropsFromTypes<Types>,
     OthersFromTypes<Types>
   >;
-  <Types extends [IAnyModelType, ...IAnyModelType[]]>(...types: Types): ModelType<
+  <Types extends [IAnyModelType, ...IAnyModelType[]]>(...types: Types): IModelType<
     PropsFromTypes<Types>,
     OthersFromTypes<Types>
   >;
@@ -28,27 +28,26 @@ type ComposeFactory = {
 export const compose: ComposeFactory = <Types extends [IAnyModelType, ...IAnyModelType[]]>(
   nameOrType: IAnyModelType | string,
   ...types: Types
-): ModelType<PropsFromTypes<Types>, OthersFromTypes<Types>> => {
+): IModelType<PropsFromTypes<Types>, OthersFromTypes<Types>> => {
   let name: string | undefined = undefined;
-  if (nameOrType instanceof ModelType) {
+  if (typeof nameOrType == "string") {
+    name = nameOrType;
+  } else {
     types.unshift(nameOrType);
     name = nameOrType.name;
-  } else {
-    name = nameOrType;
   }
 
   const props = types.reduce((props, model) => ({ ...props, ...model.properties }), {});
   const initializer = (self: any) => {
     for (const type of types) {
-      type.initializeViewsAndActions(self);
+      // TODO see if there's a good way to not have to do this cast
+      (type as any).initializeViewsAndActions(self);
     }
   };
 
   // We ignore the overloading MST has put on compose, to avoid writing out an annoying `switch`
   const mstComposedModel = (mstTypes.compose as any)(name, ...types.map((t) => t.mstType));
 
-  return new ModelType(name, props, initializer, mstComposedModel) as ModelType<
-    PropsFromTypes<Types>,
-    OthersFromTypes<Types>
-  >;
+  // TODO see if there's a good way to not have to do this cast
+  return new ModelType(name, props, initializer, mstComposedModel) as any;
 };

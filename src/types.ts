@@ -6,6 +6,7 @@ import {
   IMapType as MSTMapType,
   IMaybe as MSTMaybeType,
   IMaybeNull as MSTMaybeNullType,
+  IModelType as MSTModelType,
   Instance as MSTInstance,
   IReferenceType as MSTReferenceType,
   ISimpleType as MSTSimpleType,
@@ -14,7 +15,6 @@ import {
   SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
 import { ExtractCSTWithSTN } from "mobx-state-tree/dist/internal";
-import { ModelType } from "./model";
 import { $quickType, $type } from "./symbols";
 
 export { IStateTreeNode as MSTStateTreeNode, ModelPropertiesDeclaration, ReferenceOptions } from "mobx-state-tree";
@@ -74,10 +74,10 @@ export interface IType<InputType, OutputType, MSTType extends AnyMSTType> {
 
   is(value: any): value is QuickOrMSTInstance<this>;
   create(snapshot?: InputType, env?: any): MSTInstance<MSTType>;
-  createReadOnly(snapshot?: InputType): OutputType;
+  createReadOnly(snapshot?: InputType): this["InstanceType"];
 
   /** @hidden */
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): OutputType;
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"];
 }
 
 export type ValidOptionalValue = string | boolean | number | null | undefined;
@@ -85,10 +85,28 @@ export type FuncOrValue<T> = T | (() => T);
 export type Primitives = string | number | boolean | Date | null | undefined;
 
 export type IAnyType = IType<any, any, AnyMSTType>;
-export type IAnyComplexType = IType<any, any, AnyComplexMSTType>;
-export type IModelType<Props extends ModelProperties, Others> = ModelType<Props, Others>;
-export type IAnyModelType = IModelType<any, any>;
 export type ISimpleType<T> = IType<T, T, MSTSimpleType<T>>;
+export type IAnyComplexType = IType<any, any, AnyComplexMSTType>;
+
+export interface IModelType<Props extends ModelProperties, Others>
+  extends IType<ModelCreationProps<Props>, InstanceTypes<Props> & Others, MSTModelType<MSTProperties<Props>, Others>> {
+  readonly properties: Props;
+
+  named(newName: string): IModelType<Props, Others>;
+  props<Props2 extends ModelProperties>(props: Props2): IModelType<Props & Props2, Others>;
+  views<V extends Record<string, unknown>>(fn: (self: Instance<this>) => V): IModelType<Props, Others & V>;
+  actions<A extends ModelActions>(fn: (self: Instance<this>) => A): IModelType<Props, Others & A>;
+
+  // TODO
+  // volatile<TP extends object>(fn: (self: Instance<this>) => TP): IModelType<Props, Others & TP>;
+  // extend<A extends ModelActions = {}, V extends Object = {}, VS extends Object = {}>(fn: (self: Instance<this>) => {
+  //     actions?: A;
+  //     views?: V;
+  //     state?: VS;
+  // }): IModelType<Props, Others & A & V & VS>;
+}
+
+export type IAnyModelType = IModelType<any, any>;
 
 export type IMaybeType<T extends IAnyType> = IType<
   T["InputType"] | undefined,
@@ -139,7 +157,10 @@ export type SnapshotOrInstance<T> = T extends IAnyType
   ? MSTSnapshotOrInstance<T>
   : T;
 
-export type ModelProperties = Record<string, IAnyType>;
+export interface ModelProperties {
+  [key: string]: IAnyType;
+}
+
 export type ModelActions = Record<string, Function>;
 
 export type ModelCreationProps<T extends ModelProperties> = {

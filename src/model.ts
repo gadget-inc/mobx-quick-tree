@@ -1,7 +1,8 @@
-import { IModelType, Instance, isReferenceType, types as mstTypes, types } from "mobx-state-tree";
+import { IModelType as MSTModelType, Instance, isReferenceType, types as mstTypes, types } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
 import { $identifier, $modelType } from "./symbols";
 import type {
+  IModelType,
   InstanceTypes,
   InstantiateContext,
   ModelActions,
@@ -20,7 +21,7 @@ const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): MS
 export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   ModelCreationProps<Props>,
   InstanceTypes<Props> & Others,
-  IModelType<MSTProperties<Props>, Others>
+  MSTModelType<MSTProperties<Props>, Others>
 > {
   readonly [$modelType] = undefined;
   readonly Props!: Props;
@@ -33,7 +34,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     name: string,
     readonly properties: Props,
     readonly initializeViewsAndActions: (self: any) => any,
-    mstModel: IModelType<MSTProperties<Props>, Others>
+    mstModel: MSTModelType<MSTProperties<Props>, Others>
   ) {
     super(name, mstModel);
     this.identifierProp = Object.keys(this.properties).find((name) => properties[name].mstType === types.identifier);
@@ -113,8 +114,8 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 }
 
 export type ModelFactory = {
-  <Props extends ModelProperties>(properties?: Props): ModelType<Props, {}>;
-  <Props extends ModelProperties>(name: string, properties?: Props): ModelType<Props, {}>;
+  <Props extends ModelProperties>(properties?: Props): IModelType<Props, {}>;
+  <Props extends ModelProperties>(name: string, properties?: Props): IModelType<Props, {}>;
 };
 
 export const model: ModelFactory = <Props extends ModelProperties>(
