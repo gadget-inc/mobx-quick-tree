@@ -112,7 +112,23 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   }
 }
 
-export const model = <Props extends ModelProperties>(name: string, properties?: Props) => {
-  const props = properties ?? ({} as Props);
+export type ModelFactory = {
+  <Props extends ModelProperties>(properties?: Props): ModelType<Props, {}>;
+  <Props extends ModelProperties>(name: string, properties?: Props): ModelType<Props, {}>;
+};
+
+export const model: ModelFactory = <Props extends ModelProperties>(
+  nameOrProperties: string | Props | undefined,
+  properties?: Props
+) => {
+  let props: Props;
+  let name = "model";
+  if (typeof nameOrProperties === "string") {
+    name = nameOrProperties;
+    props = properties ?? ({} as Props);
+  } else {
+    props = nameOrProperties ?? ({} as Props);
+  }
+
   return new ModelType(name, props, (self) => self, mstTypes.model(name, mstPropsFromQuickProps(props)));
 };
