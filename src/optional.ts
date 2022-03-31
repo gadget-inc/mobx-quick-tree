@@ -1,5 +1,5 @@
-import { BaseType, InstantiateContext } from "./base";
-import type { FuncOrValue, IAnyType, ValidOptionalValue } from "./types";
+import { BaseType } from "./base";
+import type { FuncOrValue, IAnyType, InstantiateContext, ValidOptionalValue } from "./types";
 
 export class OptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> extends BaseType<
   T["InputType"] | OptionalValues[number],

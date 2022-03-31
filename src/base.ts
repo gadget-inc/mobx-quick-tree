@@ -1,15 +1,10 @@
 import type { IAnyType as AnyMSTType, Instance } from "mobx-state-tree";
 import { $parent, $quickType, $type } from "./symbols";
-import type { IAnyComplexType, IAnyType, QuickOrMSTInstance, StateTreeNode } from "./types";
-
-/** @hidden */
-export interface InstantiateContext {
-  referenceCache: StateTreeNode<Record<string, object>, IAnyComplexType>;
-  referencesToResolve: (() => void)[];
-}
+import type { IAnyType, InstantiateContext, QuickOrMSTInstance, StateTreeNode } from "./types";
 
 export abstract class BaseType<InputType, OutputType, MSTType extends AnyMSTType> {
-  readonly [$quickType]: undefined;
+  readonly [$quickType] = undefined;
+
   readonly InputType!: InputType;
   readonly OutputType!: OutputType;
   readonly InstanceType!: StateTreeNode<OutputType, this>;

@@ -1,6 +1,6 @@
 import { IMaybe, IReferenceType, types } from "mobx-state-tree";
-import { BaseType, InstantiateContext } from "./base";
-import type { IAnyComplexType } from "./types";
+import { BaseType } from "./base";
+import type { IAnyComplexType, InstantiateContext } from "./types";
 
 export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
   string,

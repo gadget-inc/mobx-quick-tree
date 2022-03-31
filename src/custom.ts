@@ -1,5 +1,6 @@
 import { CustomTypeOptions, IType, types } from "mobx-state-tree";
-import { BaseType, InstantiateContext } from "./base";
+import { BaseType } from "./base";
+import type { InstantiateContext } from "./types";
 
 export class CustomType<InputType, OutputType> extends BaseType<
   InputType,
@@ -10,7 +11,7 @@ export class CustomType<InputType, OutputType> extends BaseType<
     super(options.name, types.custom<InputType, OutputType>(options));
   }
 
-  instantiate(snapshot: this["InputType"], context: InstantiateContext): this["OutputType"] {
+  instantiate(snapshot: this["InputType"], _context: InstantiateContext): this["OutputType"] {
     if (snapshot === undefined) {
       throw new Error("can't initialize custom type with undefined");
     }

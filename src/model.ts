@@ -1,8 +1,9 @@
 import { IModelType, Instance, isReferenceType, types as mstTypes, types } from "mobx-state-tree";
-import { BaseType, InstantiateContext, setParent, setType } from "./base";
+import { BaseType, setParent, setType } from "./base";
 import { $identifier, $modelType } from "./symbols";
 import type {
   InstanceTypes,
+  InstantiateContext,
   ModelActions,
   ModelCreationProps,
   ModelProperties,

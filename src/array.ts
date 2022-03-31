@@ -1,6 +1,6 @@
 import { IAnyType as IAnyMSTType, IArrayType, IMSTArray, types } from "mobx-state-tree";
-import { BaseType, InstantiateContext, setParent, setType } from "./base";
-import type { IAnyType } from "./types";
+import { BaseType, setParent, setType } from "./base";
+import type { IAnyType, InstantiateContext } from "./types";
 
 export class QuickArray<T, M extends IAnyMSTType> extends Array<T> implements IMSTArray<M> {
   static get [Symbol.species]() {

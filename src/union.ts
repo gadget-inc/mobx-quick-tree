@@ -1,7 +1,8 @@
 import { types as mstTypes, UnionOptions } from "mobx-state-tree";
-import { BaseType, InstantiateContext } from "./base";
+import { BaseType } from "./base";
 import { literal } from "./simple";
-import type { IAnyType } from "./types";
+import { $quickType } from "./symbols";
+import type { IAnyType, InstantiateContext } from "./types";
 
 export class UnionType<Types extends IAnyType[]> extends BaseType<
   Types[number]["InputType"],
@@ -33,11 +34,12 @@ export const union: UnionFactory = <Types extends [IAnyType, ...IAnyType[]]>(
   optionsOrType: IAnyType | UnionOptions,
   ...types: Types
 ): UnionType<Types> => {
-  let options;
-  if (optionsOrType instanceof BaseType) {
-    types.unshift(optionsOrType);
+  // TODO figure out why this isn't narrowing
+  let options: UnionOptions = {};
+  if ($quickType in optionsOrType) {
+    types.unshift(optionsOrType as IAnyType);
   } else {
-    options = optionsOrType;
+    options = optionsOrType as UnionOptions;
   }
   return new UnionType(types, options);
 };

@@ -12,6 +12,12 @@ import { $quickType, $type } from "./symbols";
 
 export { IArrayType, IMapType, IMSTArray, ModelPropertiesDeclaration, ReferenceOptions } from "mobx-state-tree";
 
+/** @hidden */
+export interface InstantiateContext {
+  referenceCache: StateTreeNode<Record<string, object>, IAnyComplexType>;
+  referencesToResolve: (() => void)[];
+}
+
 export interface IType<InputType, OutputType, MSTType extends AnyMSTType> {
   readonly [$quickType]: undefined;
 
@@ -25,6 +31,7 @@ export interface IType<InputType, OutputType, MSTType extends AnyMSTType> {
   is(value: any): value is QuickOrMSTInstance<this>;
   create(snapshot?: InputType, env?: any): MSTInstance<MSTType>;
   createReadOnly(snapshot?: InputType): OutputType;
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): OutputType;
 }
 
 export type ValidOptionalValue = string | boolean | number | null | undefined;

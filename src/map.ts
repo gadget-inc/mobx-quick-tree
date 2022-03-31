@@ -1,9 +1,9 @@
 import { IInterceptor, IKeyValueMap, IMapDidChange, IMapWillChange, Lambda } from "mobx";
 import { IAnyType as IAnyMSTType, IMapType, IMSTMap, types } from "mobx-state-tree";
 import { ExtractCSTWithSTN } from "mobx-state-tree/dist/internal";
-import { BaseType, InstantiateContext, setParent, setType } from "./base";
+import { BaseType, setParent, setType } from "./base";
 import { $identifier } from "./symbols";
-import type { IAnyType } from "./types";
+import type { IAnyType, InstantiateContext } from "./types";
 
 export class QuickMap<T, M extends IAnyMSTType> extends Map<string, T> implements IMSTMap<M> {
   static get [Symbol.species]() {

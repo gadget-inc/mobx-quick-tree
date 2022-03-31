@@ -1,6 +1,6 @@
 import { ISimpleType, SnapshotIn, types } from "mobx-state-tree";
-import { BaseType, InstantiateContext } from "./base";
-import type { Primitives } from "./types";
+import { BaseType } from "./base";
+import type { InstantiateContext, Primitives } from "./types";
 
 export class SimpleType<T> extends BaseType<T, T, ISimpleType<T>> {
   static for<MSTType extends ISimpleType<any>>(mstType: MSTType): SimpleType<SnapshotIn<MSTType>> {

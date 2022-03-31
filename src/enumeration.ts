@@ -1,5 +1,6 @@
 import { ISimpleType, types, UnionStringArray } from "mobx-state-tree";
-import { BaseType, InstantiateContext } from "./base";
+import { BaseType } from "./base";
+import type { InstantiateContext } from "./types";
 
 export class EnumerationType<EnumOptions extends string> extends BaseType<
   EnumOptions,
