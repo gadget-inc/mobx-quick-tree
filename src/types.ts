@@ -3,6 +3,8 @@ import {
   IAnyType as AnyMSTType,
   IArrayType as MSTArrayType,
   IMapType as MSTMapType,
+  IMaybe as MSTMaybeType,
+  IMaybeNull as MSTMaybeNullType,
   IMSTArray,
   IMSTMap,
   Instance as MSTInstance,
@@ -16,6 +18,7 @@ import { $quickType, $type } from "./symbols";
 
 export {
   IMSTArray,
+  IMSTMap,
   IStateTreeNode as MSTStateTreeNode,
   ModelPropertiesDeclaration,
   ReferenceOptions,
@@ -52,6 +55,19 @@ export type IAnyComplexType = IType<any, any, AnyComplexMSTType>;
 export type IModelType<Props extends ModelProperties, Others> = ModelType<Props, Others>;
 export type IAnyModelType = IModelType<any, any>;
 export type ISimpleType<T> = IType<T, T, MSTSimpleType<T>>;
+
+export type IMaybeType<T extends IAnyType> = IType<
+  T["InputType"] | undefined,
+  T["InstanceType"] | undefined,
+  MSTMaybeType<T["mstType"]>
+>;
+
+export type IMaybeNullType<T extends IAnyType> = IType<
+  T["InputType"] | null,
+  T["InstanceType"] | null,
+  MSTMaybeNullType<T["mstType"]>
+>;
+
 export type IReferenceType<T extends IAnyComplexType> = IType<
   string,
   T["InstanceType"],
