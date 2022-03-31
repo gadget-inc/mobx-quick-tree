@@ -17,7 +17,12 @@ import {
 import { ExtractCSTWithSTN } from "mobx-state-tree/dist/internal";
 import { $quickType, $type } from "./symbols";
 
-export { IStateTreeNode as MSTStateTreeNode, ModelPropertiesDeclaration, ReferenceOptions } from "mobx-state-tree";
+export {
+  IStateTreeNode as MSTStateTreeNode,
+  ModelPropertiesDeclaration,
+  ReferenceOptions,
+  UnionOptions,
+} from "mobx-state-tree";
 
 export interface IMSTArray<T extends IAnyType> extends Array<QuickOrMSTInstance<T>> {
   clear(): QuickOrMSTInstance<T>[];
@@ -182,3 +187,9 @@ export interface IQuickTreeNode<T extends IAnyType = IAnyType> {
 export type StateTreeNode<T, IT extends IAnyType> = T extends object ? T & IStateTreeNode<IT> : T;
 export type IStateTreeNode<T extends IAnyType = IAnyType> = IQuickTreeNode<T> | IMSTStateTreeNode<T["mstType"]>;
 export interface IAnyStateTreeNode extends StateTreeNode<any, IAnyType> {}
+
+export type IUnionType<Types extends [...IAnyType[]]> = IType<
+  Types[number]["InputType"],
+  Types[number]["OutputType"],
+  Types[number]["mstType"]
+>;

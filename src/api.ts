@@ -9,7 +9,7 @@ import {
   isRoot as mstIsRoot,
   isStateTreeNode,
 } from "mobx-state-tree";
-import { $parent, $type } from "./symbols";
+import { $parent, $quickType, $type } from "./symbols";
 import type { IAnyComplexType, IAnyType, IStateTreeNode, QuickOrMSTInstance } from "./types";
 
 export {
@@ -47,6 +47,10 @@ export {
   typecheck,
   walk,
 } from "mobx-state-tree";
+
+export const isType = (value: any): value is IAnyType => {
+  return $quickType in value;
+};
 
 export const getParent = <T extends IAnyType>(value: any, depth = 1): QuickOrMSTInstance<T> => {
   if (isStateTreeNode(value)) {

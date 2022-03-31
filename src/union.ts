@@ -1,8 +1,7 @@
 import { types as mstTypes, UnionOptions } from "mobx-state-tree";
 import { BaseType } from "./base";
 import { literal } from "./simple";
-import { $quickType } from "./symbols";
-import type { IAnyType, InstantiateContext } from "./types";
+import type { IAnyType, InstantiateContext, IUnionType } from "./types";
 
 export class UnionType<Types extends IAnyType[]> extends BaseType<
   Types[number]["InputType"],
@@ -25,23 +24,12 @@ export class UnionType<Types extends IAnyType[]> extends BaseType<
   }
 }
 
-type UnionFactory = {
-  <Types extends [IAnyType, ...IAnyType[]]>(options: UnionOptions, ...types: Types): UnionType<Types>;
-  <Types extends [IAnyType, ...IAnyType[]]>(...types: Types): UnionType<Types>;
+export const union = <Types extends [IAnyType, ...IAnyType[]]>(...types: Types): IUnionType<Types> => {
+  return new UnionType(types);
 };
 
-export const union: UnionFactory = <Types extends [IAnyType, ...IAnyType[]]>(
-  optionsOrType: IAnyType | UnionOptions,
-  ...types: Types
-): UnionType<Types> => {
-  // TODO figure out why this isn't narrowing
-  let options: UnionOptions = {};
-  if ($quickType in optionsOrType) {
-    types.unshift(optionsOrType as IAnyType);
-  } else {
-    options = optionsOrType as UnionOptions;
-  }
-  return new UnionType(types, options);
+export const eagerUnion = <Types extends [IAnyType, ...IAnyType[]]>(...types: Types): IUnionType<Types> => {
+  return new UnionType(types, { eager: true });
 };
 
 export const maybe = <T extends IAnyType>(type: T) => {
