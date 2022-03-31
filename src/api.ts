@@ -9,7 +9,7 @@ import {
   isStateTreeNode,
 } from "mobx-state-tree";
 import { $parent, $type } from "./symbols";
-import type { IAnyComplexType, IAnyType } from "./types";
+import type { IAnyComplexType, IAnyType, Instance } from "./types";
 
 export {
   addDisposer,
@@ -48,7 +48,7 @@ export {
   walk,
 } from "mobx-state-tree";
 
-export const getParent = (value: any, depth = 1): Record<string, unknown> | undefined => {
+export const getParent = <T extends IAnyType>(value: any, depth = 1): Instance<T> => {
   if (isStateTreeNode(value)) {
     return mstGetParent(value, depth);
   }
@@ -65,7 +65,7 @@ export const getParent = (value: any, depth = 1): Record<string, unknown> | unde
   return value;
 };
 
-export const getParentOfType = <T extends IAnyComplexType>(value: any, type: T): T["InstanceType"] => {
+export const getParentOfType = <T extends IAnyComplexType>(value: any, type: T): Instance<T> => {
   if (isStateTreeNode(value)) {
     return mstGetParentOfType(value, type.mstType);
   }
@@ -84,7 +84,7 @@ export const getParentOfType = <T extends IAnyComplexType>(value: any, type: T):
   return value;
 };
 
-export const getRoot = (value: any): Record<string, unknown> | undefined => {
+export const getRoot = <T extends IAnyType>(value: any): Instance<T> => {
   if (isStateTreeNode(value)) {
     return mstGetRoot(value);
   }
