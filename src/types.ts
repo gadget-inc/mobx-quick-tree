@@ -14,7 +14,12 @@ import {
 import { ModelType } from "./model";
 import { $quickType, $type } from "./symbols";
 
-export { IMSTArray, ModelPropertiesDeclaration, ReferenceOptions } from "mobx-state-tree";
+export {
+  IMSTArray,
+  IStateTreeNode as MSTStateTreeNode,
+  ModelPropertiesDeclaration,
+  ReferenceOptions,
+} from "mobx-state-tree";
 
 /** @hidden */
 export interface InstantiateContext {
@@ -47,7 +52,11 @@ export type IAnyComplexType = IType<any, any, AnyComplexMSTType>;
 export type IModelType<Props extends ModelProperties, Others> = ModelType<Props, Others>;
 export type IAnyModelType = IModelType<any, any>;
 export type ISimpleType<T> = IType<T, T, MSTSimpleType<T>>;
-export type IReferenceType<T extends IAnyComplexType> = IType<string, string, MSTReferenceType<T["mstType"]>>;
+export type IReferenceType<T extends IAnyComplexType> = IType<
+  string,
+  T["InstanceType"],
+  MSTReferenceType<T["mstType"]>
+>;
 
 export type IOptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> = IType<
   T["InputType"] | OptionalValues,
