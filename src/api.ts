@@ -2,6 +2,7 @@ import {
   getParent as mstGetParent,
   getParentOfType as mstGetParentOfType,
   getRoot as mstGetRoot,
+  getSnapshot as mstGetSnapshot,
   isArrayType as mstIsArrayType,
   isMapType as mstIsMapType,
   isModelType as mstIsModelType,
@@ -9,7 +10,7 @@ import {
   isStateTreeNode,
 } from "mobx-state-tree";
 import { $parent, $type } from "./symbols";
-import type { IAnyComplexType, IAnyType, Instance } from "./types";
+import type { IAnyComplexType, IAnyType, Instance, IStateTreeNode } from "./types";
 
 export {
   addDisposer,
@@ -27,7 +28,6 @@ export {
   getIdentifier,
   getPath,
   getPathParts,
-  getSnapshot,
   getType,
   hasParent,
   isActionContextThisOrChildOf,
@@ -79,6 +79,14 @@ export const getParentOfType = <T extends IAnyComplexType>(value: any, type: T):
 
   if (!value) {
     throw new Error("failed to get parent");
+  }
+
+  return value;
+};
+
+export const getSnapshot = <T extends IAnyType>(value: IStateTreeNode<T>): T["OutputType"] => {
+  if (isStateTreeNode(value)) {
+    return mstGetSnapshot(value);
   }
 
   return value;

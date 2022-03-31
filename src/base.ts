@@ -26,7 +26,7 @@ export abstract class BaseType<InputType, OutputType, MSTType extends AnyMSTType
     return this.mstType.is(value);
   }
 
-  createReadOnly(snapshot?: InputType): OutputType {
+  createReadOnly(snapshot?: InputType): this["InstanceType"] {
     const context: InstantiateContext = {
       referenceCache: {},
       referencesToResolve: [],
@@ -39,7 +39,7 @@ export abstract class BaseType<InputType, OutputType, MSTType extends AnyMSTType
     return instance;
   }
 
-  abstract instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["OutputType"];
+  abstract instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"];
 }
 
 /** @hidden */

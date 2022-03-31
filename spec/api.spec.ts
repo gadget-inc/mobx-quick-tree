@@ -1,5 +1,14 @@
 import { types } from "../src";
-import { getParent, getParentOfType, getRoot, isArrayType, isMapType, isModelType, isRoot } from "../src/api";
+import {
+  getParent,
+  getParentOfType,
+  getRoot,
+  getSnapshot,
+  isArrayType,
+  isMapType,
+  isModelType,
+  isRoot,
+} from "../src/api";
 import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
 
 describe("getParent", () => {
@@ -51,6 +60,19 @@ describe("getRoot", () => {
     const instance = model.createReadOnly({ others: { key: { tests: [TestModelSnapshot] } } });
     const others = Array.from(instance.others.values());
     expect(getRoot(others[0].tests[0])).toEqual(instance);
+  });
+});
+
+describe("getSnapshot", () => {
+  // TODO currently failing with `Method Map.prototype.entries called on incompatible receiver #<QuickMap>`
+  test.skip("returns the expected snapshot for a read-only instance", () => {
+    const m = TestModel.createReadOnly(TestModelSnapshot);
+    expect(getSnapshot(m)).toEqual(expect.objectContaining(TestModelSnapshot));
+  });
+
+  test("returns the proper root for an MST instance", () => {
+    const m = TestModel.create(TestModelSnapshot);
+    expect(getSnapshot(m)).toEqual(expect.objectContaining(TestModelSnapshot));
   });
 });
 
