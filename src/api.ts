@@ -10,7 +10,7 @@ import {
   isStateTreeNode,
 } from "mobx-state-tree";
 import { $parent, $type } from "./symbols";
-import type { IAnyComplexType, IAnyType, Instance, IStateTreeNode } from "./types";
+import type { IAnyComplexType, IAnyType, IStateTreeNode, QuickOrMSTInstance } from "./types";
 
 export {
   addDisposer,
@@ -48,7 +48,7 @@ export {
   walk,
 } from "mobx-state-tree";
 
-export const getParent = <T extends IAnyType>(value: any, depth = 1): Instance<T> => {
+export const getParent = <T extends IAnyType>(value: any, depth = 1): QuickOrMSTInstance<T> => {
   if (isStateTreeNode(value)) {
     return mstGetParent(value, depth);
   }
@@ -65,7 +65,7 @@ export const getParent = <T extends IAnyType>(value: any, depth = 1): Instance<T
   return value;
 };
 
-export const getParentOfType = <T extends IAnyComplexType>(value: any, type: T): Instance<T> => {
+export const getParentOfType = <T extends IAnyComplexType>(value: any, type: T): QuickOrMSTInstance<T> => {
   if (isStateTreeNode(value)) {
     return mstGetParentOfType(value, type.mstType);
   }
@@ -92,7 +92,7 @@ export const getSnapshot = <T extends IAnyType>(value: IStateTreeNode<T>): T["Ou
   return value;
 };
 
-export const getRoot = <T extends IAnyType>(value: any): Instance<T> => {
+export const getRoot = <T extends IAnyType>(value: any): QuickOrMSTInstance<T> => {
   if (isStateTreeNode(value)) {
     return mstGetRoot(value);
   }

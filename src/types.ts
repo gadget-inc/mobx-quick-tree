@@ -11,6 +11,7 @@ import {
   IReferenceType as MSTReferenceType,
   ISimpleType as MSTSimpleType,
   IStateTreeNode as IMSTStateTreeNode,
+  SnapshotOrInstance as MSTSnapshotOrInstance,
   SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
 import { ModelType } from "./model";
@@ -94,9 +95,14 @@ export type IArrayType<T extends IAnyType> = IType<
 
 export type SnapshotIn<T extends IAnyType> = T["InputType"];
 export type SnapshotOut<T extends IAnyType> = MSTSnapshotOut<T["mstType"]>;
-export type Instance<T extends IAnyType> = T["InstanceType"];
-export type SnapshotOrInstance<T extends IAnyType> = T["InputType"] | T["InstanceType"];
+export type Instance<T> = T extends IAnyType ? T["InstanceType"] : T;
 export type QuickOrMSTInstance<T extends IAnyType> = T["InstanceType"] | MSTInstance<T["mstType"]>;
+
+export type SnapshotOrInstance<T> = T extends IAnyType
+  ? T["InputType"] | T["InstanceType"]
+  : T extends AnyMSTType
+  ? MSTSnapshotOrInstance<T>
+  : never;
 
 export type ModelProperties = {
   [key: string]: IAnyType;
