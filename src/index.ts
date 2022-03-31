@@ -11,7 +11,7 @@ import { optional } from "./optional";
 import { reference, safeReference } from "./reference";
 import { refinement } from "./refinement";
 import { literal, SimpleType } from "./simple";
-import { eagerUnion, maybe, maybeNull, union } from "./union";
+import { lazyUnion, maybe, maybeNull, union } from "./union";
 
 export * from "./api";
 export * from "./types";
@@ -28,10 +28,10 @@ export const types = {
   array,
   compose,
   custom,
-  eagerUnion,
   enumeration,
   frozen,
   late,
+  lazyUnion,
   literal,
   map,
   maybe,

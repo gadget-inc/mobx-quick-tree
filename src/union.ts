@@ -29,8 +29,8 @@ export const union = <Types extends [IAnyType, ...IAnyType[]]>(...types: Types):
   return new UnionType(types);
 };
 
-export const eagerUnion = <Types extends [IAnyType, ...IAnyType[]]>(...types: Types): IUnionType<Types> => {
-  return new UnionType(types, { eager: true });
+export const lazyUnion = <Types extends [IAnyType, ...IAnyType[]]>(...types: Types): IUnionType<Types> => {
+  return new UnionType(types, { eager: false });
 };
 
 export const maybe = <T extends IAnyType>(type: T): IMaybeType<T> => {

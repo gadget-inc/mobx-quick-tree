@@ -113,7 +113,7 @@ describe("union", () => {
   });
 
   test("can create an eager, read-only instance", () => {
-    const unionType = types.eagerUnion(types.literal("value 1"), types.literal("value 2"));
+    const unionType = types.lazyUnion(types.literal("value 1"), types.literal("value 2"));
     expect(unionType.createReadOnly("value 1")).toEqual("value 1");
     expect(unionType.createReadOnly("value 2")).toEqual("value 2");
     expect(() => unionType.createReadOnly("value 3" as any)).toThrow();
