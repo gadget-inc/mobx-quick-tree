@@ -96,14 +96,14 @@ export interface IModelType<Props extends ModelProperties, Others>
   props<Props2 extends ModelProperties>(props: Props2): IModelType<Props & Props2, Others>;
   views<V extends Record<string, unknown>>(fn: (self: Instance<this>) => V): IModelType<Props, Others & V>;
   actions<A extends ModelActions>(fn: (self: Instance<this>) => A): IModelType<Props, Others & A>;
-
-  // TODO
-  // volatile<TP extends object>(fn: (self: Instance<this>) => TP): IModelType<Props, Others & TP>;
-  // extend<A extends ModelActions = {}, V extends Object = {}, VS extends Object = {}>(fn: (self: Instance<this>) => {
-  //     actions?: A;
-  //     views?: V;
-  //     state?: VS;
-  // }): IModelType<Props, Others & A & V & VS>;
+  volatile<TP extends object>(fn: (self: Instance<this>) => TP): IModelType<Props, Others & TP>;
+  extend<A extends ModelActions = {}, V extends Object = {}, VS extends Object = {}>(
+    fn: (self: Instance<this>) => {
+      actions?: A;
+      views?: V;
+      state?: VS;
+    }
+  ): IModelType<Props, Others & A & V & VS>;
 }
 
 export type IAnyModelType = IModelType<any, any>;

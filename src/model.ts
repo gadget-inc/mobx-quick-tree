@@ -82,6 +82,22 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return new ModelType(newName, this.properties, this.initializeViewsAndActions, this.mstType);
   }
 
+  volatile<TP extends object>(fn: (self: QuickOrMSTInstance<this>) => TP): IModelType<Props, Others & TP> {
+    // TODO implement me
+    return null as any;
+  }
+
+  extend<A extends ModelActions = {}, V extends Object = {}, VS extends Object = {}>(
+    fn: (self: QuickOrMSTInstance<this>) => {
+      actions?: A;
+      views?: V;
+      state?: VS;
+    }
+  ): IModelType<Props, Others & A & V & VS> {
+    // TODO implement me
+    return null as any;
+  }
+
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
     const instance = {} as this["InstanceType"];
 
