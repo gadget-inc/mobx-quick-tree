@@ -25,10 +25,10 @@ type ComposeFactory = {
   >;
 };
 
-export const compose: ComposeFactory = <Types extends [IAnyModelType, ...IAnyModelType[]]>(
+export const compose: ComposeFactory = (
   nameOrType: IAnyModelType | string,
-  ...types: Types
-): IModelType<PropsFromTypes<Types>, OthersFromTypes<Types>> => {
+  ...types: IAnyModelType[]
+): IAnyModelType => {
   let name: string | undefined = undefined;
   if (typeof nameOrType == "string") {
     name = nameOrType;
