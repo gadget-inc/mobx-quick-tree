@@ -1,27 +1,43 @@
-import type {
+import {
   IAnyComplexType as AnyComplexMSTType,
   IAnyType as AnyMSTType,
   Instance as MSTInstance,
+  IReferenceType as MSTReferenceType,
   ISimpleType as MSTSimpleType,
   IStateTreeNode as IMSTStateTreeNode,
   SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
-import { BaseType } from "./base";
 import { ModelType } from "./model";
-import { $type } from "./symbols";
+import { $quickType, $type } from "./symbols";
 
-export { IMSTArray, ModelPropertiesDeclaration } from "mobx-state-tree";
+export { IArrayType, IMapType, IMSTArray, ModelPropertiesDeclaration, ReferenceOptions } from "mobx-state-tree";
+
+export interface IType<InputType, OutputType, MSTType extends AnyMSTType> {
+  readonly [$quickType]: undefined;
+
+  readonly InputType: InputType;
+  readonly OutputType: OutputType;
+  readonly InstanceType: StateTreeNode<OutputType, this>;
+
+  readonly name: string;
+  readonly mstType: AnyMSTType;
+
+  is(value: any): value is QuickOrMSTInstance<this>;
+  create(snapshot?: InputType, env?: any): MSTInstance<MSTType>;
+  createReadOnly(snapshot?: InputType): OutputType;
+}
 
 export type ValidOptionalValue = string | boolean | number | null | undefined;
 export type FuncOrValue<T> = T | (() => T);
 export type Primitives = string | number | boolean | Date | null | undefined;
 
-export type IAnyType = BaseType<any, any, AnyMSTType>;
-export type IAnyComplexType = BaseType<any, any, AnyComplexMSTType>;
+export type IAnyType = IType<any, any, AnyMSTType>;
+export type IAnyComplexType = IType<any, any, AnyComplexMSTType>;
 export type IModelType<Props extends ModelProperties, Others> = ModelType<Props, Others>;
 export type IAnyModelType = IModelType<any, any>;
-export type ISimpleType<T> = BaseType<T, T, MSTSimpleType<T>>;
-export type IOptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> = BaseType<
+export type ISimpleType<T> = IType<T, T, MSTSimpleType<T>>;
+export type IReferenceType<T extends IAnyComplexType> = IType<string, string, MSTReferenceType<T["mstType"]>>;
+export type IOptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> = IType<
   T["InputType"] | OptionalValues,
   T["InstanceType"],
   T["mstType"]
