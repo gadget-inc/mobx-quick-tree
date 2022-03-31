@@ -1,6 +1,10 @@
 import {
   IAnyComplexType as AnyComplexMSTType,
   IAnyType as AnyMSTType,
+  IArrayType as MSTArrayType,
+  IMapType as MSTMapType,
+  IMSTArray,
+  IMSTMap,
   Instance as MSTInstance,
   IReferenceType as MSTReferenceType,
   ISimpleType as MSTSimpleType,
@@ -10,7 +14,7 @@ import {
 import { ModelType } from "./model";
 import { $quickType, $type } from "./symbols";
 
-export { IArrayType, IMapType, IMSTArray, ModelPropertiesDeclaration, ReferenceOptions } from "mobx-state-tree";
+export { IMSTArray, ModelPropertiesDeclaration, ReferenceOptions } from "mobx-state-tree";
 
 /** @hidden */
 export interface InstantiateContext {
@@ -44,10 +48,23 @@ export type IModelType<Props extends ModelProperties, Others> = ModelType<Props,
 export type IAnyModelType = IModelType<any, any>;
 export type ISimpleType<T> = IType<T, T, MSTSimpleType<T>>;
 export type IReferenceType<T extends IAnyComplexType> = IType<string, string, MSTReferenceType<T["mstType"]>>;
+
 export type IOptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> = IType<
   T["InputType"] | OptionalValues,
   T["InstanceType"],
   T["mstType"]
+>;
+
+export type IMapType<T extends IAnyType> = IType<
+  Record<string, T["InputType"]>,
+  IMSTMap<T["mstType"]>,
+  MSTMapType<T["mstType"]>
+>;
+
+export type IArrayType<T extends IAnyType> = IType<
+  ReadonlyArray<T["InputType"]>,
+  IMSTArray<T["mstType"]>,
+  MSTArrayType<T["mstType"]>
 >;
 
 export type SnapshotIn<T extends IAnyType> = T["InputType"];
