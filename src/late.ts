@@ -1,4 +1,4 @@
-import { types } from "mobx-state-tree";
+import { Instance, types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import type { IAnyType, InstantiateContext } from "./types";
 
@@ -12,6 +12,10 @@ export class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["In
     );
   }
 
+  create(snapshot?: this["InputType"], env?: any): Instance<T["mstType"]> {
+    return this.type.mstType.create(snapshot, env);
+  }
+
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
     return this.type.instantiate(snapshot, context);
   }
@@ -22,6 +26,6 @@ export class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["In
   }
 }
 
-export const late = <T extends IAnyType>(fn: () => T): LateType<T> => {
-  return new LateType(fn);
+export const late = <T extends IAnyType>(fn: () => T): T => {
+  return new LateType(fn) as unknown as T;
 };
