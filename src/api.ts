@@ -65,7 +65,7 @@ export const getParent = (value: any, depth = 1): Record<string, unknown> | unde
   return value;
 };
 
-export const getParentOfType = <T extends IAnyComplexType>(value: any, type: T): T["InstanceType"] | undefined => {
+export const getParentOfType = <T extends IAnyComplexType>(value: any, type: T): T["InstanceType"] => {
   if (isStateTreeNode(value)) {
     return mstGetParentOfType(value, type.mstType);
   }
