@@ -2,20 +2,22 @@ import { CustomTypeOptions, IType, types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import type { InstantiateContext } from "./types";
 
-export class CustomType<InputType, OutputType> extends BaseType<
+export class CustomType<InputType, InstanceType> extends BaseType<
   InputType,
-  OutputType,
-  IType<InputType | OutputType, InputType, OutputType>
+  InstanceType,
+  IType<InputType | InstanceType, InputType, InstanceType>
 > {
-  constructor(readonly options: CustomTypeOptions<InputType, OutputType>) {
-    super(options.name, types.custom<InputType, OutputType>(options));
+  constructor(readonly options: CustomTypeOptions<InputType, InstanceType>) {
+    super(options.name, types.custom<InputType, InstanceType>(options));
   }
 
-  instantiate(snapshot: this["InputType"], _context: InstantiateContext): this["OutputType"] {
+  instantiate(snapshot: InputType, _context: InstantiateContext): this["InstanceType"] {
     if (snapshot === undefined) {
       throw new Error("can't initialize custom type with undefined");
     }
-    return this.options.fromSnapshot(snapshot);
+
+    // TODO figure out how to avoid the cast, maybe need to also consider setting $parent, etc
+    return this.options.fromSnapshot(snapshot) as this["InstanceType"];
   }
 }
 

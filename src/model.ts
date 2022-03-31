@@ -51,7 +51,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   }
 
   actions<Actions extends ModelActions>(
-    fn: (self: Instance<this["mstType"]>) => Actions
+    fn: (self: QuickOrMSTInstance<this>) => Actions
   ): ModelType<Props, Others & Actions> {
     const init = (self: QuickOrMSTInstance<this>) => {
       this.initializeViewsAndActions(self);

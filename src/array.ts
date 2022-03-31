@@ -1,44 +1,47 @@
-import { IAnyType as IAnyMSTType, IArrayType, IMSTArray, types } from "mobx-state-tree";
+import { IArrayType as MSTArrayType, Instance as MSTInstance, types } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
-import type { IAnyType, InstantiateContext } from "./types";
+import type { IAnyType, IArrayType, IMSTArray, InstantiateContext, QuickOrMSTInstance } from "./types";
 
-export class QuickArray<T, M extends IAnyMSTType> extends Array<T> implements IMSTArray<M> {
+export class QuickArray<T extends IAnyType>
+  extends Array<T["InstanceType"]>
+  implements IMSTArray<MSTInstance<T["mstType"]>>
+{
   static get [Symbol.species]() {
     return Array;
   }
 
-  spliceWithArray(_index: number, _deleteCount?: number, _newItems?: M["Type"][]): M["Type"][] {
+  spliceWithArray(_index: number, _deleteCount?: number, _newItems?: QuickOrMSTInstance<T>[]): QuickOrMSTInstance<T>[] {
     throw new Error("cannot spliceWithArray on a QuickArray instance");
   }
 
-  clear(): M["Type"][] {
+  clear(): QuickOrMSTInstance<T>[] {
     throw new Error("cannot clear a QuickArray instance");
   }
 
-  replace(_newItems: M["Type"][]): M["Type"][] {
+  replace(_newItems: QuickOrMSTInstance<T>[]): QuickOrMSTInstance<T>[] {
     throw new Error("cannot replace a QuickArray instance");
   }
 
-  remove(_value: M["Type"]): boolean {
+  remove(_value: QuickOrMSTInstance<T>): boolean {
     throw new Error("cannot remove from a QuickArray instance");
   }
 
-  toJSON(): M["Type"][] {
+  toJSON(): QuickOrMSTInstance<T>[] {
     return this;
   }
 }
 
-export class ArrayType<T extends IAnyType> extends BaseType<
+class ArrayType<T extends IAnyType> extends BaseType<
   ReadonlyArray<T["InputType"]>,
-  IMSTArray<T["mstType"]>,
-  IArrayType<T["mstType"]>
+  IMSTArray<T>,
+  MSTArrayType<T["mstType"]>
 > {
   constructor(readonly childrenType: T) {
     super(`array<${childrenType.name}>`, types.array(childrenType.mstType));
   }
 
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
-    const array = new QuickArray<T["InstanceType"], T["mstType"]>(snapshot?.length ?? 0);
+    const array = new QuickArray<T>(snapshot?.length ?? 0);
     if (snapshot) {
       snapshot.forEach((child, index) => {
         const item = this.childrenType.instantiate(child, context);
@@ -53,6 +56,6 @@ export class ArrayType<T extends IAnyType> extends BaseType<
   }
 }
 
-export const array = <T extends IAnyType>(childrenType: T): ArrayType<T> => {
+export const array = <T extends IAnyType>(childrenType: T): IArrayType<T> => {
   return new ArrayType(childrenType);
 };

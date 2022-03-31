@@ -26,6 +26,10 @@ export const TestModel = types
     get notBool() {
       return !self.bool;
     },
+
+    get arrayLength(): number {
+      return self.array.length;
+    },
   }))
   .actions((self) => ({
     setB(v: boolean) {
