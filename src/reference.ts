@@ -15,7 +15,10 @@ export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsG
   onInvalidated?: OnReferenceInvalidated<ReferenceT<T["mstType"]>>;
 };
 
+// FIXME although we say the output types are strings, technically they'll actually be the instance type right now
+
 export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
+  string,
   string,
   TargetType["InstanceType"],
   MSTReferenceType<TargetType["mstType"]>
@@ -33,6 +36,7 @@ export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
 }
 
 export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseType<
+  string,
   string,
   TargetType["InstanceType"],
   IMaybe<MSTReferenceType<TargetType["mstType"]>>

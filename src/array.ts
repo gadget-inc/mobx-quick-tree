@@ -33,6 +33,7 @@ export class QuickArray<T extends IAnyType>
 
 class ArrayType<T extends IAnyType> extends BaseType<
   ReadonlyArray<T["InputType"]>,
+  T["OutputType"][],
   IMSTArray<T>,
   MSTArrayType<T["mstType"]>
 > {

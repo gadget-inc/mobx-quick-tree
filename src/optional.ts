@@ -1,8 +1,9 @@
 import { BaseType } from "./base";
-import type { FuncOrValue, IAnyType, InstantiateContext, ValidOptionalValue } from "./types";
+import type { FuncOrValue, IAnyType, InstantiateContext, IOptionalType, ValidOptionalValue } from "./types";
 
 export class OptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> extends BaseType<
   T["InputType"] | OptionalValues[number],
+  T["OutputType"],
   T["InstanceType"],
   T["mstType"]
 > {
@@ -32,13 +33,13 @@ export class OptionalType<T extends IAnyType, OptionalValues extends ValidOption
 }
 
 export type OptionalFactory = {
-  <T extends IAnyType>(type: T, defaultValue: FuncOrValue<T["InputType"]>): OptionalType<T, [undefined]>;
+  <T extends IAnyType>(type: T, defaultValue: FuncOrValue<T["InputType"]>): IOptionalType<T, [undefined]>;
 
   <T extends IAnyType, OptionalValues extends ValidOptionalValue[]>(
     type: T,
     defaultValue: FuncOrValue<T["InputType"]>,
     undefinedValues: OptionalValues
-  ): OptionalType<T, OptionalValues>;
+  ): IOptionalType<T, OptionalValues>;
 };
 
 export const optional: OptionalFactory = <T extends IAnyType, OptionalValues extends ValidOptionalValue[]>(

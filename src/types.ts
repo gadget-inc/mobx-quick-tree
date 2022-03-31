@@ -67,12 +67,12 @@ export interface InstantiateContext {
   referencesToResolve: (() => void)[];
 }
 
-export interface IType<InputType, OutputType, MSTType extends AnyMSTType> {
+export interface IType<InputType, OutputType, InstanceType, MSTType extends AnyMSTType> {
   readonly [$quickType]: undefined;
 
   readonly InputType: InputType;
   readonly OutputType: OutputType;
-  readonly InstanceType: StateTreeNode<OutputType, this>;
+  readonly InstanceType: StateTreeNode<InstanceType, this>;
 
   readonly name: string;
   readonly mstType: AnyMSTType;
@@ -89,12 +89,17 @@ export type ValidOptionalValue = string | boolean | number | null | undefined;
 export type FuncOrValue<T> = T | (() => T);
 export type Primitives = string | number | boolean | Date | null | undefined;
 
-export type IAnyType = IType<any, any, AnyMSTType>;
-export type ISimpleType<T> = IType<T, T, MSTSimpleType<T>>;
-export type IAnyComplexType = IType<any, any, AnyComplexMSTType>;
+export type IAnyType = IType<any, any, any, AnyMSTType>;
+export type ISimpleType<T> = IType<T, T, T, MSTSimpleType<T>>;
+export type IAnyComplexType = IType<any, any, any, AnyComplexMSTType>;
 
 export interface IModelType<Props extends ModelProperties, Others>
-  extends IType<ModelCreationProps<Props>, InstanceTypes<Props> & Others, MSTModelType<MSTProperties<Props>, Others>> {
+  extends IType<
+    ModelCreationProps<Props>,
+    OutputTypes<Props>,
+    InstanceTypes<Props> & Others,
+    MSTModelType<MSTProperties<Props>, Others>
+  > {
   readonly properties: Props;
 
   named(newName: string): IModelType<Props, Others>;
@@ -115,17 +120,20 @@ export type IAnyModelType = IModelType<any, any>;
 
 export type IMaybeType<T extends IAnyType> = IType<
   T["InputType"] | undefined,
+  T["OutputType"] | undefined,
   T["InstanceType"] | undefined,
   MSTMaybeType<T["mstType"]>
 >;
 
 export type IMaybeNullType<T extends IAnyType> = IType<
   T["InputType"] | null,
+  T["OutputType"] | null,
   T["InstanceType"] | null,
   MSTMaybeNullType<T["mstType"]>
 >;
 
 export type IReferenceType<T extends IAnyComplexType> = IType<
+  string,
   string,
   T["InstanceType"],
   MSTReferenceType<T["mstType"]>
@@ -133,14 +141,21 @@ export type IReferenceType<T extends IAnyComplexType> = IType<
 
 export type IOptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> = IType<
   T["InputType"] | OptionalValues[number],
+  T["OutputType"],
   T["InstanceType"],
   T["mstType"]
 >;
 
-export type IMapType<T extends IAnyType> = IType<Record<string, T["InputType"]>, IMSTMap<T>, MSTMapType<T["mstType"]>>;
+export type IMapType<T extends IAnyType> = IType<
+  Record<string, T["InputType"]>,
+  Record<string, T["OutputType"]>,
+  IMSTMap<T>,
+  MSTMapType<T["mstType"]>
+>;
 
 export type IArrayType<T extends IAnyType> = IType<
   ReadonlyArray<T["InputType"]>,
+  T["OutputType"][],
   IMSTArray<T>,
   MSTArrayType<T["mstType"]>
 >;
@@ -172,6 +187,10 @@ export type ModelCreationProps<T extends ModelProperties> = {
   [K in keyof T]?: T[K]["InputType"];
 };
 
+export type OutputTypes<T extends ModelProperties> = {
+  [K in keyof T]: T[K]["InstanceType"];
+};
+
 export type InstanceTypes<T extends ModelProperties> = {
   [K in keyof T]: T[K]["InstanceType"];
 };
@@ -191,5 +210,6 @@ export interface IAnyStateTreeNode extends StateTreeNode<any, IAnyType> {}
 export type IUnionType<Types extends [...IAnyType[]]> = IType<
   Types[number]["InputType"],
   Types[number]["OutputType"],
+  Types[number]["InstanceType"],
   Types[number]["mstType"]
 >;

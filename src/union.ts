@@ -1,10 +1,11 @@
 import { types as mstTypes, UnionOptions } from "mobx-state-tree";
 import { BaseType } from "./base";
 import { literal } from "./simple";
-import type { IAnyType, InstantiateContext, IUnionType } from "./types";
+import type { IAnyType, IMaybeNullType, IMaybeType, InstantiateContext, IUnionType } from "./types";
 
 export class UnionType<Types extends IAnyType[]> extends BaseType<
   Types[number]["InputType"],
+  Types[number]["OutputType"],
   Types[number]["InstanceType"],
   Types[number]["mstType"]
 > {
@@ -32,10 +33,10 @@ export const eagerUnion = <Types extends [IAnyType, ...IAnyType[]]>(...types: Ty
   return new UnionType(types, { eager: true });
 };
 
-export const maybe = <T extends IAnyType>(type: T) => {
+export const maybe = <T extends IAnyType>(type: T): IMaybeType<T> => {
   return union(literal<undefined>(undefined), type);
 };
 
-export const maybeNull = <T extends IAnyType>(type: T) => {
+export const maybeNull = <T extends IAnyType>(type: T): IMaybeNullType<T> => {
   return union(literal<null>(null), type);
 };

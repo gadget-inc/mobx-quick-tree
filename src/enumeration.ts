@@ -1,11 +1,12 @@
-import { ISimpleType, types, UnionStringArray } from "mobx-state-tree";
+import { ISimpleType as MSTSimpleType, types } from "mobx-state-tree";
 import { BaseType } from "./base";
-import type { InstantiateContext } from "./types";
+import type { InstantiateContext, ISimpleType } from "./types";
 
 export class EnumerationType<EnumOptions extends string> extends BaseType<
   EnumOptions,
   EnumOptions,
-  ISimpleType<UnionStringArray<EnumOptions[]>>
+  EnumOptions,
+  MSTSimpleType<EnumOptions>
 > {
   constructor(readonly name: string, readonly options: EnumOptions[]) {
     super(name, types.enumeration<EnumOptions>(options));
@@ -20,14 +21,14 @@ export class EnumerationType<EnumOptions extends string> extends BaseType<
 }
 
 type EnumerationFactory = {
-  <EnumOptions extends string>(name: string, options: EnumOptions[]): EnumerationType<EnumOptions>;
-  <EnumOptions extends string>(options: EnumOptions[]): EnumerationType<EnumOptions>;
+  <EnumOptions extends string>(name: string, options: EnumOptions[]): ISimpleType<EnumOptions>;
+  <EnumOptions extends string>(options: EnumOptions[]): ISimpleType<EnumOptions>;
 };
 
 export const enumeration: EnumerationFactory = <EnumOptions extends string>(
   nameOrOptions: EnumOptions[] | string,
   options?: EnumOptions[]
-): EnumerationType<EnumOptions> => {
+): ISimpleType<EnumOptions> => {
   let name;
   if (typeof nameOrOptions == "string") {
     name = nameOrOptions;

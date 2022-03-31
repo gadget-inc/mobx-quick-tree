@@ -1,9 +1,9 @@
-import { ISimpleType, SnapshotIn, types } from "mobx-state-tree";
+import { ISimpleType as MSTSimpleType, SnapshotIn, types } from "mobx-state-tree";
 import { BaseType } from "./base";
-import type { InstantiateContext, Primitives } from "./types";
+import type { InstantiateContext, ISimpleType, Primitives } from "./types";
 
-export class SimpleType<T> extends BaseType<T, T, ISimpleType<T>> {
-  static for<MSTType extends ISimpleType<any>>(mstType: MSTType): SimpleType<SnapshotIn<MSTType>> {
+export class SimpleType<T> extends BaseType<T, T, T, MSTSimpleType<T>> {
+  static for<MSTType extends MSTSimpleType<any>>(mstType: MSTType): ISimpleType<SnapshotIn<MSTType>> {
     return new SimpleType(mstType.name, mstType);
   }
 
@@ -29,6 +29,6 @@ export class LiteralType<T extends Primitives> extends SimpleType<T> {
   }
 }
 
-export const literal = <T extends Primitives>(value: T): LiteralType<T> => {
+export const literal = <T extends Primitives>(value: T): ISimpleType<T> => {
   return new LiteralType(value);
 };

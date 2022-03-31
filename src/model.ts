@@ -9,6 +9,7 @@ import type {
   ModelCreationProps,
   ModelProperties,
   MSTProperties,
+  OutputTypes,
   QuickOrMSTInstance,
 } from "./types";
 
@@ -20,6 +21,7 @@ const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): MS
 
 export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   ModelCreationProps<Props>,
+  OutputTypes<Props>,
   InstanceTypes<Props> & Others,
   MSTModelType<MSTProperties<Props>, Others>
 > {
