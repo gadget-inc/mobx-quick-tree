@@ -3,10 +3,10 @@ import { BaseType, setParent, setType } from "./base";
 import { $identifier, $modelType } from "./symbols";
 import type {
   IModelType,
+  InputTypes,
   InstanceTypes,
   InstantiateContext,
   ModelActions,
-  ModelCreationProps,
   ModelProperties,
   MSTProperties,
   OutputTypes,
@@ -20,7 +20,7 @@ const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): MS
 };
 
 export class ModelType<Props extends ModelProperties, Others> extends BaseType<
-  ModelCreationProps<Props>,
+  InputTypes<Props>,
   OutputTypes<Props>,
   InstanceTypes<Props> & Others,
   MSTModelType<MSTProperties<Props>, Others>

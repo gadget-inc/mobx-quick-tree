@@ -96,7 +96,7 @@ export type IAnyComplexType = IType<any, any, any, AnyComplexMSTType>;
 
 export interface IModelType<Props extends ModelProperties, Others>
   extends IType<
-    ModelCreationProps<Props>,
+    InputTypes<Props>,
     OutputTypes<Props>,
     InstanceTypes<Props> & Others,
     MSTModelType<MSTProperties<Props>, Others>
@@ -182,7 +182,7 @@ export interface ModelProperties {
 
 export type ModelActions = Record<string, Function>;
 
-export type ModelCreationProps<T extends ModelProperties> = {
+export type InputTypes<T extends ModelProperties> = {
   [K in keyof T]?: T[K]["InputType"];
 };
 
