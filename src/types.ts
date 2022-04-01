@@ -169,7 +169,7 @@ export interface InstantiateContext {
 
 export type SnapshotIn<T extends IAnyType> = T["InputType"]; // | MSTSnapshotIn<T["mstType"]>;
 export type SnapshotOut<T extends IAnyType> = T["OutputType"]; // | MSTSnapshotOut<T["mstType"]>;
-export type Instance<T> = T extends IAnyType ? QuickOrMSTInstance<T> : T;
+export type Instance<T> = T extends IAnyType ? T["InstanceType"] : T;
 export type QuickOrMSTInstance<T extends IAnyType> = T["InstanceType"] | MSTInstance<T["mstType"]>;
 
 export type SnapshotOrInstance<T> = T extends IAnyType
