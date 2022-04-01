@@ -18,6 +18,8 @@ import { ExtractCSTWithSTN } from "mobx-state-tree/dist/internal";
 import { $quickType, $type } from "./symbols";
 
 export {
+  IJsonPatch,
+  IPatchRecorder,
   IStateTreeNode as MSTStateTreeNode,
   ModelPropertiesDeclaration,
   ReferenceOptions,
@@ -125,7 +127,7 @@ export type IMaybeType<T extends IAnyType> = IType<
 >;
 
 export type IMaybeNullType<T extends IAnyType> = IType<
-  T["InputType"] | null,
+  T["InputType"] | null | undefined,
   T["OutputType"] | null,
   T["InstanceType"] | null,
   MSTMaybeNullType<T["mstType"]>

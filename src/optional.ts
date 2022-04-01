@@ -46,6 +46,6 @@ export const optional: OptionalFactory = <T extends IAnyType, OptionalValues ext
   type: T,
   defaultValue: FuncOrValue<T["InputType"]>,
   undefinedValues?: OptionalValues
-): OptionalType<T, OptionalValues> => {
+): IOptionalType<T, OptionalValues> => {
   return new OptionalType(type, defaultValue, undefinedValues);
 };
