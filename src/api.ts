@@ -13,6 +13,7 @@ import {
   isRoot as mstIsRoot,
   isStateTreeNode,
   IStateTreeNode as MSTStateTreeNode,
+  resolveIdentifier as mstResolveIdentifier,
   SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
 import { $parent, $quickType, $type } from "./symbols";
@@ -55,7 +56,6 @@ export {
   onPatch,
   onSnapshot,
   recordPatches,
-  resolveIdentifier,
   resolvePath,
   setLivelinessChecking,
   splitJsonPath,
@@ -148,6 +148,28 @@ export const isRoot = (value: any): boolean => {
 
   return value[$parent] === undefined;
 };
+
+export function resolveIdentifier<T extends IAnyModelType>(
+  type: T,
+  target: IQuickTreeNode<IAnyType>,
+  identifier: string
+): Instance<T> | undefined;
+export function resolveIdentifier<T extends IAnyModelType>(
+  type: T,
+  target: MSTStateTreeNode<MSTAnyType>,
+  identifier: string
+): MSTInstance<T> | undefined;
+export function resolveIdentifier<T extends IAnyModelType>(
+  type: T,
+  target: IStateTreeNode<IAnyType>,
+  identifier: string
+): QuickOrMSTInstance<T> | undefined {
+  if (isStateTreeNode(target)) {
+    return mstResolveIdentifier(type.mstType, target, identifier);
+  }
+
+  throw new Error("not yet implemented");
+}
 
 export const isArrayType = (value: IAnyType): value is IArrayType<IAnyType> => {
   return mstIsArrayType(value.mstType);
