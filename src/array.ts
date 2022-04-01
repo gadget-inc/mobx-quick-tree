@@ -1,32 +1,29 @@
-import { IArrayType as MSTArrayType, Instance as MSTInstance, types } from "mobx-state-tree";
+import { IArrayType as MSTArrayType, types } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
-import type { IAnyType, IArrayType, IMSTArray, InstantiateContext, QuickOrMSTInstance } from "./types";
+import type { IAnyType, IArrayType, IMSTArray, Instance, InstantiateContext } from "./types";
 
-export class QuickArray<T extends IAnyType>
-  extends Array<T["InstanceType"]>
-  implements IMSTArray<MSTInstance<T["mstType"]>>
-{
+export class QuickArray<T extends IAnyType> extends Array<T["InstanceType"]> implements IMSTArray<T> {
   static get [Symbol.species]() {
     return Array;
   }
 
-  spliceWithArray(_index: number, _deleteCount?: number, _newItems?: QuickOrMSTInstance<T>[]): QuickOrMSTInstance<T>[] {
+  spliceWithArray(_index: number, _deleteCount?: number, _newItems?: Instance<T>[]): Instance<T>[] {
     throw new Error("cannot spliceWithArray on a QuickArray instance");
   }
 
-  clear(): QuickOrMSTInstance<T>[] {
+  clear(): Instance<T>[] {
     throw new Error("cannot clear a QuickArray instance");
   }
 
-  replace(_newItems: QuickOrMSTInstance<T>[]): QuickOrMSTInstance<T>[] {
+  replace(_newItems: Instance<T>[]): Instance<T>[] {
     throw new Error("cannot replace a QuickArray instance");
   }
 
-  remove(_value: QuickOrMSTInstance<T>): boolean {
+  remove(_value: Instance<T>): boolean {
     throw new Error("cannot remove from a QuickArray instance");
   }
 
-  toJSON(): QuickOrMSTInstance<T>[] {
+  toJSON(): Instance<T>[] {
     return this;
   }
 }

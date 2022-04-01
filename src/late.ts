@@ -5,7 +5,7 @@ import type { IAnyType, InstantiateContext } from "./types";
 export class LateType<T extends IAnyType> extends BaseType<
   T["InputType"],
   T["OutputType"],
-  T["InstanceType"],
+  T["InstanceTypeWithoutSTN"],
   T["mstType"]
 > {
   private cachedType: T | undefined;

@@ -5,7 +5,7 @@ import type { IAnyType, InstantiateContext } from "./types";
 export class RefinementType<T extends IAnyType> extends BaseType<
   T["InputType"],
   T["OutputType"],
-  T["InstanceType"],
+  T["InstanceTypeWithoutSTN"],
   T["mstType"]
 > {
   constructor(readonly type: T, readonly predicate: (snapshot: T["InstanceType"] | Instance<T["mstType"]>) => boolean) {

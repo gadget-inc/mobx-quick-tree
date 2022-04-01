@@ -9,13 +9,13 @@ import { $identifier, $modelType } from "./symbols";
 import type {
   IModelType,
   InputTypesForModelProps,
+  Instance,
   InstanceTypesForModelProps,
   InstantiateContext,
   ModelActions,
   ModelProperties,
   MSTPropertiesForModelProps,
   OutputTypesForModelProps,
-  QuickOrMSTInstance,
 } from "./types";
 
 const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): MSTPropertiesForModelProps<Props> => {
@@ -47,21 +47,17 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     this.identifierProp = Object.keys(this.properties).find((name) => properties[name].mstType === mstTypes.identifier);
   }
 
-  views<Views extends Record<string, unknown>>(
-    fn: (self: QuickOrMSTInstance<this>) => Views
-  ): ModelType<Props, Others & Views> {
-    const init = (self: QuickOrMSTInstance<this>) => {
+  views<Views extends Record<string, unknown>>(fn: (self: Instance<this>) => Views): ModelType<Props, Others & Views> {
+    const init = (self: Instance<this>) => {
       this.initializeViewsAndActions(self);
       Object.assign(self, fn(self));
       return self;
     };
-    return new ModelType<Props, Others & Views>(this.name, this.properties, init, this.mstType.views(fn));
+    return new ModelType<Props, Others & Views>(this.name, this.properties, init, this.mstType.views(fn as any));
   }
 
-  actions<Actions extends ModelActions>(
-    fn: (self: QuickOrMSTInstance<this>) => Actions
-  ): ModelType<Props, Others & Actions> {
-    const init = (self: QuickOrMSTInstance<this>) => {
+  actions<Actions extends ModelActions>(fn: (self: Instance<this>) => Actions): ModelType<Props, Others & Actions> {
+    const init = (self: Instance<this>) => {
       this.initializeViewsAndActions(self);
 
       const actions = fn(self as any);
@@ -89,13 +85,13 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return new ModelType(newName, this.properties, this.initializeViewsAndActions, this.mstType);
   }
 
-  volatile<TP extends object>(fn: (self: QuickOrMSTInstance<this>) => TP): IModelType<Props, Others & TP> {
+  volatile<TP extends object>(fn: (self: Instance<this>) => TP): IModelType<Props, Others & TP> {
     // TODO implement me
     return null as any;
   }
 
   extend<A extends ModelActions = {}, V extends Object = {}, VS extends Object = {}>(
-    fn: (self: QuickOrMSTInstance<this>) => {
+    fn: (self: Instance<this>) => {
       actions?: A;
       views?: V;
       state?: VS;

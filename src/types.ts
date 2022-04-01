@@ -7,14 +7,13 @@ import {
   IMaybe as MSTMaybeType,
   IMaybeNull as MSTMaybeNullType,
   IModelType as MSTModelType,
-  Instance as MSTInstance,
+  Instance as MSTInstance_,
   IReferenceType as MSTReferenceType,
   ISimpleType as MSTSimpleType,
   IStateTreeNode as MSTStateTreeNode,
   SnapshotOrInstance as MSTSnapshotOrInstance,
   SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
-import { ExtractCSTWithSTN } from "mobx-state-tree/dist/internal";
 import { $quickType, $type } from "./symbols";
 
 export {
@@ -33,12 +32,13 @@ export interface IType<InputType, OutputType, InstanceType, MSTType extends AnyM
   readonly InputType: InputType;
   readonly OutputType: OutputType;
   readonly InstanceType: StateTreeNode<InstanceType, this>;
+  readonly InstanceTypeWithoutSTN: InstanceType;
 
   readonly name: string;
   readonly mstType: MSTType;
 
-  is(value: any): value is InputType | this["InstanceType"] | MSTSnapshotOrInstance<MSTType>;
-  create(snapshot?: InputType, env?: any): MSTInstance<MSTType>;
+  is(value: any): value is this["InstanceType"];
+  create(snapshot?: InputType, env?: any): MSTInstance_<MSTType>;
   createReadOnly(snapshot?: InputType): this["InstanceType"];
 
   /** @hidden */
@@ -48,7 +48,7 @@ export interface IType<InputType, OutputType, InstanceType, MSTType extends AnyM
 export type IAnyType = IType<any, any, any, AnyMSTType>;
 export type ISimpleType<T> = IType<T, T, T, MSTSimpleType<T>>;
 export type IAnyModelType = IModelType<any, any>;
-export type IAnyComplexType = IType<any, any, any, AnyComplexMSTType>;
+export type IAnyComplexType = IType<any, any, object, AnyComplexMSTType>;
 
 export interface IModelType<Props extends ModelProperties, Others>
   extends IType<
@@ -76,28 +76,28 @@ export interface IModelType<Props extends ModelProperties, Others>
 export type IMaybeType<T extends IAnyType> = IType<
   T["InputType"] | undefined,
   T["OutputType"] | undefined,
-  T["InstanceType"] | undefined,
+  T["InstanceTypeWithoutSTN"] | undefined,
   MSTMaybeType<T["mstType"]>
 >;
 
 export type IMaybeNullType<T extends IAnyType> = IType<
   T["InputType"] | null | undefined,
   T["OutputType"] | null,
-  T["InstanceType"] | null,
+  T["InstanceTypeWithoutSTN"] | null,
   MSTMaybeNullType<T["mstType"]>
 >;
 
 export type IReferenceType<T extends IAnyComplexType> = IType<
   string,
   string,
-  T["InstanceType"],
+  T["InstanceTypeWithoutSTN"],
   MSTReferenceType<T["mstType"]>
 >;
 
 export type IOptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> = IType<
   T["InputType"] | OptionalValues[number],
   T["OutputType"],
-  T["InstanceType"],
+  T["InstanceTypeWithoutSTN"],
   T["mstType"]
 >;
 
@@ -118,47 +118,47 @@ export type IArrayType<T extends IAnyType> = IType<
 export type IUnionType<Types extends [IAnyType, ...IAnyType[]]> = IType<
   Types[number]["InputType"],
   Types[number]["OutputType"],
-  Types[number]["InstanceType"],
+  Types[number]["InstanceTypeWithoutSTN"],
   Types[number]["mstType"]
 >;
 
 // Utility types
 
-export interface IMSTArray<T extends IAnyType> extends Array<QuickOrMSTInstance<T>> {
-  clear(): QuickOrMSTInstance<T>[];
+export interface IMSTArray<T extends IAnyType> extends Array<Instance<T>> {
+  clear(): Instance<T>[];
   push(...items: CreateTypes<T>[]): number;
-  concat(...items: (CreateTypes<T> | ConcatArray<CreateTypes<T>>)[]): QuickOrMSTInstance<T>[];
-  remove(value: QuickOrMSTInstance<T>): boolean;
-  replace(newItems: QuickOrMSTInstance<T>[]): QuickOrMSTInstance<T>[];
-  splice(start: number, deleteCount?: number): QuickOrMSTInstance<T>[];
-  splice(start: number, deleteCount: number, ...items: CreateTypes<T>[]): QuickOrMSTInstance<T>[];
-  spliceWithArray(index: number, deleteCount?: number, newItems?: QuickOrMSTInstance<T>[]): QuickOrMSTInstance<T>[];
-  toJSON(): QuickOrMSTInstance<T>[];
+  concat(...items: (CreateTypes<T> | ConcatArray<CreateTypes<T>>)[]): Instance<T>[];
+  remove(value: Instance<T>): boolean;
+  replace(newItems: Instance<T>[]): Instance<T>[];
+  splice(start: number, deleteCount?: number): Instance<T>[];
+  splice(start: number, deleteCount: number, ...items: CreateTypes<T>[]): Instance<T>[];
+  spliceWithArray(index: number, deleteCount?: number, newItems?: Instance<T>[]): Instance<T>[];
+  toJSON(): Instance<T>[];
   unshift(...items: CreateTypes<T>[]): number;
 }
 
 export interface IMSTMap<T extends IAnyType> {
   readonly size: number;
 
-  [Symbol.iterator](): IterableIterator<[string, QuickOrMSTInstance<T>]>;
+  [Symbol.iterator](): IterableIterator<[string, Instance<T>]>;
   [Symbol.toStringTag]: "Map";
 
   clear(): void;
   delete(key: string): boolean;
-  entries(): IterableIterator<[string, QuickOrMSTInstance<T>]>;
-  forEach(callbackfn: (value: QuickOrMSTInstance<T>, key: string, map: this) => void, thisArg?: any): void;
-  get(key: string): QuickOrMSTInstance<T> | undefined;
+  entries(): IterableIterator<[string, Instance<T>]>;
+  forEach(callbackfn: (value: Instance<T>, key: string, map: this) => void, thisArg?: any): void;
+  get(key: string): Instance<T> | undefined;
   has(key: string): boolean;
-  intercept(handler: IInterceptor<IMapWillChange<string, QuickOrMSTInstance<T>>>): Lambda;
+  intercept(handler: IInterceptor<IMapWillChange<string, Instance<T>>>): Lambda;
   keys(): IterableIterator<string>;
   merge(other: IMSTMap<IAnyType> | Record<string, CreateTypes<T>> | any): this;
-  observe(listener: (changes: IMapDidChange<string, QuickOrMSTInstance<T>>) => void, fireImmediately?: boolean): Lambda;
-  put(value: CreateTypes<T>): QuickOrMSTInstance<T>;
+  observe(listener: (changes: IMapDidChange<string, Instance<T>>) => void, fireImmediately?: boolean): Lambda;
+  put(value: CreateTypes<T>): Instance<T>;
   replace(values: IMSTMap<IAnyType> | Record<string, CreateTypes<T>> | any): this;
   set(key: string, value: CreateTypes<T>): this;
   toJSON(): Record<string, MSTSnapshotOut<T["mstType"]>>;
   toString(): string;
-  values(): IterableIterator<QuickOrMSTInstance<T>>;
+  values(): IterableIterator<Instance<T>>;
 }
 
 /** @hidden */
@@ -170,7 +170,8 @@ export interface InstantiateContext {
 export type SnapshotIn<T extends IAnyType> = T["InputType"]; // | MSTSnapshotIn<T["mstType"]>;
 export type SnapshotOut<T extends IAnyType> = T["OutputType"]; // | MSTSnapshotOut<T["mstType"]>;
 export type Instance<T> = T extends IAnyType ? T["InstanceType"] : T;
-export type QuickOrMSTInstance<T extends IAnyType> = T["InstanceType"] | MSTInstance<T["mstType"]>;
+export type MSTInstance<T> = T extends IAnyType ? MSTInstance_<T["mstType"]> : MSTInstance_<T>;
+export type QuickOrMSTInstance<T extends IAnyType> = T["InstanceType"] | MSTInstance_<T["mstType"]>;
 
 export type SnapshotOrInstance<T> = T extends IAnyType
   ? T["InputType"] | T["InstanceType"] | MSTSnapshotOrInstance<T["mstType"]>
@@ -178,11 +179,7 @@ export type SnapshotOrInstance<T> = T extends IAnyType
   ? MSTSnapshotOrInstance<T>
   : T;
 
-export declare type CreateTypes<T extends IAnyType> =
-  | T["InputType"]
-  | T["OutputType"]
-  | T["InstanceType"]
-  | ExtractCSTWithSTN<T["mstType"]>;
+export declare type CreateTypes<T extends IAnyType> = T["InputType"] | T["OutputType"] | T["InstanceType"];
 
 export type ValidOptionalValue = string | boolean | number | null | undefined;
 export type FuncOrValue<T> = T | (() => T);

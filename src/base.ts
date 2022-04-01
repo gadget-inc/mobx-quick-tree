@@ -1,8 +1,4 @@
-import type {
-  IAnyType as AnyMSTType,
-  Instance as MSTInstance,
-  SnapshotOrInstance as MSTSnapshotOrInstance,
-} from "mobx-state-tree";
+import type { IAnyType as AnyMSTType, Instance as MSTInstance } from "mobx-state-tree";
 import { $parent, $quickType, $type } from "./symbols";
 import type { IAnyType, InstantiateContext, StateTreeNode } from "./types";
 
@@ -12,6 +8,7 @@ export abstract class BaseType<InputType, OutputType, InstanceType, MSTType exte
   readonly InputType!: InputType;
   readonly OutputType!: OutputType;
   readonly InstanceType!: StateTreeNode<InstanceType, this>;
+  readonly InstanceTypeWithoutSTN!: InstanceType;
 
   constructor(readonly name: string, readonly mstType: MSTType) {
     Reflect.defineProperty(this, "mstType", {
@@ -26,7 +23,7 @@ export abstract class BaseType<InputType, OutputType, InstanceType, MSTType exte
     return this.mstType.create(snapshot, env);
   }
 
-  is(value: any): value is InputType | this["InstanceType"] | MSTSnapshotOrInstance<MSTType> {
+  is(value: any): value is this["InstanceType"] {
     return this.mstType.is(value);
   }
 

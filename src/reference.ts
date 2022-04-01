@@ -20,7 +20,7 @@ export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsG
 export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
   string,
   string,
-  TargetType["InstanceType"],
+  TargetType["InstanceTypeWithoutSTN"],
   MSTReferenceType<TargetType["mstType"]>
 > {
   constructor(readonly targetType: IAnyComplexType, options?: ReferenceOptions<TargetType["mstType"]>) {
@@ -38,7 +38,7 @@ export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
 export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseType<
   string | undefined,
   string | undefined,
-  TargetType["InstanceType"] | undefined,
+  TargetType["InstanceTypeWithoutSTN"] | undefined,
   IMaybe<MSTReferenceType<TargetType["mstType"]>>
 > {
   constructor(readonly targetType: IAnyComplexType, options?: SafeReferenceOptions<TargetType>) {

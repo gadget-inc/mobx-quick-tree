@@ -6,6 +6,7 @@ import {
   getType as mstGetType,
   IAnyComplexType as MSTAnyComplexType,
   IAnyType as MSTAnyType,
+  Instance as MSTInstance,
   isArrayType as mstIsArrayType,
   isMapType as mstIsMapType,
   isModelType as mstIsModelType,
@@ -15,7 +16,18 @@ import {
   SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
 import { $parent, $quickType, $type } from "./symbols";
-import type { IAnyComplexType, IAnyType, IQuickTreeNode, IStateTreeNode, IType, QuickOrMSTInstance } from "./types";
+import type {
+  IAnyComplexType,
+  IAnyModelType,
+  IAnyType,
+  IArrayType,
+  IMapType,
+  Instance,
+  IQuickTreeNode,
+  IStateTreeNode,
+  IType,
+  QuickOrMSTInstance,
+} from "./types";
 
 export {
   addDisposer,
@@ -73,7 +85,9 @@ export const getParent = <T extends IAnyType>(value: any, depth = 1): QuickOrMST
   return value;
 };
 
-export const getParentOfType = <T extends IAnyComplexType>(value: any, type: T): QuickOrMSTInstance<T> => {
+export function getParentOfType<T extends IAnyComplexType>(value: any, type: T): Instance<T>;
+export function getParentOfType<T extends MSTAnyComplexType>(value: any, type: T): MSTInstance<T>;
+export function getParentOfType<T extends IAnyComplexType>(value: any, type: T): QuickOrMSTInstance<T> {
   if (isStateTreeNode(value)) {
     return mstGetParentOfType(value, type.mstType);
   }
@@ -90,7 +104,7 @@ export const getParentOfType = <T extends IAnyComplexType>(value: any, type: T):
   }
 
   return value;
-};
+}
 
 export function getType(value: MSTStateTreeNode<MSTAnyType>): MSTAnyComplexType;
 export function getType(value: IQuickTreeNode<IAnyType>): IAnyComplexType;
@@ -135,14 +149,14 @@ export const isRoot = (value: any): boolean => {
   return value[$parent] === undefined;
 };
 
-export const isArrayType = (value: IAnyType) => {
+export const isArrayType = (value: IAnyType): value is IArrayType<IAnyType> => {
   return mstIsArrayType(value.mstType);
 };
 
-export const isMapType = (value: IAnyType) => {
+export const isMapType = (value: IAnyType): value is IMapType<IAnyType> => {
   return mstIsMapType(value.mstType);
 };
 
-export const isModelType = (value: IAnyType) => {
+export const isModelType = (value: IAnyType): value is IAnyModelType => {
   return mstIsModelType(value.mstType);
 };

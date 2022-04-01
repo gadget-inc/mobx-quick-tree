@@ -1,24 +1,21 @@
 import { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
-import { IMapType as MSTMapType, Instance as MSTInstance, SnapshotOut as MSTSnapshotOut, types } from "mobx-state-tree";
+import { IMapType as MSTMapType, SnapshotOut as MSTSnapshotOut, types } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
 import { $identifier } from "./symbols";
-import type { CreateTypes, IAnyType, IMapType, IMSTMap, InstantiateContext, QuickOrMSTInstance } from "./types";
+import type { CreateTypes, IAnyType, IMapType, IMSTMap, Instance, InstantiateContext } from "./types";
 
-export class QuickMap<T extends IAnyType>
-  extends Map<string, T["InstanceType"]>
-  implements IMSTMap<MSTInstance<T["mstType"]>>
-{
+export class QuickMap<T extends IAnyType> extends Map<string, T["InstanceType"]> implements IMSTMap<T> {
   static get [Symbol.species]() {
     return Map;
   }
 
   [Symbol.toStringTag]: "Map";
 
-  forEach(callbackfn: (value: QuickOrMSTInstance<T>, key: string, map: this) => void, thisArg?: any): void {
+  forEach(callbackfn: (value: Instance<T>, key: string, map: this) => void, thisArg?: any): void {
     super.forEach((value, key) => callbackfn(value, key, thisArg ?? this));
   }
 
-  put(_value: CreateTypes<T>): QuickOrMSTInstance<T> {
+  put(_value: CreateTypes<T>): Instance<T> {
     throw new Error("put not supported in QuickMap");
   }
 
@@ -34,14 +31,11 @@ export class QuickMap<T extends IAnyType>
     return Object.fromEntries(super.entries());
   }
 
-  observe(
-    _listener: (changes: IMapDidChange<string, QuickOrMSTInstance<T>>) => void,
-    _fireImmediately?: boolean
-  ): Lambda {
+  observe(_listener: (changes: IMapDidChange<string, Instance<T>>) => void, _fireImmediately?: boolean): Lambda {
     throw new Error("observer not supported in QuickMap");
   }
 
-  intercept(_handler: IInterceptor<IMapWillChange<string, QuickOrMSTInstance<T>>>): Lambda {
+  intercept(_handler: IInterceptor<IMapWillChange<string, Instance<T>>>): Lambda {
     throw new Error("intercept not supported in QuickMap");
   }
 }

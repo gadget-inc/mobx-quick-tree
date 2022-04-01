@@ -6,7 +6,7 @@ import type { IAnyType, IMaybeNullType, IMaybeType, InstantiateContext, IUnionTy
 export class UnionType<Types extends IAnyType[]> extends BaseType<
   Types[number]["InputType"],
   Types[number]["OutputType"],
-  Types[number]["InstanceType"],
+  Types[number]["InstanceTypeWithoutSTN"],
   Types[number]["mstType"]
 > {
   constructor(private types: Types, readonly options?: UnionOptions) {

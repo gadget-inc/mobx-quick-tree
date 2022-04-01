@@ -4,7 +4,7 @@ import type { FuncOrValue, IAnyType, InstantiateContext, IOptionalType, ValidOpt
 export class OptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> extends BaseType<
   T["InputType"] | OptionalValues[number],
   T["OutputType"],
-  T["InstanceType"],
+  T["InstanceTypeWithoutSTN"],
   T["mstType"]
 > {
   constructor(
