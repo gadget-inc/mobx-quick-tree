@@ -8,6 +8,7 @@ import {
   isModelType as mstIsModelType,
   isRoot as mstIsRoot,
   isStateTreeNode,
+  SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
 import { $parent, $quickType, $type } from "./symbols";
 import type { IAnyComplexType, IAnyType, IStateTreeNode, QuickOrMSTInstance } from "./types";
@@ -90,7 +91,7 @@ export const getParentOfType = <T extends IAnyComplexType>(value: any, type: T):
 
 export const getSnapshot = <T extends IAnyType>(value: IStateTreeNode<T>): T["OutputType"] => {
   if (isStateTreeNode(value)) {
-    return mstGetSnapshot(value);
+    return mstGetSnapshot<MSTSnapshotOut<T["mstType"]>>(value);
   }
 
   return value;
