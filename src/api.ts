@@ -13,6 +13,7 @@ import {
   isRoot as mstIsRoot,
   isStateTreeNode,
   IStateTreeNode as MSTStateTreeNode,
+  IType as MSTType,
   resolveIdentifier as mstResolveIdentifier,
   SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
@@ -106,7 +107,7 @@ export function getParentOfType<T extends IAnyComplexType>(value: any, type: T):
   return value;
 }
 
-export function getType(value: MSTStateTreeNode<MSTAnyType>): MSTAnyComplexType;
+export function getType(value: MSTInstance<MSTAnyType>): MSTAnyComplexType;
 export function getType(value: IQuickTreeNode<IAnyType>): IAnyComplexType;
 export function getType(value: IStateTreeNode<IAnyType>): MSTAnyComplexType | IAnyComplexType {
   if (isStateTreeNode(value)) {
@@ -116,14 +117,16 @@ export function getType(value: IStateTreeNode<IAnyType>): MSTAnyComplexType | IA
   return value[$type];
 }
 
-export const getSnapshot = <S, M extends MSTAnyType>(value: IStateTreeNode<IType<any, S, any, M>>): S => {
+export function getSnapshot<S>(value: IQuickTreeNode<IType<any, S, any, any>>): S;
+export function getSnapshot<S>(value: MSTInstance<MSTType<any, S, any>>): S;
+export function getSnapshot<S, M extends MSTAnyType>(value: IStateTreeNode<IType<any, S, any, M>>): S {
   if (isStateTreeNode(value)) {
     return mstGetSnapshot<MSTSnapshotOut<M>>(value);
   }
 
   // TODO this isn't quite right, primarily for reference types. The snapshot = string, but the instance = object.
   return value as unknown as S;
-};
+}
 
 export const getRoot = <T extends IAnyType>(value: any): QuickOrMSTInstance<T> => {
   if (isStateTreeNode(value)) {
