@@ -37,7 +37,7 @@ export interface IType<InputType, OutputType, InstanceType, MSTType extends AnyM
   readonly name: string;
   readonly mstType: MSTType;
 
-  is(value: any): value is QuickOrMSTInstance<this>;
+  is(value: any): value is InputType | this["InstanceType"] | MSTSnapshotOrInstance<MSTType>;
   create(snapshot?: InputType, env?: any): MSTInstance<MSTType>;
   createReadOnly(snapshot?: InputType): this["InstanceType"];
 

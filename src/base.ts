@@ -1,6 +1,10 @@
-import type { IAnyType as AnyMSTType, Instance } from "mobx-state-tree";
+import type {
+  IAnyType as AnyMSTType,
+  Instance as MSTInstance,
+  SnapshotOrInstance as MSTSnapshotOrInstance,
+} from "mobx-state-tree";
 import { $parent, $quickType, $type } from "./symbols";
-import type { IAnyType, InstantiateContext, QuickOrMSTInstance, StateTreeNode } from "./types";
+import type { IAnyType, InstantiateContext, StateTreeNode } from "./types";
 
 export abstract class BaseType<InputType, OutputType, InstanceType, MSTType extends AnyMSTType> {
   readonly [$quickType] = undefined;
@@ -18,11 +22,11 @@ export abstract class BaseType<InputType, OutputType, InstanceType, MSTType exte
     });
   }
 
-  create(snapshot?: this["InputType"], env?: any): Instance<MSTType> {
+  create(snapshot?: this["InputType"], env?: any): MSTInstance<MSTType> {
     return this.mstType.create(snapshot, env);
   }
 
-  is(value: any): value is QuickOrMSTInstance<this> {
+  is(value: any): value is InputType | this["InstanceType"] | MSTSnapshotOrInstance<MSTType> {
     return this.mstType.is(value);
   }
 
