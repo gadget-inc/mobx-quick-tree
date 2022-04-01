@@ -10,7 +10,7 @@ import { model } from "./model";
 import { optional } from "./optional";
 import { reference, safeReference } from "./reference";
 import { refinement } from "./refinement";
-import { literal, SimpleType } from "./simple";
+import { Date, literal, SimpleType } from "./simple";
 import { lazyUnion, maybe, maybeNull, union } from "./union";
 
 export * from "./api";
@@ -18,9 +18,10 @@ export * from "./types";
 
 export const types = {
   boolean: SimpleType.for(mstTypes.boolean),
-  Date: SimpleType.for(mstTypes.Date),
+  Date,
   identifier: SimpleType.for(mstTypes.identifier),
   integer: SimpleType.for(mstTypes.integer),
+  literal,
   null: SimpleType.for(mstTypes.null),
   number: SimpleType.for(mstTypes.number),
   string: SimpleType.for(mstTypes.string),
@@ -32,7 +33,6 @@ export const types = {
   frozen,
   late,
   lazyUnion,
-  literal,
   map,
   maybe,
   maybeNull,
