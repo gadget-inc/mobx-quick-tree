@@ -1,34 +1,39 @@
-import { IModelType as MSTModelType, Instance, isReferenceType, types as mstTypes, types } from "mobx-state-tree";
+import {
+  IModelType as MSTModelType,
+  Instance as MSTInstance,
+  isReferenceType,
+  types as mstTypes,
+} from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
 import { $identifier, $modelType } from "./symbols";
 import type {
   IModelType,
-  InputTypes,
-  InstanceTypes,
+  InputTypesForModelProps,
+  InstanceTypesForModelProps,
   InstantiateContext,
   ModelActions,
   ModelProperties,
-  MSTProperties,
-  OutputTypes,
+  MSTPropertiesForModelProps,
+  OutputTypesForModelProps,
   QuickOrMSTInstance,
 } from "./types";
 
-const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): MSTProperties<Props> => {
+const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): MSTPropertiesForModelProps<Props> => {
   return (
     props ? Object.fromEntries(Object.entries(props).map(([k, v]) => [k, v.mstType])) : {}
-  ) as MSTProperties<Props>;
+  ) as MSTPropertiesForModelProps<Props>;
 };
 
 export class ModelType<Props extends ModelProperties, Others> extends BaseType<
-  InputTypes<Props>,
-  OutputTypes<Props>,
-  InstanceTypes<Props> & Others,
-  MSTModelType<MSTProperties<Props>, Others>
+  InputTypesForModelProps<Props>,
+  OutputTypesForModelProps<Props>,
+  InstanceTypesForModelProps<Props> & Others,
+  MSTModelType<MSTPropertiesForModelProps<Props>, Others>
 > {
   readonly [$modelType] = undefined;
   readonly Props!: Props;
   readonly Others!: Others;
-  readonly QuickOrSlowInstance!: this["InstanceType"] | Instance<this["mstType"]>;
+  readonly QuickOrSlowInstance!: this["InstanceType"] | MSTInstance<this["mstType"]>;
 
   private identifierProp: string | undefined;
 
@@ -36,10 +41,10 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     name: string,
     readonly properties: Props,
     readonly initializeViewsAndActions: (self: any) => any,
-    mstModel: MSTModelType<MSTProperties<Props>, Others>
+    mstModel: MSTModelType<MSTPropertiesForModelProps<Props>, Others>
   ) {
     super(name, mstModel);
-    this.identifierProp = Object.keys(this.properties).find((name) => properties[name].mstType === types.identifier);
+    this.identifierProp = Object.keys(this.properties).find((name) => properties[name].mstType === mstTypes.identifier);
   }
 
   views<Views extends Record<string, unknown>>(

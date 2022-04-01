@@ -10,7 +10,7 @@ import {
   Instance as MSTInstance,
   IReferenceType as MSTReferenceType,
   ISimpleType as MSTSimpleType,
-  IStateTreeNode as IMSTStateTreeNode,
+  IStateTreeNode as MSTStateTreeNode,
   SnapshotOrInstance as MSTSnapshotOrInstance,
   SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
@@ -52,10 +52,10 @@ export type IAnyComplexType = IType<any, any, any, AnyComplexMSTType>;
 
 export interface IModelType<Props extends ModelProperties, Others>
   extends IType<
-    InputTypes<Props>,
-    OutputTypes<Props>,
-    InstanceTypes<Props> & Others,
-    MSTModelType<MSTProperties<Props>, Others>
+    InputTypesForModelProps<Props>,
+    OutputTypesForModelProps<Props>,
+    InstanceTypesForModelProps<Props> & Others,
+    MSTModelType<MSTPropertiesForModelProps<Props>, Others>
   > {
   readonly properties: Props;
 
@@ -115,7 +115,7 @@ export type IArrayType<T extends IAnyType> = IType<
   MSTArrayType<T["mstType"]>
 >;
 
-export type IUnionType<Types extends [...IAnyType[]]> = IType<
+export type IUnionType<Types extends [IAnyType, ...IAnyType[]]> = IType<
   Types[number]["InputType"],
   Types[number]["OutputType"],
   Types[number]["InstanceType"],
@@ -188,32 +188,32 @@ export type ValidOptionalValue = string | boolean | number | null | undefined;
 export type FuncOrValue<T> = T | (() => T);
 export type Primitives = string | number | boolean | Date | null | undefined;
 
+export interface IQuickTreeNode<T extends IAnyType = IAnyType> {
+  readonly [$type]: T;
+}
+
+export type StateTreeNode<T, IT extends IAnyType> = T extends object ? T & IStateTreeNode<IT> : T;
+export type IStateTreeNode<T extends IAnyType = IAnyType> = IQuickTreeNode<T> | MSTStateTreeNode<T["mstType"]>;
+export interface IAnyStateTreeNode extends StateTreeNode<any, IAnyType> {}
+
 export interface ModelProperties {
   [key: string]: IAnyType;
 }
 
 export type ModelActions = Record<string, Function>;
 
-export type InputTypes<T extends ModelProperties> = {
+export type InputTypesForModelProps<T extends ModelProperties> = {
   [K in keyof T]?: T[K]["InputType"];
 };
 
-export type OutputTypes<T extends ModelProperties> = {
+export type OutputTypesForModelProps<T extends ModelProperties> = {
   [K in keyof T]: T[K]["OutputType"];
 };
 
-export type InstanceTypes<T extends ModelProperties> = {
+export type InstanceTypesForModelProps<T extends ModelProperties> = {
   [K in keyof T]: T[K]["InstanceType"];
 };
 
-export type MSTProperties<T extends ModelProperties> = {
+export type MSTPropertiesForModelProps<T extends ModelProperties> = {
   [K in keyof T]: T[K]["mstType"];
 };
-
-export interface IQuickTreeNode<T extends IAnyType = IAnyType> {
-  readonly [$type]: T;
-}
-
-export type StateTreeNode<T, IT extends IAnyType> = T extends object ? T & IStateTreeNode<IT> : T;
-export type IStateTreeNode<T extends IAnyType = IAnyType> = IQuickTreeNode<T> | IMSTStateTreeNode<T["mstType"]>;
-export interface IAnyStateTreeNode extends StateTreeNode<any, IAnyType> {}

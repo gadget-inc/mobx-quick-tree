@@ -1,4 +1,4 @@
-import { types } from "../src";
+import { getSnapshot, types } from "../src";
 
 describe("boolean", () => {
   test("can create a read-only instance", () => {
@@ -126,6 +126,19 @@ describe("union", () => {
     expect(unionType.is(null)).toEqual(false);
     expect(unionType.is(true)).toEqual(false);
     expect(unionType.is({})).toEqual(false);
+  });
+
+  test("can create a union of model types", () => {
+    const modelTypeA = types.model({ x: types.string });
+    const modelTypeB = types.model({ y: types.number });
+    const unionType = types.union(modelTypeA, modelTypeB);
+    const unionInstance = unionType.createReadOnly({ x: "test" });
+
+    expect(getSnapshot(unionInstance)).toEqual(
+      expect.objectContaining({
+        x: "test",
+      })
+    );
   });
 });
 

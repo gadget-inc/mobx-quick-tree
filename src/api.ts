@@ -15,7 +15,7 @@ import {
   SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
 import { $parent, $quickType, $type } from "./symbols";
-import type { IAnyComplexType, IAnyType, IQuickTreeNode, IStateTreeNode, QuickOrMSTInstance } from "./types";
+import type { IAnyComplexType, IAnyType, IQuickTreeNode, IStateTreeNode, IType, QuickOrMSTInstance } from "./types";
 
 export {
   addDisposer,
@@ -102,13 +102,13 @@ export function getType(value: IStateTreeNode<IAnyType>): MSTAnyComplexType | IA
   return value[$type];
 }
 
-export const getSnapshot = <T extends IAnyType>(value: IStateTreeNode<T>): T["OutputType"] => {
+export const getSnapshot = <S, M extends MSTAnyType>(value: IStateTreeNode<IType<any, S, any, M>>): S => {
   if (isStateTreeNode(value)) {
-    return mstGetSnapshot<MSTSnapshotOut<T["mstType"]>>(value);
+    return mstGetSnapshot<MSTSnapshotOut<M>>(value);
   }
 
   // TODO this isn't quite right, primarily for reference types. The snapshot = string, but the instance = object.
-  return value;
+  return value as unknown as S;
 };
 
 export const getRoot = <T extends IAnyType>(value: any): QuickOrMSTInstance<T> => {
