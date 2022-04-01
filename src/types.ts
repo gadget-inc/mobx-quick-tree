@@ -75,7 +75,7 @@ export interface IType<InputType, OutputType, InstanceType, MSTType extends AnyM
   readonly InstanceType: StateTreeNode<InstanceType, this>;
 
   readonly name: string;
-  readonly mstType: AnyMSTType;
+  readonly mstType: MSTType;
 
   is(value: any): value is QuickOrMSTInstance<this>;
   create(snapshot?: InputType, env?: any): MSTInstance<MSTType>;
@@ -91,6 +91,7 @@ export type Primitives = string | number | boolean | Date | null | undefined;
 
 export type IAnyType = IType<any, any, any, AnyMSTType>;
 export type ISimpleType<T> = IType<T, T, T, MSTSimpleType<T>>;
+export type IAnyModelType = IModelType<any, any>;
 export type IAnyComplexType = IType<any, any, any, AnyComplexMSTType>;
 
 export interface IModelType<Props extends ModelProperties, Others>
@@ -115,8 +116,6 @@ export interface IModelType<Props extends ModelProperties, Others>
     }
   ): IModelType<Props, Others & A & V & VS>;
 }
-
-export type IAnyModelType = IModelType<any, any>;
 
 export type IMaybeType<T extends IAnyType> = IType<
   T["InputType"] | undefined,
@@ -167,8 +166,8 @@ export declare type CreateTypes<T extends IAnyType> =
   | ExtractCSTWithSTN<T["mstType"]>;
 
 export type SnapshotIn<T extends IAnyType> = T["InputType"];
-export type SnapshotOut<T extends IAnyType> = MSTSnapshotOut<T["mstType"]>;
-export type Instance<T> = T extends IAnyType ? T["InstanceType"] : T;
+export type SnapshotOut<T extends IAnyType> = T["OutputType"];
+export type Instance<T> = T extends IAnyType ? QuickOrMSTInstance<T> : T;
 export type QuickOrMSTInstance<T extends IAnyType> = T["InstanceType"] | MSTInstance<T["mstType"]>;
 
 export type SnapshotOrInstance<T> = T extends IAnyType
@@ -188,7 +187,7 @@ export type ModelCreationProps<T extends ModelProperties> = {
 };
 
 export type OutputTypes<T extends ModelProperties> = {
-  [K in keyof T]: T[K]["InstanceType"];
+  [K in keyof T]: T[K]["OutputType"];
 };
 
 export type InstanceTypes<T extends ModelProperties> = {
