@@ -109,7 +109,7 @@ export type IMapType<T extends IAnyType> = IType<
 >;
 
 export type IArrayType<T extends IAnyType> = IType<
-  ReadonlyArray<T["InputType"]>,
+  Array<T["InputType"]>,
   T["OutputType"][],
   IMSTArray<T>,
   MSTArrayType<T["mstType"]>
