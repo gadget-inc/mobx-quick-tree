@@ -1,5 +1,7 @@
 import { BaseType } from "./base";
-import type { FuncOrValue, IAnyType, InstantiateContext, IOptionalType, ValidOptionalValue } from "./types";
+import type { CreateTypes, IAnyType, InstantiateContext, IOptionalType, ValidOptionalValue } from "./types";
+
+export type DefaultFuncOrValue<T extends IAnyType> = T["InputType"] | T["OutputType"] | (() => CreateTypes<T>);
 
 export class OptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> extends BaseType<
   T["InputType"] | OptionalValues[number],
@@ -9,7 +11,7 @@ export class OptionalType<T extends IAnyType, OptionalValues extends ValidOption
 > {
   constructor(
     readonly type: T,
-    private readonly defaultValueOrFunc: FuncOrValue<T["InputType"]>,
+    private readonly defaultValueOrFunc: DefaultFuncOrValue<T>,
     private readonly undefinedValues?: OptionalValues
   ) {
     super(`optional<${type.name}>`, type.mstType);
@@ -33,18 +35,17 @@ export class OptionalType<T extends IAnyType, OptionalValues extends ValidOption
 }
 
 export type OptionalFactory = {
-  <T extends IAnyType>(type: T, defaultValue: FuncOrValue<T["InputType"]>): IOptionalType<T, [undefined]>;
-
+  <T extends IAnyType>(type: T, defaultValue: DefaultFuncOrValue<T>): IOptionalType<T, [undefined]>;
   <T extends IAnyType, OptionalValues extends ValidOptionalValue[]>(
     type: T,
-    defaultValue: FuncOrValue<T["InputType"]>,
+    defaultValue: DefaultFuncOrValue<T>,
     undefinedValues: OptionalValues
   ): IOptionalType<T, OptionalValues>;
 };
 
 export const optional: OptionalFactory = <T extends IAnyType, OptionalValues extends ValidOptionalValue[]>(
   type: T,
-  defaultValue: FuncOrValue<T["InputType"]>,
+  defaultValue: DefaultFuncOrValue<T>,
   undefinedValues?: OptionalValues
 ): IOptionalType<T, OptionalValues> => {
   return new OptionalType(type, defaultValue, undefinedValues);

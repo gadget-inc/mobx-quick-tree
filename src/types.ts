@@ -182,7 +182,6 @@ export type SnapshotOrInstance<T> = T extends IAnyType
 export declare type CreateTypes<T extends IAnyType> = T["InputType"] | T["OutputType"] | T["InstanceType"];
 
 export type ValidOptionalValue = string | boolean | number | null | undefined;
-export type FuncOrValue<T> = T | (() => T);
 export type Primitives = string | number | boolean | Date | null | undefined;
 
 export interface IQuickTreeNode<T extends IAnyType = IAnyType> {
