@@ -8,7 +8,7 @@ import {
 } from "mobx-state-tree";
 import { ReferenceT } from "mobx-state-tree/dist/internal";
 import { BaseType } from "./base";
-import type { IAnyComplexType, InstantiateContext } from "./types";
+import type { IAnyComplexType, IMaybeType, InstantiateContext, IReferenceType } from "./types";
 
 export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsGetSet<T["mstType"]> | {}) & {
   acceptsUndefined?: boolean;
@@ -36,16 +36,16 @@ export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
 }
 
 export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseType<
-  string,
-  string,
-  TargetType["InstanceType"],
+  string | undefined,
+  string | undefined,
+  TargetType["InstanceType"] | undefined,
   IMaybe<MSTReferenceType<TargetType["mstType"]>>
 > {
   constructor(readonly targetType: IAnyComplexType, options?: SafeReferenceOptions<TargetType>) {
     super(`safeReference<${targetType.name}>`, types.safeReference(targetType.mstType, options));
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: string | undefined, context: InstantiateContext): this["InstanceType"] {
     if (!snapshot) {
       return undefined as this["InstanceType"];
     }
@@ -56,13 +56,13 @@ export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseT
 export const reference = <TargetType extends IAnyComplexType>(
   targetType: TargetType,
   options?: ReferenceOptions<TargetType["mstType"]>
-): ReferenceType<TargetType> => {
+): IReferenceType<TargetType> => {
   return new ReferenceType(targetType, options);
 };
 
 export const safeReference = <TargetType extends IAnyComplexType>(
   targetType: TargetType,
   options?: SafeReferenceOptions<TargetType>
-): SafeReferenceType<TargetType> => {
+): IMaybeType<IReferenceType<TargetType>> => {
   return new SafeReferenceType(targetType, options);
 };
