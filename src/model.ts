@@ -48,7 +48,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     this.identifierProp = Object.keys(this.properties).find((name) => properties[name].mstType === mstTypes.identifier);
   }
 
-  views<Views extends Record<string, unknown>>(fn: (self: Instance<this>) => Views): ModelType<Props, Others & Views> {
+  views<Views extends Object>(fn: (self: Instance<this>) => Views): ModelType<Props, Others & Views> {
     const init = (self: Instance<this>) => {
       this.initializeViewsAndActions(self);
       Object.assign(self, fn(self));
