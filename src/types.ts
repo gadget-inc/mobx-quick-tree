@@ -52,7 +52,7 @@ export type IAnyComplexType = IType<any, any, object, AnyComplexMSTType>;
 
 export interface IModelType<Props extends ModelProperties, Others>
   extends IType<
-    InputTypesForModelProps<Props>,
+    InputsForModel<InputTypesForModelProps<Props>>,
     OutputTypesForModelProps<Props>,
     InstanceTypesForModelProps<Props> & Others,
     MSTModelType<MSTPropertiesForModelProps<Props>, Others>
@@ -102,14 +102,14 @@ export type IOptionalType<T extends IAnyType, OptionalValues extends ValidOption
 >;
 
 export type IMapType<T extends IAnyType> = IType<
-  Record<string, T["InputType"]>,
+  Record<string, T["InputType"]> | undefined,
   Record<string, T["OutputType"]>,
   IMSTMap<T>,
   MSTMapType<T["mstType"]>
 >;
 
 export type IArrayType<T extends IAnyType> = IType<
-  Array<T["InputType"]>,
+  Array<T["InputType"]> | undefined,
   T["OutputType"][],
   IMSTArray<T>,
   MSTArrayType<T["mstType"]>
@@ -199,8 +199,16 @@ export interface ModelProperties {
 export type ModelActions = Record<string, Function>;
 
 export type InputTypesForModelProps<T extends ModelProperties> = {
-  [K in keyof T]?: T[K]["InputType"];
+  [K in keyof T]: T[K]["InputType"];
 };
+
+export type RequiredKeys<T> = {
+  [K in keyof T]: undefined extends T[K] ? never : K;
+}[keyof T];
+
+export type InputsForModel<T> = {
+  [K in RequiredKeys<T>]: T[K];
+} & Partial<T>;
 
 export type OutputTypesForModelProps<T extends ModelProperties> = {
   [K in keyof T]: T[K]["OutputType"];

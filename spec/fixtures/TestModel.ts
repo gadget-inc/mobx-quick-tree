@@ -1,4 +1,4 @@
-import { types } from "../../src";
+import { SnapshotIn, types } from "../../src";
 
 export const NamedThing = types
   .model("BooleanWrapper", {
@@ -37,8 +37,8 @@ export const TestModel = types
     },
   }));
 
-export const TestModelSnapshot = {
+export const TestModelSnapshot: SnapshotIn<typeof TestModel> = {
   bool: true,
   frozen: { test: "string" },
   nested: { name: "MiXeD CaSe" },
-} as const;
+};

@@ -29,7 +29,7 @@ export class QuickArray<T extends IAnyType> extends Array<T["InstanceType"]> imp
 }
 
 class ArrayType<T extends IAnyType> extends BaseType<
-  Array<T["InputType"]>,
+  Array<T["InputType"]> | undefined,
   T["OutputType"][],
   IMSTArray<T>,
   MSTArrayType<T["mstType"]>
