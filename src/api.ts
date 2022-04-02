@@ -19,6 +19,7 @@ import {
 } from "mobx-state-tree";
 import { $parent, $quickType, $type } from "./symbols";
 import type {
+  CreateTypes,
   IAnyComplexType,
   IAnyModelType,
   IAnyType,
@@ -36,7 +37,6 @@ export {
   addMiddleware,
   applyPatch,
   applySnapshot,
-  cast,
   clone,
   createActionTrackingMiddleware2,
   destroy,
@@ -51,6 +51,7 @@ export {
   isActionContextThisOrChildOf,
   isAlive,
   isStateTreeNode,
+  IStateTreeNode as MSTStateTreeNode,
   isValidReference,
   joinJsonPath,
   onAction,
@@ -117,7 +118,7 @@ export function getType(value: IStateTreeNode<IAnyType>): MSTAnyComplexType | IA
   return value[$type];
 }
 
-export function getSnapshot<S>(value: IQuickTreeNode<IType<any, S, any, any>>): S;
+export function getSnapshot<S, M extends MSTAnyType>(value: IStateTreeNode<IType<any, S, any, M>>): S;
 export function getSnapshot<S>(value: MSTInstance<MSTType<any, S, any>>): S;
 export function getSnapshot<S, M extends MSTAnyType>(value: IStateTreeNode<IType<any, S, any, M>>): S {
   if (isStateTreeNode(value)) {
@@ -185,3 +186,10 @@ export const isMapType = (value: IAnyType): value is IMapType<IAnyType> => {
 export const isModelType = (value: IAnyType): value is IAnyModelType => {
   return mstIsModelType(value.mstType);
 };
+
+export function cast<O extends string | number | boolean | null | undefined = never>(snapshotOrInstance: O): O;
+export function cast<O extends IAnyType>(snapshotOrInstance: CreateTypes<O>): O;
+export function cast(snapshotOrInstance: never): never;
+export function cast(snapshotOrInstance: any): any {
+  return snapshotOrInstance;
+}
