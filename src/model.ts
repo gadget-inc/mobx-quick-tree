@@ -25,6 +25,12 @@ const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): MS
   ) as MSTPropertiesForModelProps<Props>;
 };
 
+const assignProps = (target: any, source: any) => {
+  if (target && source) {
+    Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+  }
+};
+
 export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   InputsForModel<InputTypesForModelProps<Props>>,
   OutputTypesForModelProps<Props>,
@@ -51,7 +57,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   views<Views extends Object>(fn: (self: Instance<this>) => Views): ModelType<Props, Others & Views> {
     const init = (self: Instance<this>) => {
       this.initializeViewsAndActions(self);
-      Object.assign(self, fn(self));
+      assignProps(self, fn(self));
       return self;
     };
     return new ModelType<Props, Others & Views>(this.name, this.properties, init, this.mstType.views(fn as any));
@@ -116,13 +122,8 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 
       const { actions, views, state } = fn(self);
 
-      if (views) {
-        Object.assign(self, views);
-      }
-
-      if (state) {
-        Object.assign(self, state);
-      }
+      assignProps(self, views);
+      assignProps(self, state);
 
       if (actions) {
         for (const actionName of Object.keys(actions)) {
