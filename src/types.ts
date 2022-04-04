@@ -192,7 +192,7 @@ export type MSTInstance<T> = T extends IAnyType ? MSTInstance_<T["mstType"]> : M
 export type QuickOrMSTInstance<T extends IAnyType> = T["InstanceType"] | MSTInstance_<T["mstType"]>;
 
 export type SnapshotOrInstance<T> = T extends IAnyType
-  ? T["InputType"] | T["InstanceType"] | MSTSnapshotOrInstance<T["mstType"]>
+  ? T["InputType"] | T["InstanceType"] // | MSTSnapshotOrInstance<T["mstType"]>
   : T extends AnyMSTType
   ? MSTSnapshotOrInstance<T>
   : T;
