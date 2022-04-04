@@ -86,20 +86,63 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return new ModelType(newName, this.properties, this.initializeViewsAndActions, this.mstType);
   }
 
-  volatile<TP extends object>(fn: (self: Instance<this>) => TP): IModelType<Props, Others & TP> {
-    // TODO implement me
-    return null as any;
+  volatile<VolatileState extends Record<string, any>>(
+    fn: (self: Instance<this>) => VolatileState
+  ): IModelType<Props, Others & VolatileState> {
+    const init = (self: Instance<this>) => {
+      this.initializeViewsAndActions(self);
+      Object.assign(self, fn(self));
+      return self;
+    };
+
+    return new ModelType<Props, Others & VolatileState>(
+      this.name,
+      this.properties,
+      init,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      this.mstType.volatile(fn as any)
+    );
   }
 
-  extend<A extends ModelActions = {}, V extends Object = {}, VS extends Object = {}>(
+  extend<Actions extends ModelActions = {}, Views extends Object = {}, VolatileState extends Object = {}>(
     fn: (self: Instance<this>) => {
-      actions?: A;
-      views?: V;
-      state?: VS;
+      actions?: Actions;
+      views?: Views;
+      state?: VolatileState;
     }
-  ): IModelType<Props, Others & A & V & VS> {
-    // TODO implement me
-    return null as any;
+  ): IModelType<Props, Others & Actions & Views & VolatileState> {
+    const init = (self: Instance<this>) => {
+      this.initializeViewsAndActions(self);
+
+      const { actions, views, state } = fn(self);
+
+      if (views) {
+        Object.assign(self, views);
+      }
+
+      if (state) {
+        Object.assign(self, state);
+      }
+
+      if (actions) {
+        for (const actionName of Object.keys(actions)) {
+          Reflect.set(self, actionName, () => {
+            throw new Error(`can't execute action "${actionName}" on a read-only instance`);
+          });
+        }
+      }
+
+      return self;
+    };
+
+    return new ModelType<Props, Others & Actions & Views & VolatileState>(
+      this.name,
+      this.properties,
+      init,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore fn should work regardless, but
+      this.mstType.extend(fn)
+    );
   }
 
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
