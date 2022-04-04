@@ -5,11 +5,17 @@ describe("performance", () => {
   const TestModelSnapshot: typeof TestModel["InputType"] = {
     bool: true,
     frozen: { test: "string" },
-    nested: { name: "MiXeD CaSe" },
-    array: [{ name: "Array Item 1" }, { name: "Array Item 2" }],
+    nested: {
+      key: "mixed_up",
+      name: "MiXeD CaSe",
+    },
+    array: [
+      { key: "1", name: "Array Item 1" },
+      { key: "b", name: "Array Item 2" },
+    ],
     map: {
-      a: { name: "Map Item A" },
-      b: { name: "Map Item B" },
+      a: { key: "a", name: "Map Item A" },
+      b: { key: "b", name: "Map Item B" },
     },
   };
 

@@ -1,4 +1,5 @@
 import {
+  getEnv as mstGetEnv,
   getParent as mstGetParent,
   getParentOfType as mstGetParentOfType,
   getRoot as mstGetRoot,
@@ -17,7 +18,7 @@ import {
   resolveIdentifier as mstResolveIdentifier,
   SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
-import { $parent, $quickType, $type } from "./symbols";
+import { $env, $parent, $quickType, $type } from "./symbols";
 import type {
   CreateTypes,
   IAnyComplexType,
@@ -43,7 +44,6 @@ export {
   detach,
   escapeJsonPath,
   flow,
-  getEnv,
   getIdentifier,
   getPath,
   getPathParts,
@@ -116,6 +116,25 @@ export function getType(value: IStateTreeNode<IAnyType>): MSTAnyComplexType | IA
   }
 
   return value[$type];
+}
+
+export function getEnv<Env = any>(value: IStateTreeNode<IAnyType>): Env {
+  if (isStateTreeNode(value)) {
+    return mstGetEnv(value);
+  }
+
+  // Assumes no cycles, otherwise this is an infinite loop
+  let currentNode: IQuickTreeNode<IAnyType> = value;
+  while (currentNode) {
+    const env = currentNode[$env];
+    if (env !== undefined) {
+      return env;
+    }
+
+    currentNode = currentNode[$parent];
+  }
+
+  return {} as Env;
 }
 
 export function getSnapshot<S, M extends MSTAnyType>(value: IStateTreeNode<IType<any, S, any, M>>): S;

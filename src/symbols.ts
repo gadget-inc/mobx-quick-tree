@@ -2,13 +2,16 @@
 export const $quickType = Symbol.for("quickType");
 
 /** @hidden */
-export const $parent = Symbol.for("parent");
+export const $env = Symbol.for("MQT_env");
 
 /** @hidden */
-export const $modelType = Symbol.for("modelType");
+export const $parent = Symbol.for("MQT_parent");
 
 /** @hidden */
-export const $identifier = Symbol.for("identifier");
+export const $modelType = Symbol.for("MQT_modelType");
 
 /** @hidden */
-export const $type = Symbol.for("type");
+export const $identifier = Symbol.for("MQT_identifier");
+
+/** @hidden */
+export const $type = Symbol.for("MQT_type");

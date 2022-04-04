@@ -40,7 +40,7 @@ export interface IType<InputType, OutputType, InstanceType, MSTType extends AnyM
 
   is(value: any): value is this["InstanceType"];
   create(snapshot?: InputType, env?: any): MSTInstance_<MSTType>;
-  createReadOnly(snapshot?: InputType): this["InstanceType"];
+  createReadOnly(snapshot?: InputType, env?: any): this["InstanceType"];
 
   /** @hidden */
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"];
@@ -183,6 +183,7 @@ export interface IMSTMap<T extends IAnyType> {
 export interface InstantiateContext {
   referenceCache: StateTreeNode<Record<string, object>, IAnyComplexType>;
   referencesToResolve: (() => void)[];
+  env?: unknown;
 }
 
 export type SnapshotIn<T extends IAnyType> = T["InputType"]; // | MSTSnapshotIn<T["mstType"]>;
@@ -204,6 +205,7 @@ export type Primitives = string | number | boolean | Date | null | undefined;
 
 export interface IQuickTreeNode<T extends IAnyType = IAnyType> {
   readonly [$type]: T;
+  readonly [key: string | symbol]: any;
 }
 
 export type StateTreeNode<T, IT extends IAnyType> = T extends object ? T & IStateTreeNode<IT> : T;

@@ -2,6 +2,7 @@ import { SnapshotIn, types } from "../../src";
 
 export const NamedThing = types
   .model("BooleanWrapper", {
+    key: types.identifier,
     name: types.string,
   })
   .views((self) => ({
@@ -40,5 +41,14 @@ export const TestModel = types
 export const TestModelSnapshot: SnapshotIn<typeof TestModel> = {
   bool: true,
   frozen: { test: "string" },
-  nested: { name: "MiXeD CaSe" },
+  nested: {
+    key: "mixed_up",
+    name: "MiXeD CaSe",
+  },
+  map: {
+    test_key: {
+      key: "test_key",
+      name: "Testy McTest",
+    },
+  },
 };

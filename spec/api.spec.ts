@@ -1,5 +1,6 @@
 import { types } from "../src";
 import {
+  getEnv,
   getParent,
   getParentOfType,
   getRoot,
@@ -73,6 +74,19 @@ describe("getSnapshot", () => {
   test("returns the proper root for an MST instance", () => {
     const m = TestModel.create(TestModelSnapshot);
     expect(getSnapshot(m)).toEqual(expect.objectContaining(TestModelSnapshot));
+  });
+});
+
+describe("getEnv", () => {
+  test("returns expected env for quick tree instances", () => {
+    const m = TestModel.createReadOnly(TestModelSnapshot, { test: 1 });
+    expect(getEnv(m)).toEqual({ test: 1 });
+    expect(getEnv(m.map.get("test_key")!)).toEqual({ test: 1 });
+  });
+
+  test("returns expected env for MST instances", () => {
+    const m = TestModel.create(TestModelSnapshot, { test: 1 });
+    expect(getEnv(m)).toEqual({ test: 1 });
   });
 });
 

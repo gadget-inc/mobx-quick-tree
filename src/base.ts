@@ -1,5 +1,5 @@
 import type { IAnyType as AnyMSTType, Instance as MSTInstance } from "mobx-state-tree";
-import { $parent, $quickType, $type } from "./symbols";
+import { $env, $parent, $quickType, $type } from "./symbols";
 import type { IAnyType, InstantiateContext, StateTreeNode } from "./types";
 
 export abstract class BaseType<InputType, OutputType, InstanceType, MSTType extends AnyMSTType> {
@@ -27,16 +27,28 @@ export abstract class BaseType<InputType, OutputType, InstanceType, MSTType exte
     return this.mstType.is(value);
   }
 
-  createReadOnly(snapshot?: InputType): this["InstanceType"] {
+  createReadOnly(snapshot?: InputType, env?: any): this["InstanceType"] {
     const context: InstantiateContext = {
       referenceCache: {},
       referencesToResolve: [],
+      env,
     };
 
     const instance = this.instantiate(snapshot, context);
     for (const resolver of context.referencesToResolve) {
       resolver();
     }
+
+    const maybeObjectInstance: unknown = instance;
+    if (typeof maybeObjectInstance === "object" && maybeObjectInstance !== null) {
+      Reflect.defineProperty(maybeObjectInstance, $env, {
+        value: env,
+        configurable: false,
+        enumerable: false,
+        writable: false,
+      });
+    }
+
     return instance;
   }
 
