@@ -25,7 +25,10 @@ export abstract class BaseType<InputType, OutputType, InstanceType, MSTType exte
     return this.mstType.create(snapshot, env);
   }
 
-  is(value: any): value is this["InstanceType"] {
+  is(value: any): value is this["InputType"] | this["InstanceType"] {
+    if (value && value[$type]) {
+      return value[$type] == this;
+    }
     return this.mstType.is(value);
   }
 

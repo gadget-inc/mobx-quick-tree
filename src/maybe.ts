@@ -18,6 +18,13 @@ export class MaybeType<Type extends IAnyType> extends BaseType<
     }
     return this.type.instantiate(snapshot, context);
   }
+
+  is(value: any): value is this["InputType"] | this["InstanceType"] {
+    if (value === undefined) {
+      return true;
+    }
+    return this.type.is(value);
+  }
 }
 
 export class MaybeNullType<Type extends IAnyType> extends BaseType<
@@ -35,6 +42,13 @@ export class MaybeNullType<Type extends IAnyType> extends BaseType<
       return null;
     }
     return this.type.instantiate(snapshot, context);
+  }
+
+  is(value: any): value is this["InputType"] | this["InstanceType"] {
+    if (value === undefined || value === null) {
+      return true;
+    }
+    return this.type.is(value);
   }
 }
 

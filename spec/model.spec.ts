@@ -60,9 +60,7 @@ describe("named", () => {
 });
 
 describe("is", () => {
-  test.skip("can verify a read-only instance", () => {
-    // TODO currently we have MST do all of the heavy lifting for our `is` checks, but it doesn't like our map instances. Skipping this test
-    //   until we implement our own version of `is`.
+  test("can verify a read-only instance", () => {
     const value = TestModel.createReadOnly(TestModelSnapshot);
     expect(TestModel.is(value)).toEqual(true);
     expect(TestModel.is(TestModelSnapshot)).toEqual(true);

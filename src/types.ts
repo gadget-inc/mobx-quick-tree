@@ -38,7 +38,7 @@ export interface IType<InputType, OutputType, InstanceType, MSTType extends AnyM
   readonly name: string;
   readonly mstType: MSTType;
 
-  is(value: any): value is this["InstanceType"];
+  is(value: any): value is this["InputType"] | this["InstanceType"];
   create(snapshot?: InputType, env?: any): MSTInstance_<MSTType>;
   createReadOnly(snapshot?: InputType, env?: any): this["InstanceType"];
 

@@ -22,6 +22,10 @@ export class UnionType<Types extends IAnyType[]> extends BaseType<
     }
     return type.instantiate(snapshot, context);
   }
+
+  is(value: any): value is this["InputType"] | this["InstanceType"] {
+    return this.types.some((type) => type.is(value));
+  }
 }
 
 export const union = <Types extends [IAnyType, ...IAnyType[]]>(...types: Types): IUnionType<Types> => {

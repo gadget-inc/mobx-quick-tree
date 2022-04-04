@@ -21,6 +21,10 @@ export class LateType<T extends IAnyType> extends BaseType<
     return this.type.instantiate(snapshot, context);
   }
 
+  is(value: any): value is this["InputType"] | this["InstanceType"] {
+    return this.type.is(value);
+  }
+
   private get type() {
     this.cachedType ??= this.fn();
     return this.cachedType;

@@ -18,6 +18,10 @@ export class EnumerationType<EnumOptions extends string> extends BaseType<
     }
     throw new Error("unknown enum value");
   }
+
+  is(value: any): value is this["InputType"] | this["InstanceType"] {
+    return this.options.includes(value);
+  }
 }
 
 type EnumerationFactory = {

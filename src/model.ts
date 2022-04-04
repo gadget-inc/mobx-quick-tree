@@ -2,10 +2,11 @@ import {
   IModelType as MSTModelType,
   Instance as MSTInstance,
   isReferenceType,
+  isStateTreeNode,
   types as mstTypes,
 } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
-import { $identifier, $modelType } from "./symbols";
+import { $identifier, $modelType, $type } from "./symbols";
 import type {
   IModelType,
   InputsForModel,
@@ -137,6 +138,26 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
       // @ts-ignore fn should work regardless, but
       this.mstType.extend(fn)
     );
+  }
+
+  is(value: any): value is this["InputType"] | this["InstanceType"] {
+    if (isStateTreeNode(value)) {
+      return this.mstType.is(value);
+    }
+
+    if (typeof value !== "object" || value === null) {
+      return false;
+    }
+
+    if (Object.getPrototypeOf(value) != Object.prototype) {
+      return false;
+    }
+
+    if (value[$type] === this) {
+      return true;
+    }
+
+    return Object.entries(this.properties).every(([name, prop]) => prop.is(value[name]));
   }
 
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {

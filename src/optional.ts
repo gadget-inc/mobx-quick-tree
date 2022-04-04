@@ -38,6 +38,18 @@ export class OptionalType<
     return this.type.instantiate(snapshot, context);
   }
 
+  is(value: any): value is this["InputType"] | this["InstanceType"] {
+    if (this.undefinedValues) {
+      if (this.undefinedValues.includes(value)) {
+        return true;
+      }
+    } else if (value === undefined) {
+      return true;
+    }
+
+    return this.type.is(value);
+  }
+
   private get defaultValue(): T["InputType"] {
     return this.defaultValueOrFunc instanceof Function ? this.defaultValueOrFunc() : this.defaultValueOrFunc;
   }

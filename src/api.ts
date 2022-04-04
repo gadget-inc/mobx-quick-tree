@@ -96,7 +96,7 @@ export function getParentOfType<T extends IAnyComplexType>(value: any, type: T):
 
   value = value[$parent];
   while (value) {
-    if (value[$type] === type) {
+    if (type.is(value)) {
       break;
     }
 
