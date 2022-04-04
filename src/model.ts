@@ -66,14 +66,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   actions<Actions extends ModelActions>(fn: (self: Instance<this>) => Actions): ModelType<Props, Others & Actions> {
     const init = (self: Instance<this>) => {
       this.initializeViewsAndActions(self);
-
-      const actions = fn(self as any);
-      for (const actionName of Object.keys(actions)) {
-        Reflect.set(self, actionName, () => {
-          throw new Error(`can't execute action "${actionName}" on a read-only instance`);
-        });
-      }
-
+      assignProps(self, fn(self));
       return self;
     };
     return new ModelType<Props, Others & Actions>(this.name, this.properties, init, this.mstType.actions(fn as any));

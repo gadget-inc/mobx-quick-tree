@@ -82,10 +82,10 @@ describe("is", () => {
 });
 
 describe("actions", () => {
-  test("throw on a read-only instance", () => {
+  test("succeed on a read-only instance", () => {
     const m = TestModel.createReadOnly(TestModelSnapshot);
-    expect(() => m.setB(false)).toThrow();
-    expect(m.bool).toEqual(true);
+    m.setB(false);
+    expect(m.bool).toEqual(false);
   });
 
   test("succeed on an MST instance", () => {
