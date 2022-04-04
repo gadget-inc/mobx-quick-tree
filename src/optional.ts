@@ -1,9 +1,13 @@
+import { types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
 import type { CreateTypes, IAnyType, InstantiateContext, IOptionalType, ValidOptionalValue } from "./types";
 
 export type DefaultFuncOrValue<T extends IAnyType> = T["InputType"] | T["OutputType"] | (() => CreateTypes<T>);
 
-export class OptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> extends BaseType<
+export class OptionalType<
+  T extends IAnyType,
+  OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]
+> extends BaseType<
   T["InputType"] | OptionalValues[number],
   T["OutputType"],
   T["InstanceTypeWithoutSTN"],
@@ -14,7 +18,12 @@ export class OptionalType<T extends IAnyType, OptionalValues extends ValidOption
     private readonly defaultValueOrFunc: DefaultFuncOrValue<T>,
     private readonly undefinedValues?: OptionalValues
   ) {
-    super(`optional<${type.name}>`, type.mstType);
+    super(
+      `optional<${type.name}>`,
+      undefinedValues
+        ? mstTypes.optional(type.mstType, defaultValueOrFunc, undefinedValues)
+        : mstTypes.optional(type.mstType, defaultValueOrFunc)
+    );
   }
 
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
@@ -36,14 +45,17 @@ export class OptionalType<T extends IAnyType, OptionalValues extends ValidOption
 
 export type OptionalFactory = {
   <T extends IAnyType>(type: T, defaultValue: DefaultFuncOrValue<T>): IOptionalType<T, [undefined]>;
-  <T extends IAnyType, OptionalValues extends ValidOptionalValue[]>(
+  <T extends IAnyType, OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]>(
     type: T,
     defaultValue: DefaultFuncOrValue<T>,
     undefinedValues: OptionalValues
   ): IOptionalType<T, OptionalValues>;
 };
 
-export const optional: OptionalFactory = <T extends IAnyType, OptionalValues extends ValidOptionalValue[]>(
+export const optional: OptionalFactory = <
+  T extends IAnyType,
+  OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]
+>(
   type: T,
   defaultValue: DefaultFuncOrValue<T>,
   undefinedValues?: OptionalValues
