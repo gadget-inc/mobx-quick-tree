@@ -21,7 +21,7 @@ export const TestModel = types
     frozen: types.frozen<{ test: "string" }>(),
     nested: NamedThing,
     array: types.array(NamedThing),
-    map: types.map(NamedThing),
+    map: types.map(types.late(() => NamedThing)),
   })
   .views((self) => ({
     get notBool() {

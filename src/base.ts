@@ -10,7 +10,9 @@ export abstract class BaseType<InputType, OutputType, InstanceType, MSTType exte
   readonly InstanceType!: StateTreeNode<InstanceType, this>;
   readonly InstanceTypeWithoutSTN!: InstanceType;
 
-  constructor(readonly name: string, readonly mstType: MSTType) {
+  readonly mstType!: MSTType;
+
+  constructor(readonly name: string, mstType: MSTType) {
     Reflect.defineProperty(this, "mstType", {
       value: mstType,
       enumerable: false,
