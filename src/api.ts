@@ -94,11 +94,13 @@ export function getParentOfType<T extends IAnyComplexType>(value: any, type: T):
     return mstGetParentOfType(value, type.mstType);
   }
 
+  value = value[$parent];
   while (value) {
-    value = value[$parent];
     if (value[$type] === type) {
       break;
     }
+
+    value = value[$parent];
   }
 
   if (!value) {
