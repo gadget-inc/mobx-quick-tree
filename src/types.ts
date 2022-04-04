@@ -1,6 +1,7 @@
 import type { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
 import {
   IAnyComplexType as AnyComplexMSTType,
+  IAnyModelType as MSTAnyModelType,
   IAnyType as AnyMSTType,
   IArrayType as MSTArrayType,
   IMapType as MSTMapType,
@@ -47,7 +48,6 @@ export interface IType<InputType, OutputType, InstanceType, MSTType extends AnyM
 
 export type IAnyType = IType<any, any, any, AnyMSTType>;
 export type ISimpleType<T> = IType<T, T, T, MSTSimpleType<T>>;
-export type IAnyModelType = IModelType<any, any>;
 export type IAnyComplexType = IType<any, any, object, AnyComplexMSTType>;
 
 export interface IModelType<Props extends ModelProperties, Others>
@@ -71,6 +71,24 @@ export interface IModelType<Props extends ModelProperties, Others>
       state?: VS;
     }
   ): IModelType<Props, Others & A & V & VS>;
+}
+
+// This isn't quite IModelType<any, any>. In particular, InputType is any, which is key to make a lot of things typecheck
+export interface IAnyModelType extends IType<any, any, any, MSTAnyModelType> {
+  readonly properties: any;
+
+  named(newName: string): IAnyModelType;
+  props<Props2 extends ModelProperties>(props: Props2): IAnyModelType;
+  views<V extends Object>(fn: (self: Instance<this>) => V): IAnyModelType;
+  actions<A extends ModelActions>(fn: (self: Instance<this>) => A): IAnyModelType;
+  volatile<TP extends object>(fn: (self: Instance<this>) => TP): IAnyModelType;
+  extend<A extends ModelActions = {}, V extends Object = {}, VS extends Object = {}>(
+    fn: (self: Instance<this>) => {
+      actions?: A;
+      views?: V;
+      state?: VS;
+    }
+  ): IAnyModelType;
 }
 
 export type IMaybeType<T extends IAnyType> = IType<

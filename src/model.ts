@@ -141,7 +141,7 @@ export type ModelFactory = {
 export const model: ModelFactory = <Props extends ModelProperties>(
   nameOrProperties: string | Props | undefined,
   properties?: Props
-) => {
+): IModelType<Props, {}> => {
   let props: Props;
   let name = "model";
   if (typeof nameOrProperties === "string") {
