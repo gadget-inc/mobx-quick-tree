@@ -54,7 +54,6 @@ describe("maybe", () => {
     expect(maybeType.createReadOnly()).toEqual(undefined);
     expect(maybeType.createReadOnly(undefined)).toEqual(undefined);
     expect(maybeType.createReadOnly("value 2")).toEqual("value 2");
-    expect(() => maybeType.createReadOnly(null as any)).toThrow();
   });
 
   test("can be verified with is", () => {
@@ -71,15 +70,14 @@ describe("maybeNull", () => {
 
   test("can create a read-only instance", () => {
     expect(maybeNullType.createReadOnly(null)).toEqual(null);
+    expect(maybeNullType.createReadOnly(undefined)).toEqual(null);
     expect(maybeNullType.createReadOnly("value 2")).toEqual("value 2");
-    expect(() => maybeNullType.createReadOnly()).toThrow();
-    expect(() => maybeNullType.createReadOnly(undefined)).toThrow();
   });
 
   test("can be verified with is", () => {
     expect(maybeNullType.is(null)).toEqual(true);
+    expect(maybeNullType.is(undefined)).toEqual(true);
     expect(maybeNullType.is("not testing")).toEqual(true);
-    expect(maybeNullType.is(undefined)).toEqual(false);
     expect(maybeNullType.is(true)).toEqual(false);
     expect(maybeNullType.is({})).toEqual(false);
   });

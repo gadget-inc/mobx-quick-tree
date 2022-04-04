@@ -6,12 +6,13 @@ import { enumeration } from "./enumeration";
 import { frozen } from "./frozen";
 import { late } from "./late";
 import { map } from "./map";
+import { maybe, maybeNull } from "./maybe";
 import { model } from "./model";
 import { optional } from "./optional";
 import { reference, safeReference } from "./reference";
 import { refinement } from "./refinement";
 import { Date, literal, SimpleType } from "./simple";
-import { lazyUnion, maybe, maybeNull, union } from "./union";
+import { lazyUnion, union } from "./union";
 
 export * from "./api";
 export * from "./types";

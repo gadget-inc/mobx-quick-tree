@@ -9,7 +9,7 @@ export class SimpleType<T> extends BaseType<T, T, T, MSTSimpleType<T>> {
 
   instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext): this["InstanceType"] {
     if (snapshot === undefined) {
-      throw new Error("can't initialize simple type with undefined");
+      throw new Error(`can't initialize simple type ${this.name} with undefined`);
     }
     return snapshot as this["InstanceType"];
   }
@@ -18,7 +18,7 @@ export class SimpleType<T> extends BaseType<T, T, T, MSTSimpleType<T>> {
 export class DateType extends BaseType<Date | number, number, Date, typeof types.Date> {
   instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext): this["InstanceType"] {
     if (snapshot === undefined) {
-      throw new Error("can't initialize simple type with undefined");
+      throw new Error(`can't initialize simple type ${this.name} with undefined`);
     }
     return snapshot as this["InstanceType"];
   }
