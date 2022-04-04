@@ -1,5 +1,6 @@
 import { isStateTreeNode } from "mobx-state-tree";
 import { types } from "../src";
+import { $identifier } from "../src/symbols";
 import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
 
 describe("can create", () => {
@@ -28,6 +29,12 @@ describe("can create", () => {
     expect(m.nested.upperCasedName()).toEqual("MIXED CASE");
     expect(m.newThing).toEqual("COOL");
     expect(isStateTreeNode(m)).toEqual(false);
+  });
+
+  test("a read-only instance with an optional identifier", () => {
+    const model = types.model("Test", { key: types.optional(types.identifier, () => "test") });
+    const m = model.createReadOnly(TestModelSnapshot);
+    expect((m as any)[$identifier]).toEqual("test");
   });
 
   test("an MST instance", () => {

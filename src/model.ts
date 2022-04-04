@@ -51,7 +51,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     mstModel: MSTModelType<MSTPropertiesForModelProps<Props>, Others>
   ) {
     super(name, mstModel);
-    this.identifierProp = Object.keys(this.properties).find((name) => properties[name].mstType === mstTypes.identifier);
+    this.identifierProp = this.mstType.identifierAttribute;
   }
 
   views<Views extends Object>(fn: (self: Instance<this>) => Views): ModelType<Props, Others & Views> {
