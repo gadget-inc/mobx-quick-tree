@@ -95,7 +95,19 @@ test("can compose models", () => {
     },
   }));
 
-  const modelBType = types.model("B", { b: types.optional(types.number, 10) });
+  const modelBType = types
+    .model("B", { b: types.optional(types.number, 10) })
+    .views((self) => ({
+      get doubleLength() {
+        return (self as any).a.length * 2;
+      },
+    }))
+    .views((self) => ({
+      get bSquared() {
+        return self.b * self.b;
+      },
+    }));
+
   const composedType = types.compose("C", modelAType, modelBType);
 
   expect(composedType.name).toEqual("C");
@@ -103,8 +115,14 @@ test("can compose models", () => {
   let instance = composedType.createReadOnly({ a: "xyz" });
   expect(instance.a).toEqual("xyz");
   expect(instance.b).toEqual(10);
+  expect(instance.lenA()).toEqual(3);
+  expect(instance.doubleLength).toEqual(6);
+  expect(instance.bSquared).toEqual(100);
 
-  instance = composedType.createReadOnly({ a: "abc", b: 4 });
-  expect(instance.a).toEqual("abc");
+  instance = composedType.createReadOnly({ a: "abcde", b: 4 });
+  expect(instance.a).toEqual("abcde");
   expect(instance.b).toEqual(4);
+  expect(instance.lenA()).toEqual(5);
+  expect(instance.doubleLength).toEqual(10);
+  expect(instance.bSquared).toEqual(16);
 });

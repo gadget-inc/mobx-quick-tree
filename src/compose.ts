@@ -43,6 +43,7 @@ export const compose: ComposeFactory = (
       // TODO see if there's a good way to not have to do this cast
       (type as any).initializeViewsAndActions(self);
     }
+    return self;
   };
 
   // We ignore the overloading MST has put on compose, to avoid writing out an annoying `switch`
