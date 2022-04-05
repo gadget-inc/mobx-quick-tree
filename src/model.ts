@@ -29,20 +29,12 @@ const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): MS
 const assignProps = (target: any, source: any) => {
   if (target && source) {
     const descriptors = Object.getOwnPropertyDescriptors(source);
-    Object.defineProperties(
-      target,
-      Object.fromEntries(
-        Object.entries(descriptors).map(([key, desc]) => {
-          return [
-            key,
-            {
-              ...desc,
-              enumerable: false,
-            },
-          ];
-        })
-      )
-    );
+    for (const [name, desc] of Object.entries(descriptors)) {
+      Object.defineProperty(target, name, {
+        ...desc,
+        enumerable: false,
+      });
+    }
   }
 };
 
