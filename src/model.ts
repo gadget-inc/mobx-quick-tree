@@ -158,7 +158,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   }
 
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
-    const instance = {} as this["InstanceType"];
+    const instance: Record<string | symbol, any> = {};
 
     setType(instance, this);
 
@@ -166,25 +166,25 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
       if (isReferenceType(v.mstType)) {
         context.referencesToResolve.push(() => {
           const propValue = v.instantiate(snapshot?.[k], context);
-          Reflect.set(instance, k, propValue);
+          instance[k] = propValue;
         });
         continue;
       }
 
       const propValue = v.instantiate(snapshot?.[k], context);
       setParent(propValue, instance);
-      Reflect.set(instance, k, propValue);
+      instance[k] = propValue;
     }
 
     if (this.identifierProp) {
       const id = instance[this.identifierProp];
-      Reflect.set(instance, $identifier, id);
+      instance[$identifier] = id;
       context.referenceCache[id] = instance;
     }
 
     this.initializeViewsAndActions(instance);
 
-    return instance;
+    return instance as this["InstanceType"];
   }
 }
 
