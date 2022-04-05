@@ -12,17 +12,18 @@ import {
   isMapType as mstIsMapType,
   isModelType as mstIsModelType,
   isRoot as mstIsRoot,
-  isStateTreeNode,
+  isStateTreeNode as mstIsStateTreeNode,
   IStateTreeNode as MSTStateTreeNode,
   IType as MSTType,
   resolveIdentifier as mstResolveIdentifier,
-  SnapshotOut as MSTSnapshotOut,
+  SnapshotOut as MSTSnapshotOut
 } from "mobx-state-tree";
 import { $env, $parent, $quickType, $type } from "./symbols";
 import type {
   CreateTypes,
   IAnyComplexType,
   IAnyModelType,
+  IAnyStateTreeNode,
   IAnyType,
   IArrayType,
   IMapType,
@@ -30,7 +31,7 @@ import type {
   IQuickTreeNode,
   IStateTreeNode,
   IType,
-  QuickOrMSTInstance,
+  QuickOrMSTInstance
 } from "./types";
 
 export {
@@ -50,7 +51,6 @@ export {
   hasParent,
   isActionContextThisOrChildOf,
   isAlive,
-  isStateTreeNode,
   IStateTreeNode as MSTStateTreeNode,
   isValidReference,
   joinJsonPath,
@@ -63,15 +63,23 @@ export {
   splitJsonPath,
   tryReference,
   typecheck,
-  walk,
+  walk
 } from "mobx-state-tree";
 
 export const isType = (value: any): value is IAnyType => {
   return $quickType in value;
 };
 
+export const isStateTreeNode = (value: any): value is IAnyStateTreeNode => {
+  if(mstIsStateTreeNode(value)) {
+    return true;
+  }
+  
+  return typeof value === "object" && value !== null && $type in value;
+};
+
 export const getParent = <T extends IAnyType>(value: any, depth = 1): QuickOrMSTInstance<T> => {
-  if (isStateTreeNode(value)) {
+  if (mstIsStateTreeNode(value)) {
     return mstGetParent(value, depth);
   }
 
@@ -90,7 +98,7 @@ export const getParent = <T extends IAnyType>(value: any, depth = 1): QuickOrMST
 export function getParentOfType<T extends IAnyComplexType>(value: any, type: T): Instance<T>;
 export function getParentOfType<T extends MSTAnyComplexType>(value: any, type: T): MSTInstance<T>;
 export function getParentOfType<T extends IAnyComplexType>(value: any, type: T): QuickOrMSTInstance<T> {
-  if (isStateTreeNode(value)) {
+  if (mstIsStateTreeNode(value)) {
     return mstGetParentOfType(value, type.mstType);
   }
 
@@ -113,7 +121,7 @@ export function getParentOfType<T extends IAnyComplexType>(value: any, type: T):
 export function getType(value: MSTInstance<MSTAnyType>): MSTAnyComplexType;
 export function getType(value: IQuickTreeNode<IAnyType>): IAnyComplexType;
 export function getType(value: IStateTreeNode<IAnyType>): MSTAnyComplexType | IAnyComplexType {
-  if (isStateTreeNode(value)) {
+  if (mstIsStateTreeNode(value)) {
     return mstGetType(value);
   }
 
@@ -121,7 +129,7 @@ export function getType(value: IStateTreeNode<IAnyType>): MSTAnyComplexType | IA
 }
 
 export function getEnv<Env = any>(value: IStateTreeNode<IAnyType>): Env {
-  if (isStateTreeNode(value)) {
+  if (mstIsStateTreeNode(value)) {
     return mstGetEnv(value);
   }
 
@@ -142,7 +150,7 @@ export function getEnv<Env = any>(value: IStateTreeNode<IAnyType>): Env {
 export function getSnapshot<S, M extends MSTAnyType>(value: IStateTreeNode<IType<any, S, any, M>>): S;
 export function getSnapshot<S>(value: MSTInstance<MSTType<any, S, any>>): S;
 export function getSnapshot<S, M extends MSTAnyType>(value: IStateTreeNode<IType<any, S, any, M>>): S {
-  if (isStateTreeNode(value)) {
+  if (mstIsStateTreeNode(value)) {
     return mstGetSnapshot<MSTSnapshotOut<M>>(value);
   }
 
@@ -151,7 +159,7 @@ export function getSnapshot<S, M extends MSTAnyType>(value: IStateTreeNode<IType
 }
 
 export const getRoot = <T extends IAnyType>(value: any): QuickOrMSTInstance<T> => {
-  if (isStateTreeNode(value)) {
+  if (mstIsStateTreeNode(value)) {
     return mstGetRoot(value);
   }
 
@@ -167,7 +175,7 @@ export const getRoot = <T extends IAnyType>(value: any): QuickOrMSTInstance<T> =
 };
 
 export const isRoot = (value: any): boolean => {
-  if (isStateTreeNode(value)) {
+  if (mstIsStateTreeNode(value)) {
     return mstIsRoot(value);
   }
 
@@ -189,7 +197,7 @@ export function resolveIdentifier<T extends IAnyModelType>(
   target: IStateTreeNode<IAnyType>,
   identifier: string
 ): QuickOrMSTInstance<T> | undefined {
-  if (isStateTreeNode(target)) {
+  if (mstIsStateTreeNode(target)) {
     return mstResolveIdentifier(type.mstType, target, identifier);
   }
 

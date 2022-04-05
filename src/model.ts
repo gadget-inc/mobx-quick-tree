@@ -28,7 +28,21 @@ const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): MS
 
 const assignProps = (target: any, source: any) => {
   if (target && source) {
-    Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    const descriptors = Object.getOwnPropertyDescriptors(source);
+    Object.defineProperties(
+      target,
+      Object.fromEntries(
+        Object.entries(descriptors).map(([key, desc]) => {
+          return [
+            key,
+            {
+              ...desc,
+              enumerable: false,
+            },
+          ];
+        })
+      )
+    );
   }
 };
 
@@ -91,7 +105,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   ): IModelType<Props, Others & VolatileState> {
     const init = (self: Instance<this>) => {
       this.initializeViewsAndActions(self);
-      Object.assign(self, fn(self));
+      assignProps(self, fn(self));
       return self;
     };
 
@@ -115,18 +129,9 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
       this.initializeViewsAndActions(self);
 
       const { actions, views, state } = fn(self);
-
       assignProps(self, views);
       assignProps(self, state);
-
-      if (actions) {
-        for (const actionName of Object.keys(actions)) {
-          Reflect.set(self, actionName, () => {
-            throw new Error(`can't execute action "${actionName}" on a read-only instance`);
-          });
-        }
-      }
-
+      assignProps(self, actions);
       return self;
     };
 
