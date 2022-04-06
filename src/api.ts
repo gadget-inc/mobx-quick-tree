@@ -16,7 +16,7 @@ import {
   IStateTreeNode as MSTStateTreeNode,
   IType as MSTType,
   resolveIdentifier as mstResolveIdentifier,
-  SnapshotOut as MSTSnapshotOut
+  SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
 import { $env, $parent, $quickType, $type } from "./symbols";
 import type {
@@ -31,7 +31,7 @@ import type {
   IQuickTreeNode,
   IStateTreeNode,
   IType,
-  QuickOrMSTInstance
+  QuickOrMSTInstance,
 } from "./types";
 
 export {
@@ -63,7 +63,7 @@ export {
   splitJsonPath,
   tryReference,
   typecheck,
-  walk
+  walk,
 } from "mobx-state-tree";
 
 export const isType = (value: any): value is IAnyType => {
@@ -71,10 +71,10 @@ export const isType = (value: any): value is IAnyType => {
 };
 
 export const isStateTreeNode = (value: any): value is IAnyStateTreeNode => {
-  if(mstIsStateTreeNode(value)) {
+  if (mstIsStateTreeNode(value)) {
     return true;
   }
-  
+
   return typeof value === "object" && value !== null && $type in value;
 };
 

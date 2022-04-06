@@ -17,7 +17,7 @@ import {
 } from "mobx-state-tree";
 import { $quickType, $type } from "./symbols";
 
-export {
+export type {
   IJsonPatch,
   IMiddlewareEvent,
   IPatchRecorder,
