@@ -11,7 +11,7 @@ import { model } from "./model";
 import { optional } from "./optional";
 import { reference, safeReference } from "./reference";
 import { refinement } from "./refinement";
-import { Date, literal, SimpleType } from "./simple";
+import { DateType, literal, SimpleType } from "./simple";
 import { lazyUnion, union } from "./union";
 
 export * from "./api";
@@ -19,7 +19,7 @@ export * from "./types";
 
 export const types = {
   boolean: SimpleType.for(mstTypes.boolean),
-  Date,
+  Date: new DateType("Date", mstTypes.Date),
   identifier: SimpleType.for(mstTypes.identifier),
   integer: SimpleType.for(mstTypes.integer),
   literal,

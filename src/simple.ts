@@ -1,6 +1,6 @@
 import { ISimpleType as MSTSimpleType, SnapshotIn, types } from "mobx-state-tree";
 import { BaseType } from "./base";
-import type { InstantiateContext, ISimpleType, IType, Primitives } from "./types";
+import type { InstantiateContext, ISimpleType, Primitives } from "./types";
 
 export class SimpleType<T> extends BaseType<T, T, T, MSTSimpleType<T>> {
   static for<MSTType extends MSTSimpleType<any>>(mstType: MSTType): ISimpleType<SnapshotIn<MSTType>> {
@@ -20,6 +20,11 @@ export class DateType extends BaseType<Date | number, number, Date, typeof types
     if (snapshot === undefined) {
       throw new Error(`can't initialize simple type ${this.name} with undefined`);
     }
+
+    if (typeof snapshot == "number") {
+      return new Date(snapshot);
+    }
+
     return snapshot as this["InstanceType"];
   }
 }
@@ -37,8 +42,6 @@ export class LiteralType<T extends Primitives> extends SimpleType<T> {
     return this.value as this["InstanceType"];
   }
 }
-
-export const Date: IType<Date | number, number, Date, typeof types.Date> = new DateType("Date", types.Date);
 
 export const literal = <T extends Primitives>(value: T): ISimpleType<T> => {
   return new LiteralType(value);

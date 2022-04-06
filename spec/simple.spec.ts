@@ -29,6 +29,23 @@ describe("string", () => {
   });
 });
 
+describe("Date", () => {
+  test("can create a read-only instance", () => {
+    const date = new Date();
+    expect(types.Date.createReadOnly(date.getTime())).toEqual(date);
+    expect(types.Date.createReadOnly(date)).toEqual(date);
+  });
+
+  test("can be verified with is", () => {
+    expect(types.Date.is(123)).toEqual(true);
+    expect(types.Date.is(new Date())).toEqual(true);
+    expect(types.Date.is("")).toEqual(false);
+    expect(types.Date.is(null)).toEqual(false);
+    expect(types.Date.is(true)).toEqual(false);
+    expect(types.Date.is({})).toEqual(false);
+  });
+});
+
 describe("late", () => {
   const modelType = types.model("Test", { a: types.optional(types.string, "default"), b: types.number });
   const lateType = types.late(() => modelType);
