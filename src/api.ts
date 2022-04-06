@@ -6,6 +6,7 @@ import {
   getSnapshot as mstGetSnapshot,
   getType as mstGetType,
   IAnyComplexType as MSTAnyComplexType,
+  IAnyModelType as MSTAnyModelType,
   IAnyType as MSTAnyType,
   Instance as MSTInstance,
   isArrayType as mstIsArrayType,
@@ -78,9 +79,9 @@ export const isStateTreeNode = (value: any): value is IAnyStateTreeNode => {
   return typeof value === "object" && value !== null && $type in value;
 };
 
-export const getParent = <T extends IAnyType>(value: any, depth = 1): QuickOrMSTInstance<T> => {
+export const getParent = <T extends IAnyType>(value: IAnyStateTreeNode, depth = 1): QuickOrMSTInstance<T> => {
   if (mstIsStateTreeNode(value)) {
-    return mstGetParent(value, depth);
+    return mstGetParent(value, depth) as QuickOrMSTInstance<T>;
   }
 
   while (value && depth > 0) {
@@ -95,11 +96,16 @@ export const getParent = <T extends IAnyType>(value: any, depth = 1): QuickOrMST
   return value;
 };
 
-export function getParentOfType<T extends IAnyComplexType>(value: any, type: T): Instance<T>;
-export function getParentOfType<T extends MSTAnyComplexType>(value: any, type: T): MSTInstance<T>;
-export function getParentOfType<T extends IAnyComplexType>(value: any, type: T): QuickOrMSTInstance<T> {
+export function getParentOfType<T extends IAnyComplexType | MSTAnyComplexType>(
+  value: IAnyStateTreeNode,
+  type: T
+): QuickOrMSTInstance<T> {
   if (mstIsStateTreeNode(value)) {
-    return mstGetParentOfType(value, type.mstType);
+    if (mstIsType(type)) {
+      return mstGetParentOfType(value, type);
+    } else {
+      return mstGetParentOfType(value, type.mstType) as QuickOrMSTInstance<T>;
+    }
   }
 
   value = value[$parent];
@@ -158,9 +164,9 @@ export function getSnapshot<S, M extends MSTAnyType>(value: IStateTreeNode<IType
   return value as unknown as S;
 }
 
-export const getRoot = <T extends IAnyType>(value: any): QuickOrMSTInstance<T> => {
+export const getRoot = <T extends IAnyType>(value: IAnyStateTreeNode): QuickOrMSTInstance<T> => {
   if (mstIsStateTreeNode(value)) {
-    return mstGetRoot(value);
+    return mstGetRoot(value) as T["mstType"]["Type"]; // Not sure why MSTInstance doesn't work here
   }
 
   // Assumes no cycles, otherwise this is an infinite loop
@@ -182,23 +188,27 @@ export const isRoot = (value: any): boolean => {
   return value[$parent] === undefined;
 };
 
-export function resolveIdentifier<T extends IAnyModelType>(
+export function resolveIdentifier<T extends IAnyModelType | MSTAnyModelType>(
   type: T,
   target: IQuickTreeNode<IAnyType>,
   identifier: string
 ): Instance<T> | undefined;
-export function resolveIdentifier<T extends IAnyModelType>(
+export function resolveIdentifier<T extends IAnyModelType | MSTAnyModelType>(
   type: T,
   target: MSTStateTreeNode<MSTAnyType>,
   identifier: string
 ): MSTInstance<T> | undefined;
-export function resolveIdentifier<T extends IAnyModelType>(
+export function resolveIdentifier<T extends IAnyModelType | MSTAnyModelType>(
   type: T,
   target: IStateTreeNode<IAnyType>,
   identifier: string
 ): QuickOrMSTInstance<T> | undefined {
   if (mstIsStateTreeNode(target)) {
-    return mstResolveIdentifier(type.mstType, target, identifier);
+    if (mstIsType(type)) {
+      return mstResolveIdentifier(type, target, identifier);
+    } else {
+      return mstResolveIdentifier(type.mstType, target, identifier);
+    }
   }
 
   throw new Error("not yet implemented");

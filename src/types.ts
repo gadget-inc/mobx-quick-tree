@@ -1,8 +1,8 @@
 import type { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
 import {
-  IAnyComplexType as AnyComplexMSTType,
+  IAnyComplexType as MSTAnyComplexType,
   IAnyModelType as MSTAnyModelType,
-  IAnyType as AnyMSTType,
+  IAnyType as MSTAnyType,
   IArrayType as MSTArrayType,
   IMapType as MSTMapType,
   IMaybe as MSTMaybeType,
@@ -12,6 +12,7 @@ import {
   IReferenceType as MSTReferenceType,
   ISimpleType as MSTSimpleType,
   IStateTreeNode as MSTStateTreeNode,
+  SnapshotIn as MSTSnapshotIn,
   SnapshotOrInstance as MSTSnapshotOrInstance,
   SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
@@ -27,7 +28,7 @@ export type {
   UnionOptions,
 } from "mobx-state-tree";
 
-export interface IType<InputType, OutputType, InstanceType, MSTType extends AnyMSTType> {
+export interface IType<InputType, OutputType, InstanceType, MSTType extends MSTAnyType> {
   readonly [$quickType]: undefined;
 
   readonly InputType: InputType;
@@ -46,9 +47,9 @@ export interface IType<InputType, OutputType, InstanceType, MSTType extends AnyM
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"];
 }
 
-export type IAnyType = IType<any, any, any, AnyMSTType>;
+export type IAnyType = IType<any, any, any, MSTAnyType>;
 export type ISimpleType<T> = IType<T, T, T, MSTSimpleType<T>>;
-export type IAnyComplexType = IType<any, any, object, AnyComplexMSTType>;
+export type IAnyComplexType = IType<any, any, object, MSTAnyComplexType>;
 
 export interface IModelType<Props extends ModelProperties, Others>
   extends IType<
@@ -190,11 +191,15 @@ export type SnapshotIn<T extends IAnyType> = T["InputType"];
 export type SnapshotOut<T extends IAnyType> = T["OutputType"];
 export type Instance<T> = T extends IAnyType ? T["InstanceType"] : T;
 export type MSTInstance<T> = T extends IAnyType ? MSTInstance_<T["mstType"]> : MSTInstance_<T>;
-export type QuickOrMSTInstance<T extends IAnyType> = T["InstanceType"] | MSTInstance_<T["mstType"]>;
+export type QuickOrMSTInstance<T> = T extends IAnyType
+  ? T["InstanceType"] | T["mstType"]
+  : T extends MSTAnyType
+  ? IQuickTreeNode<IType<MSTSnapshotIn<T>, MSTSnapshotOut<T>, T["TypeWithoutSTN"], T>> | MSTInstance_<T>
+  : never;
 
 export type SnapshotOrInstance<T> = T extends IAnyType
   ? T["InputType"] | T["InstanceType"]
-  : T extends AnyMSTType
+  : T extends MSTAnyType
   ? MSTSnapshotOrInstance<T>
   : T;
 
