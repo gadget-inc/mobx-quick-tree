@@ -14,6 +14,7 @@ import {
   isRoot as mstIsRoot,
   isStateTreeNode as mstIsStateTreeNode,
   IStateTreeNode as MSTStateTreeNode,
+  isType as mstIsType,
   IType as MSTType,
   resolveIdentifier as mstResolveIdentifier,
   SnapshotOut as MSTSnapshotOut,
@@ -51,7 +52,6 @@ export {
   hasParent,
   isActionContextThisOrChildOf,
   isAlive,
-  IStateTreeNode as MSTStateTreeNode,
   isValidReference,
   joinJsonPath,
   onAction,
@@ -204,15 +204,24 @@ export function resolveIdentifier<T extends IAnyModelType>(
   throw new Error("not yet implemented");
 }
 
-export const isArrayType = (value: IAnyType): value is IArrayType<IAnyType> => {
+export const isArrayType = (value: IAnyType | MSTAnyType): value is IArrayType<IAnyType> => {
+  if (mstIsType(value)) {
+    return mstIsArrayType(value);
+  }
   return mstIsArrayType(value.mstType);
 };
 
-export const isMapType = (value: IAnyType): value is IMapType<IAnyType> => {
+export const isMapType = (value: IAnyType | MSTAnyType): value is IMapType<IAnyType> => {
+  if (mstIsType(value)) {
+    return mstIsMapType(value);
+  }
   return mstIsMapType(value.mstType);
 };
 
-export const isModelType = (value: IAnyType): value is IAnyModelType => {
+export const isModelType = (value: IAnyType | MSTAnyType): value is IAnyModelType => {
+  if (mstIsType(value)) {
+    return mstIsModelType(value);
+  }
   return mstIsModelType(value.mstType);
 };
 
