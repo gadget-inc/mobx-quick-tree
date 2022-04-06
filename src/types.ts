@@ -186,14 +186,14 @@ export interface InstantiateContext {
   env?: unknown;
 }
 
-export type SnapshotIn<T extends IAnyType> = T["InputType"]; // | MSTSnapshotIn<T["mstType"]>;
-export type SnapshotOut<T extends IAnyType> = T["OutputType"]; // | MSTSnapshotOut<T["mstType"]>;
+export type SnapshotIn<T extends IAnyType> = T["InputType"];
+export type SnapshotOut<T extends IAnyType> = T["OutputType"];
 export type Instance<T> = T extends IAnyType ? T["InstanceType"] : T;
 export type MSTInstance<T> = T extends IAnyType ? MSTInstance_<T["mstType"]> : MSTInstance_<T>;
 export type QuickOrMSTInstance<T extends IAnyType> = T["InstanceType"] | MSTInstance_<T["mstType"]>;
 
 export type SnapshotOrInstance<T> = T extends IAnyType
-  ? T["InputType"] | T["InstanceType"] // | MSTSnapshotOrInstance<T["mstType"]>
+  ? T["InputType"] | T["InstanceType"]
   : T extends AnyMSTType
   ? MSTSnapshotOrInstance<T>
   : T;
@@ -210,12 +210,9 @@ export interface IQuickTreeNode<T extends IAnyType = IAnyType> {
 
 export type StateTreeNode<T, IT extends IAnyType> = T extends object ? T & IStateTreeNode<IT> : T;
 export type IStateTreeNode<T extends IAnyType = IAnyType> = IQuickTreeNode<T> | MSTStateTreeNode<T["mstType"]>;
-export interface IAnyStateTreeNode extends StateTreeNode<any, IAnyType> {}
+export type IAnyStateTreeNode = StateTreeNode<any, IAnyType>;
 
-export interface ModelProperties {
-  [key: string]: IAnyType;
-}
-
+export type ModelProperties = Record<string, IAnyType>;
 export type ModelActions = Record<string, Function>;
 
 export type InputTypesForModelProps<T extends ModelProperties> = {

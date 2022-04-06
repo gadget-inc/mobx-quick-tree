@@ -147,7 +147,7 @@ export function getEnv<Env = any>(value: IStateTreeNode<IAnyType>): Env {
   return {} as Env;
 }
 
-export function getSnapshot<S, M extends MSTAnyType>(value: IStateTreeNode<IType<any, S, any, M>>): S;
+export function getSnapshot<S>(value: IQuickTreeNode<IType<any, S, any, any>>): S;
 export function getSnapshot<S>(value: MSTInstance<MSTType<any, S, any>>): S;
 export function getSnapshot<S, M extends MSTAnyType>(value: IStateTreeNode<IType<any, S, any, M>>): S {
   if (mstIsStateTreeNode(value)) {
