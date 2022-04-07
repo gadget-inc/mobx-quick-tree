@@ -3,7 +3,6 @@ import {
   getParent as mstGetParent,
   getParentOfType as mstGetParentOfType,
   getRoot as mstGetRoot,
-  getSnapshot as mstGetSnapshot,
   getType as mstGetType,
   IAnyComplexType as MSTAnyComplexType,
   IAnyModelType as MSTAnyModelType,
@@ -16,9 +15,7 @@ import {
   isStateTreeNode as mstIsStateTreeNode,
   IStateTreeNode as MSTStateTreeNode,
   isType as mstIsType,
-  IType as MSTType,
   resolveIdentifier as mstResolveIdentifier,
-  SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
 import { $env, $parent, $quickType, $type } from "./symbols";
 import type {
@@ -32,7 +29,6 @@ import type {
   Instance,
   IQuickTreeNode,
   IStateTreeNode,
-  IType,
   QuickOrMSTInstance,
 } from "./types";
 
@@ -66,12 +62,13 @@ export {
   typecheck,
   walk,
 } from "mobx-state-tree";
+export { getSnapshot } from "./snapshot";
 
 export const isType = (value: any): value is IAnyType => {
   return $quickType in value;
 };
 
-export const isStateTreeNode = (value: any): value is IAnyStateTreeNode => {
+export const isStateTreeNode = (value: any): value is IStateTreeNode => {
   if (mstIsStateTreeNode(value)) {
     return true;
   }
@@ -124,9 +121,8 @@ export function getParentOfType<T extends IAnyComplexType | MSTAnyComplexType>(
   return value;
 }
 
-export function getType(value: MSTInstance<MSTAnyType>): MSTAnyComplexType;
 export function getType(value: IQuickTreeNode<IAnyType>): IAnyComplexType;
-export function getType(value: IStateTreeNode<IAnyType>): MSTAnyComplexType | IAnyComplexType {
+export function getType(value: IAnyStateTreeNode): MSTAnyComplexType | IAnyComplexType {
   if (mstIsStateTreeNode(value)) {
     return mstGetType(value);
   }
@@ -134,7 +130,7 @@ export function getType(value: IStateTreeNode<IAnyType>): MSTAnyComplexType | IA
   return value[$type];
 }
 
-export function getEnv<Env = any>(value: IStateTreeNode<IAnyType>): Env {
+export function getEnv<Env = any>(value: IAnyStateTreeNode): Env {
   if (mstIsStateTreeNode(value)) {
     return mstGetEnv(value);
   }
@@ -153,17 +149,6 @@ export function getEnv<Env = any>(value: IStateTreeNode<IAnyType>): Env {
   return {} as Env;
 }
 
-export function getSnapshot<S>(value: IQuickTreeNode<IType<any, S, any, any>>): S;
-export function getSnapshot<S>(value: MSTInstance<MSTType<any, S, any>>): S;
-export function getSnapshot<S, M extends MSTAnyType>(value: IStateTreeNode<IType<any, S, any, M>>): S {
-  if (mstIsStateTreeNode(value)) {
-    return mstGetSnapshot<MSTSnapshotOut<M>>(value);
-  }
-
-  // TODO this isn't quite right, primarily for reference types. The snapshot = string, but the instance = object.
-  return value as unknown as S;
-}
-
 export const getRoot = <T extends IAnyType>(value: IAnyStateTreeNode): QuickOrMSTInstance<T> => {
   if (mstIsStateTreeNode(value)) {
     return mstGetRoot(value) as T["mstType"]["Type"]; // Not sure why MSTInstance doesn't work here
@@ -180,7 +165,7 @@ export const getRoot = <T extends IAnyType>(value: IAnyStateTreeNode): QuickOrMS
   }
 };
 
-export const isRoot = (value: any): boolean => {
+export const isRoot = (value: IAnyStateTreeNode): boolean => {
   if (mstIsStateTreeNode(value)) {
     return mstIsRoot(value);
   }

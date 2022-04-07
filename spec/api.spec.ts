@@ -71,6 +71,12 @@ describe("getSnapshot", () => {
     expect(getSnapshot(m)).toEqual(expect.objectContaining(TestModelSnapshot));
   });
 
+  test("returns a number for types.Date", () => {
+    const now = new Date();
+    const m = types.Date.createReadOnly(now);
+    expect(getSnapshot(m)).toEqual(now.getTime());
+  });
+
   test("returns the proper root for an MST instance", () => {
     const m = TestModel.create(TestModelSnapshot);
     expect(getSnapshot(m)).toEqual(expect.objectContaining(TestModelSnapshot));
