@@ -66,7 +66,7 @@ describe("getRoot", () => {
 
 describe("getSnapshot", () => {
   // TODO currently failing with `Method Map.prototype.entries called on incompatible receiver #<QuickMap>`
-  test.skip("returns the expected snapshot for a read-only instance", () => {
+  test("returns the expected snapshot for a read-only instance", () => {
     const m = TestModel.createReadOnly(TestModelSnapshot);
     expect(getSnapshot(m)).toEqual(expect.objectContaining(TestModelSnapshot));
   });
