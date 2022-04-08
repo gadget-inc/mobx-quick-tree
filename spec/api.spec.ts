@@ -71,6 +71,12 @@ describe("getSnapshot", () => {
     expect(getSnapshot(m)).toEqual(expect.objectContaining(TestModelSnapshot));
   });
 
+  test("returns a plain object for QuickMap", () => {
+    const now = new Date();
+    const m = types.map(types.frozen()).createReadOnly({ A: now, B: "test" });
+    expect(getSnapshot(m)).toEqual({ A: now.getTime(), B: "test" });
+  });
+
   test("returns a number for types.Date", () => {
     const now = new Date();
     const m = types.Date.createReadOnly(now);

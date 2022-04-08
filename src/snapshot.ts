@@ -23,7 +23,7 @@ const snapshot = (value: any): unknown => {
   }
 
   if (value instanceof QuickMap) {
-    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, snapshot(v)]));
+    return Object.fromEntries(Array.from(value.entries()).map(([k, v]) => [k, snapshot(v)]));
   }
 
   if (isStateTreeNode(value)) {
