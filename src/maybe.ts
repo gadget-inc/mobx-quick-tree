@@ -39,6 +39,11 @@ export class MaybeNullType<Type extends IAnyType> extends BaseType<
 
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
     if (snapshot === undefined || snapshot === null) {
+      // Special case for things like types.frozen, or types.literal(undefined), where MST prefers the subtype over maybeNull
+      if (this.type.is(snapshot)) {
+        return this.type.instantiate(snapshot, context);
+      }
+
       return null;
     }
     return this.type.instantiate(snapshot, context);

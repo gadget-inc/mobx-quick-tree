@@ -1,7 +1,17 @@
-import { types } from "mobx-state-tree";
-import { SimpleType } from "./simple";
-import { ISimpleType } from "./types";
+import { ISimpleType as MSTSimpleType, types } from "mobx-state-tree";
+import { BaseType } from "./base";
+import { InstantiateContext, ISimpleType } from "./types";
+
+export class FrozenType<T> extends BaseType<T, T, T, MSTSimpleType<T>> {
+  constructor() {
+    super("frozen", types.frozen<T>());
+  }
+
+  instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext): this["InstanceType"] {
+    return snapshot as this["InstanceType"];
+  }
+}
 
 export const frozen = <T = any>(): ISimpleType<T> => {
-  return new SimpleType("frozen", types.frozen<T>());
+  return new FrozenType<T>();
 };

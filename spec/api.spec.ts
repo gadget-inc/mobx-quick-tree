@@ -83,6 +83,11 @@ describe("getSnapshot", () => {
     expect(getSnapshot(m)).toEqual(now.getTime());
   });
 
+  test("returns undefined for a maybeNull(frozen)", () => {
+    const m = types.maybeNull(types.frozen()).createReadOnly();
+    expect(getSnapshot(m)).toEqual(undefined);
+  });
+
   test("returns the proper root for an MST instance", () => {
     const m = TestModel.create(TestModelSnapshot);
     expect(getSnapshot(m)).toEqual(expect.objectContaining(TestModelSnapshot));
