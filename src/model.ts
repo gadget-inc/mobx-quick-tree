@@ -2,6 +2,7 @@ import { IModelType as MSTModelType, Instance as MSTInstance, isReferenceType, i
 import { BaseType, setParent, setType } from "./base";
 import { $identifier, $modelType, $type } from "./symbols";
 import type {
+  EmptyObject,
   IModelType,
   InputsForModel,
   InputTypesForModelProps,
@@ -10,6 +11,7 @@ import type {
   InstantiateContext,
   ModelActions,
   ModelProperties,
+  ModelViews,
   MSTPropertiesForModelProps,
   OutputTypesForModelProps,
 } from "./types";
@@ -66,7 +68,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     this.identifierProp = this.mstType.identifierAttribute;
   }
 
-  views<Views extends Object>(fn: (self: Instance<this>) => Views): ModelType<Props, Others & Views> {
+  views<Views extends ModelViews>(fn: (self: Instance<this>) => Views): ModelType<Props, Others & Views> {
     const init = (self: Instance<this>) => {
       this.initializeViewsAndActions(self);
       assignProps(self, fn(self));
@@ -97,25 +99,17 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return new ModelType(newName, this.properties, this.initializeViewsAndActions, this.mstType);
   }
 
-  volatile<VolatileState extends Record<string, any>>(
-    fn: (self: Instance<this>) => VolatileState
-  ): IModelType<Props, Others & VolatileState> {
+  volatile<VolatileState extends ModelViews>(fn: (self: Instance<this>) => VolatileState): IModelType<Props, Others & VolatileState> {
     const init = (self: Instance<this>) => {
       this.initializeViewsAndActions(self);
       assignProps(self, fn(self));
       return self;
     };
 
-    return new ModelType<Props, Others & VolatileState>(
-      this.name,
-      this.properties,
-      init,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      this.mstType.volatile(fn as any)
-    );
+    return new ModelType<Props, Others & VolatileState>(this.name, this.properties, init, this.mstType.volatile(fn as any));
   }
 
-  extend<Actions extends ModelActions = {}, Views extends Object = {}, VolatileState extends Object = {}>(
+  extend<Actions extends ModelActions, Views extends ModelViews, VolatileState extends ModelViews>(
     fn: (self: Instance<this>) => {
       actions?: Actions;
       views?: Views;
@@ -136,9 +130,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
       this.name,
       this.properties,
       init,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore fn should work regardless, but
-      this.mstType.extend(fn)
+      this.mstType.extend<Actions, Views, VolatileState>(fn as any)
     );
   }
 
@@ -194,14 +186,14 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 }
 
 export type ModelFactory = {
-  <Props extends ModelProperties>(properties?: Props): IModelType<Props, {}>;
-  <Props extends ModelProperties>(name: string, properties?: Props): IModelType<Props, {}>;
+  <Props extends ModelProperties>(properties?: Props): IModelType<Props, EmptyObject>;
+  <Props extends ModelProperties>(name: string, properties?: Props): IModelType<Props, EmptyObject>;
 };
 
 export const model: ModelFactory = <Props extends ModelProperties>(
   nameOrProperties: string | Props | undefined,
   properties?: Props
-): IModelType<Props, {}> => {
+): IModelType<Props, EmptyObject> => {
   let props: Props;
   let name = "model";
   if (typeof nameOrProperties === "string") {

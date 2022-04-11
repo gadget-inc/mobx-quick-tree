@@ -62,10 +62,10 @@ export interface IModelType<Props extends ModelProperties, Others>
 
   named(newName: string): IModelType<Props, Others>;
   props<Props2 extends ModelProperties>(props: Props2): IModelType<Props & Props2, Others>;
-  views<V extends Object>(fn: (self: Instance<this>) => V): IModelType<Props, Others & V>;
+  views<V extends ModelViews>(fn: (self: Instance<this>) => V): IModelType<Props, Others & V>;
   actions<A extends ModelActions>(fn: (self: Instance<this>) => A): IModelType<Props, Others & A>;
-  volatile<TP extends object>(fn: (self: Instance<this>) => TP): IModelType<Props, Others & TP>;
-  extend<A extends ModelActions = {}, V extends Object = {}, VS extends Object = {}>(
+  volatile<TP extends ModelViews>(fn: (self: Instance<this>) => TP): IModelType<Props, Others & TP>;
+  extend<A extends ModelActions, V extends ModelViews, VS extends ModelViews>(
     fn: (self: Instance<this>) => {
       actions?: A;
       views?: V;
@@ -80,10 +80,10 @@ export interface IAnyModelType extends IType<any, any, any, MSTAnyModelType> {
 
   named(newName: string): IAnyModelType;
   props<Props2 extends ModelProperties>(props: Props2): IAnyModelType;
-  views<V extends Object>(fn: (self: Instance<this>) => V): IAnyModelType;
+  views<V extends ModelViews>(fn: (self: Instance<this>) => V): IAnyModelType;
   actions<A extends ModelActions>(fn: (self: Instance<this>) => A): IAnyModelType;
-  volatile<TP extends object>(fn: (self: Instance<this>) => TP): IAnyModelType;
-  extend<A extends ModelActions = {}, V extends Object = {}, VS extends Object = {}>(
+  volatile<TP extends ModelViews>(fn: (self: Instance<this>) => TP): IAnyModelType;
+  extend<A extends ModelActions, V extends ModelViews, VS extends ModelViews>(
     fn: (self: Instance<this>) => {
       actions?: A;
       views?: V;
@@ -214,6 +214,8 @@ export type IAnyStateTreeNode = StateTreeNode<any, IAnyType>;
 
 export type ModelProperties = Record<string, IAnyType>;
 export type ModelActions = Record<string, Function>;
+export type ModelViews = Record<string, unknown>;
+export type EmptyObject = Record<string, unknown>; // not really an empty object, but `never` doesn't play nicely where this is used
 
 export type InputTypesForModelProps<T extends ModelProperties> = {
   [K in keyof T]: T[K]["InputType"];
