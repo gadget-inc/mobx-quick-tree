@@ -13,7 +13,6 @@ import {
   ISimpleType as MSTSimpleType,
   IStateTreeNode as MSTStateTreeNode,
   IType as MSTType,
-  SnapshotIn as MSTSnapshotIn,
   SnapshotOrInstance as MSTSnapshotOrInstance,
   SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
@@ -188,11 +187,6 @@ export type SnapshotIn<T extends IAnyType> = T["InputType"];
 export type SnapshotOut<T extends IAnyType> = T["OutputType"];
 export type Instance<T> = T extends IAnyType ? T["InstanceType"] : T;
 export type MSTInstance<T> = T extends IAnyType ? MSTInstance_<T["mstType"]> : MSTInstance_<T>;
-export type QuickOrMSTInstance<T> = T extends IAnyType
-  ? T["InstanceType"] | MSTInstance<T["mstType"]>
-  : T extends MSTAnyType
-  ? IQuickTreeNode<IType<MSTSnapshotIn<T>, MSTSnapshotOut<T>, T["TypeWithoutSTN"], T>> | MSTInstance_<T>
-  : never;
 
 export type SnapshotOrInstance<T> = T extends IAnyType
   ? T["InputType"] | T["InstanceType"]

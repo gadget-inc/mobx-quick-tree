@@ -32,7 +32,6 @@ import type {
   IQuickTreeNode,
   IReferenceType,
   IStateTreeNode,
-  QuickOrMSTInstance,
 } from "./types";
 
 export {
@@ -79,9 +78,9 @@ export const isStateTreeNode = (value: any): value is IStateTreeNode => {
   return typeof value === "object" && value !== null && $type in value;
 };
 
-export const getParent = <T extends IAnyType>(value: IAnyStateTreeNode, depth = 1): QuickOrMSTInstance<T> => {
+export const getParent = <T extends IAnyType>(value: IAnyStateTreeNode, depth = 1): Instance<T> => {
   if (mstIsStateTreeNode(value)) {
-    return mstGetParent(value, depth) as QuickOrMSTInstance<T>;
+    return mstGetParent(value, depth) as Instance<T>;
   }
 
   while (value && depth > 0) {
@@ -96,12 +95,12 @@ export const getParent = <T extends IAnyType>(value: IAnyStateTreeNode, depth = 
   return value;
 };
 
-export function getParentOfType<T extends IAnyComplexType | MSTAnyComplexType>(value: IAnyStateTreeNode, type: T): QuickOrMSTInstance<T> {
+export function getParentOfType<T extends IAnyComplexType | MSTAnyComplexType>(value: IAnyStateTreeNode, type: T): Instance<T> {
   if (mstIsStateTreeNode(value)) {
     if (mstIsType(type)) {
       return mstGetParentOfType(value, type);
     } else {
-      return mstGetParentOfType(value, type.mstType) as QuickOrMSTInstance<T>;
+      return mstGetParentOfType(value, type.mstType) as Instance<T>;
     }
   }
 
@@ -149,9 +148,9 @@ export function getEnv<Env = any>(value: IAnyStateTreeNode): Env {
   return {} as Env;
 }
 
-export const getRoot = <T extends IAnyType>(value: IAnyStateTreeNode): QuickOrMSTInstance<T> => {
+export const getRoot = <T extends IAnyType>(value: IAnyStateTreeNode): Instance<T> => {
   if (mstIsStateTreeNode(value)) {
-    return mstGetRoot(value) as T["mstType"]["Type"]; // Not sure why MSTInstance doesn't work here
+    return mstGetRoot(value) as Instance<T>;
   }
 
   // Assumes no cycles, otherwise this is an infinite loop
@@ -187,7 +186,7 @@ export function resolveIdentifier<T extends IAnyModelType | MSTAnyModelType>(
   type: T,
   target: IStateTreeNode<IAnyType>,
   identifier: string
-): QuickOrMSTInstance<T> | undefined {
+): Instance<T> | undefined {
   if (mstIsStateTreeNode(target)) {
     if (mstIsType(type)) {
       return mstResolveIdentifier(type, target, identifier);
