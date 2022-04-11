@@ -1,6 +1,6 @@
 import { ISimpleType as MSTSimpleType, types } from "mobx-state-tree";
 import { BaseType } from "./base";
-import type { InstantiateContext, ISimpleType } from "./types";
+import type { IAnyStateTreeNode, InstantiateContext, ISimpleType } from "./types";
 
 export class EnumerationType<EnumOptions extends string> extends BaseType<
   EnumOptions,
@@ -19,6 +19,7 @@ export class EnumerationType<EnumOptions extends string> extends BaseType<
     throw new Error("unknown enum value");
   }
 
+  is(value: IAnyStateTreeNode): value is this["InstanceType"];
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     return this.options.includes(value);
   }

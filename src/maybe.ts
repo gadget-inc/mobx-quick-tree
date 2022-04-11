@@ -1,6 +1,6 @@
 import { IMaybe, IMaybeNull, types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
-import type { IAnyType, IMaybeNullType, IMaybeType, InstantiateContext } from "./types";
+import type { IAnyStateTreeNode, IAnyType, IMaybeNullType, IMaybeType, InstantiateContext } from "./types";
 
 export class MaybeType<Type extends IAnyType> extends BaseType<
   Type["InputType"] | undefined,
@@ -49,6 +49,7 @@ export class MaybeNullType<Type extends IAnyType> extends BaseType<
     return this.type.instantiate(snapshot, context);
   }
 
+  is(value: IAnyStateTreeNode): value is this["InstanceType"];
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     if (value === undefined || value === null) {
       return true;

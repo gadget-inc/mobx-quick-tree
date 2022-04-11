@@ -1,7 +1,7 @@
 import { IArrayType as MSTArrayType, isStateTreeNode, types } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
 import { $type } from "./symbols";
-import type { IAnyType, IArrayType, IMSTArray, Instance, InstantiateContext } from "./types";
+import type { IAnyStateTreeNode, IAnyType, IArrayType, IMSTArray, Instance, InstantiateContext } from "./types";
 
 export class QuickArray<T extends IAnyType> extends Array<T["InstanceType"]> implements IMSTArray<T> {
   static get [Symbol.species]() {
@@ -39,6 +39,7 @@ class ArrayType<T extends IAnyType> extends BaseType<
     super(`array<${childrenType.name}>`, types.array(childrenType.mstType));
   }
 
+  is(value: IAnyStateTreeNode): value is this["InstanceType"];
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     if (isStateTreeNode(value)) {
       return this.mstType.is(value);

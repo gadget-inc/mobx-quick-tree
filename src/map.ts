@@ -2,7 +2,7 @@ import { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
 import { IMapType as MSTMapType, isStateTreeNode, SnapshotOut as MSTSnapshotOut, types } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
 import { $identifier, $type } from "./symbols";
-import type { CreateTypes, IAnyType, IMapType, IMSTMap, Instance, InstantiateContext } from "./types";
+import type { CreateTypes, IAnyStateTreeNode, IAnyType, IMapType, IMSTMap, Instance, InstantiateContext } from "./types";
 
 export class QuickMap<T extends IAnyType> extends Map<string, T["InstanceType"]> implements IMSTMap<T> {
   static get [Symbol.species]() {
@@ -50,6 +50,7 @@ export class MapType<T extends IAnyType> extends BaseType<
     super(`map<${childrenType.name}>`, types.map(childrenType.mstType));
   }
 
+  is(value: IAnyStateTreeNode): value is this["InstanceType"];
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     if (isStateTreeNode(value)) {
       return this.mstType.is(value);

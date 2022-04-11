@@ -1,6 +1,6 @@
 import { types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
-import type { CreateTypes, IAnyType, InstantiateContext, IOptionalType, ValidOptionalValue } from "./types";
+import type { CreateTypes, IAnyStateTreeNode, IAnyType, InstantiateContext, IOptionalType, ValidOptionalValue } from "./types";
 
 export type DefaultFuncOrValue<T extends IAnyType> = T["InputType"] | T["OutputType"] | (() => CreateTypes<T>);
 
@@ -35,6 +35,7 @@ export class OptionalType<T extends IAnyType, OptionalValues extends [ValidOptio
     return this.type.instantiate(snapshot, context);
   }
 
+  is(value: IAnyStateTreeNode): value is this["InstanceType"];
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     if (this.undefinedValues) {
       if (this.undefinedValues.includes(value)) {

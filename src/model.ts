@@ -3,6 +3,7 @@ import { types } from ".";
 import { BaseType, setParent, setType } from "./base";
 import { $identifier, $modelType, $type } from "./symbols";
 import type {
+  IAnyStateTreeNode,
   IModelType,
   InputsForModel,
   InputTypesForModelProps,
@@ -159,6 +160,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     );
   }
 
+  is(value: IAnyStateTreeNode): value is this["InstanceType"];
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     if (isStateTreeNode(value)) {
       return this.mstType.is(value);

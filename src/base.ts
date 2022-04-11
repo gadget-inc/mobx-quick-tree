@@ -1,6 +1,6 @@
 import type { IAnyType as AnyMSTType, Instance as MSTInstance } from "mobx-state-tree";
 import { $env, $parent, $quickType, $type } from "./symbols";
-import type { IAnyType, InstantiateContext, StateTreeNode } from "./types";
+import type { IAnyStateTreeNode, IAnyType, InstantiateContext, StateTreeNode } from "./types";
 
 export abstract class BaseType<InputType, OutputType, InstanceType, MSTType extends AnyMSTType> {
   readonly [$quickType] = undefined;
@@ -25,6 +25,7 @@ export abstract class BaseType<InputType, OutputType, InstanceType, MSTType exte
     return this.mstType.create(snapshot, env);
   }
 
+  is(value: IAnyStateTreeNode): value is this["InstanceType"];
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     if (value && value[$type]) {
       return value[$type] == this;
