@@ -1,7 +1,7 @@
 {
   "name": "@gadgetinc/mobx-quick-tree",
   "version": "0.1.0",
-  "description": "Library that mirrors mobx-state-tree's API to construct a fast, read-only version with all the same views",
+  "description": "A mirror of mobx-state-tree's API to construct fast, read-only instances that share all the same views",
   "source": "src/index.ts",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

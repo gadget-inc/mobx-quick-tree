@@ -1,0 +1,31 @@
+name: "Test"
+on:
+  push:
+  workflow_call:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2.3.4
+    - uses: ./.github/actions/setup-test-env
+    - name: Test
+      shell: bash
+      run: yarn test
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2.3.4
+    - uses: ./.github/actions/setup-test-env
+    - name: Lint
+      shell: bash
+      run: yarn lint
+
+  build-js:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2.3.4
+    - uses: ./.github/actions/setup-test-env
+    - name: Build
+      shell: bash
+      run: yarn build

@@ -1,0 +1,10 @@
+name: 'Setup test environment'
+description: ''
+inputs: {}
+outputs: {}
+runs:
+    using: "composite"
+    steps:
+    - name: Install dependencies with yarn install
+      shell: bash
+      run: yarn install
