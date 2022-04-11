@@ -21,6 +21,7 @@ describe("getParentOfType", () => {
     const m = TestModel.createReadOnly(TestModelSnapshot);
     expect(() => getParentOfType(m, TestModel)).toThrow();
     expect(getParentOfType(m.nested, TestModel)).toEqual(m);
+    expect(getParentOfType(m.nested, TestModel).optional).toEqual("value");
   });
 
   test("returns the proper root for an MST instance", () => {

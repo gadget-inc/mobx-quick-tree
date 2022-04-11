@@ -189,7 +189,7 @@ export type SnapshotOut<T extends IAnyType> = T["OutputType"];
 export type Instance<T> = T extends IAnyType ? T["InstanceType"] : T;
 export type MSTInstance<T> = T extends IAnyType ? MSTInstance_<T["mstType"]> : MSTInstance_<T>;
 export type QuickOrMSTInstance<T> = T extends IAnyType
-  ? T["InstanceType"] | T["mstType"]
+  ? T["InstanceType"] | MSTInstance<T["mstType"]>
   : T extends MSTAnyType
   ? IQuickTreeNode<IType<MSTSnapshotIn<T>, MSTSnapshotOut<T>, T["TypeWithoutSTN"], T>> | MSTInstance_<T>
   : never;
