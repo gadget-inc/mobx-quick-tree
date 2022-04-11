@@ -12,6 +12,7 @@ import {
   IReferenceType as MSTReferenceType,
   ISimpleType as MSTSimpleType,
   IStateTreeNode as MSTStateTreeNode,
+  IType as MSTType,
   SnapshotIn as MSTSnapshotIn,
   SnapshotOrInstance as MSTSnapshotOrInstance,
   SnapshotOut as MSTSnapshotOut,
@@ -23,7 +24,6 @@ export type {
   IMiddlewareEvent,
   IPatchRecorder,
   IStateTreeNode as MSTStateTreeNode,
-  ModelPropertiesDeclaration,
   ReferenceOptions,
   UnionOptions,
 } from "mobx-state-tree";
@@ -49,6 +49,7 @@ export interface IType<InputType, OutputType, InstanceType, MSTType extends MSTA
 
 export type IAnyType = IType<any, any, any, MSTAnyType>;
 export type ISimpleType<T> = IType<T, T, T, MSTSimpleType<T>>;
+export type IDateType = IType<Date | number, number, Date, MSTType<Date | number, number, Date>>;
 export type IAnyComplexType = IType<any, any, object, MSTAnyComplexType>;
 
 export interface IModelType<Props extends ModelProperties, Others>
@@ -61,7 +62,7 @@ export interface IModelType<Props extends ModelProperties, Others>
   readonly properties: Props;
 
   named(newName: string): IModelType<Props, Others>;
-  props<Props2 extends ModelProperties>(props: Props2): IModelType<Props & Props2, Others>;
+  props<Props2 extends ModelPropertiesDeclaration>(props: Props2): IModelType<Props & TypesForModelPropsDeclaration<Props2>, Others>;
   views<V extends ModelViews>(fn: (self: Instance<this>) => V): IModelType<Props, Others & V>;
   actions<A extends ModelActions>(fn: (self: Instance<this>) => A): IModelType<Props, Others & A>;
   volatile<TP extends ModelViews>(fn: (self: Instance<this>) => TP): IModelType<Props, Others & TP>;
@@ -74,12 +75,13 @@ export interface IModelType<Props extends ModelProperties, Others>
   ): IModelType<Props, Others & A & V & VS>;
 }
 
+// TODO see if we can make this work for `IModelType<any, any>`, or some other way to simplify
 // This isn't quite IModelType<any, any>. In particular, InputType is any, which is key to make a lot of things typecheck
 export interface IAnyModelType extends IType<any, any, any, MSTAnyModelType> {
   readonly properties: any;
 
   named(newName: string): IAnyModelType;
-  props<Props2 extends ModelProperties>(props: Props2): IAnyModelType;
+  props<Props2 extends ModelPropertiesDeclaration>(props: Props2): IAnyModelType;
   views<V extends ModelViews>(fn: (self: Instance<this>) => V): IAnyModelType;
   actions<A extends ModelActions>(fn: (self: Instance<this>) => A): IAnyModelType;
   volatile<TP extends ModelViews>(fn: (self: Instance<this>) => TP): IAnyModelType;
@@ -212,10 +214,25 @@ export type StateTreeNode<T, IT extends IAnyType> = T extends object ? T & IStat
 export type IStateTreeNode<T extends IAnyType = IAnyType> = IQuickTreeNode<T> | MSTStateTreeNode<T["mstType"]>;
 export type IAnyStateTreeNode = StateTreeNode<any, IAnyType>;
 
+export type ModelPropertiesDeclaration = Record<string, string | number | boolean | Date | IAnyType>;
 export type ModelProperties = Record<string, IAnyType>;
 export type ModelActions = Record<string, Function>;
 export type ModelViews = Record<string, unknown>;
 export type EmptyObject = Record<string, unknown>; // not really an empty object, but `never` doesn't play nicely where this is used
+
+export type TypesForModelPropsDeclaration<T extends ModelPropertiesDeclaration> = {
+  [K in keyof T]: T[K] extends IAnyType
+    ? T[K]
+    : T[K] extends string
+    ? IOptionalType<ISimpleType<string>, [undefined]>
+    : T[K] extends number
+    ? IOptionalType<ISimpleType<number>, [undefined]>
+    : T[K] extends boolean
+    ? IOptionalType<ISimpleType<boolean>, [undefined]>
+    : T[K] extends Date
+    ? IOptionalType<IDateType, [undefined]>
+    : never;
+};
 
 export type InputTypesForModelProps<T extends ModelProperties> = {
   [K in keyof T]: T[K]["InputType"];

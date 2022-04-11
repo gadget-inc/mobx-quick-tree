@@ -8,6 +8,7 @@ describe("can create", () => {
     const m = TestModel.createReadOnly(TestModelSnapshot);
     expect(m.bool).toEqual(true);
     expect(m.notBool).toEqual(false);
+    expect(m.optional).toEqual("value");
     expect(m.frozen.test).toEqual("string");
     expect(m.nested.name).toEqual("MiXeD CaSe");
     expect(m.nested.lowerCasedName()).toEqual("mixed case");
@@ -23,6 +24,7 @@ describe("can create", () => {
 
     expect(m.bool).toEqual(true);
     expect(m.notBool).toEqual(false);
+    expect(m.optional).toEqual("value");
     expect(m.frozen.test).toEqual("string");
     expect(m.nested.name).toEqual("MiXeD CaSe");
     expect(m.nested.lowerCasedName()).toEqual("mixed case");

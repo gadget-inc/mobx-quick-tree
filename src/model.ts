@@ -1,4 +1,5 @@
 import { IModelType as MSTModelType, Instance as MSTInstance, isReferenceType, isStateTreeNode, types as mstTypes } from "mobx-state-tree";
+import { types } from ".";
 import { BaseType, setParent, setType } from "./base";
 import { $identifier, $modelType, $type } from "./symbols";
 import type {
@@ -11,10 +12,32 @@ import type {
   InstantiateContext,
   ModelActions,
   ModelProperties,
+  ModelPropertiesDeclaration,
   ModelViews,
   MSTPropertiesForModelProps,
   OutputTypesForModelProps,
+  TypesForModelPropsDeclaration,
 } from "./types";
+
+const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDeclaration>(props: Props): TypesForModelPropsDeclaration<Props> => {
+  return Object.fromEntries(
+    Object.entries(props).map(([k, v]) => {
+      switch (typeof v) {
+        case "string":
+          return [k, types.optional(types.string, v)];
+        case "boolean":
+          return [k, types.optional(types.boolean, v)];
+        case "number":
+          return [k, types.optional(types.number, v)];
+        default:
+          if (v instanceof Date) {
+            return [k, types.optional(types.Date, v)];
+          }
+          return [k, v];
+      }
+    })
+  ) as TypesForModelPropsDeclaration<Props>;
+};
 
 const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): MSTPropertiesForModelProps<Props> => {
   return (props ? Object.fromEntries(Object.entries(props).map(([k, v]) => [k, v.mstType])) : {}) as MSTPropertiesForModelProps<Props>;
@@ -86,7 +109,10 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return new ModelType<Props, Others & Actions>(this.name, this.properties, init, this.mstType.actions(fn as any));
   }
 
-  props<AdditionalProps extends ModelProperties>(props: AdditionalProps): ModelType<Props & AdditionalProps, Others> {
+  props<AdditionalProps extends ModelPropertiesDeclaration>(
+    propsDecl: AdditionalProps
+  ): ModelType<Props & TypesForModelPropsDeclaration<AdditionalProps>, Others> {
+    const props = propsFromModelPropsDeclaration(propsDecl);
     return new ModelType(
       this.name,
       { ...this.properties, ...props },
@@ -186,22 +212,27 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 }
 
 export type ModelFactory = {
-  <Props extends ModelProperties>(properties?: Props): IModelType<Props, EmptyObject>;
-  <Props extends ModelProperties>(name: string, properties?: Props): IModelType<Props, EmptyObject>;
+  <Props extends ModelPropertiesDeclaration>(properties?: Props): IModelType<TypesForModelPropsDeclaration<Props>, EmptyObject>;
+  <Props extends ModelPropertiesDeclaration>(name: string, properties?: Props): IModelType<
+    TypesForModelPropsDeclaration<Props>,
+    EmptyObject
+  >;
 };
 
-export const model: ModelFactory = <Props extends ModelProperties>(
+export const model: ModelFactory = <Props extends ModelPropertiesDeclaration>(
   nameOrProperties: string | Props | undefined,
   properties?: Props
-): IModelType<Props, EmptyObject> => {
-  let props: Props;
+): IModelType<TypesForModelPropsDeclaration<Props>, EmptyObject> => {
+  let propsDecl: Props;
   let name = "model";
   if (typeof nameOrProperties === "string") {
     name = nameOrProperties;
-    props = properties ?? ({} as Props);
+    propsDecl = properties ?? ({} as Props);
   } else {
-    props = nameOrProperties ?? ({} as Props);
+    propsDecl = nameOrProperties ?? ({} as Props);
   }
 
-  return new ModelType(name, props, (self) => self, mstTypes.model(name, mstPropsFromQuickProps(props)));
+  // TODO figure out how to make these types compatible
+  const props = propsFromModelPropsDeclaration(propsDecl);
+  return new ModelType(name, props, (self) => self, mstTypes.model(name, mstPropsFromQuickProps(props))) as any;
 };

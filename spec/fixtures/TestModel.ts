@@ -22,6 +22,7 @@ export const TestModel = types
     nested: NamedThing,
     array: types.array(NamedThing),
     map: types.map(types.late(() => NamedThing)),
+    optional: "value",
   })
   .views((self) => ({
     get notBool() {
