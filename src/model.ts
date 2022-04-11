@@ -28,7 +28,7 @@ const assignProps = (target: any, source: any, cache = true) => {
       if (cache && getter) {
         Object.defineProperty(target, name, {
           get() {
-            const value = getter.apply(target);
+            const value = desc.get?.apply(target);
             Object.defineProperty(target, name, { value });
             return value;
           },
@@ -159,18 +159,18 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 
     setType(instance, this);
 
-    for (const [k, v] of Object.entries(this.properties)) {
-      if (isReferenceType(v.mstType)) {
+    for (const [propName, propType] of Object.entries(this.properties)) {
+      if (isReferenceType(propType.mstType)) {
         context.referencesToResolve.push(() => {
-          const propValue = v.instantiate(snapshot?.[k], context);
-          instance[k] = propValue;
+          const propValue = propType.instantiate(snapshot?.[propName], context);
+          instance[propName] = propValue;
         });
         continue;
       }
 
-      const propValue = v.instantiate(snapshot?.[k], context);
+      const propValue = propType.instantiate(snapshot?.[propName], context);
       setParent(propValue, instance);
-      instance[k] = propValue;
+      instance[propName] = propValue;
     }
 
     if (this.identifierProp) {

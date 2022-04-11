@@ -9,6 +9,7 @@ import {
   IAnyType as MSTAnyType,
   Instance as MSTInstance,
   isArrayType as mstIsArrayType,
+  isIdentifierType as mstIsIdentifierType,
   isMapType as mstIsMapType,
   isModelType as mstIsModelType,
   isReferenceType as mstIsReferenceType,
@@ -224,6 +225,13 @@ export const isReferenceType = (value: IAnyType | MSTAnyType): value is IReferen
     return mstIsReferenceType(value);
   }
   return mstIsReferenceType(value.mstType);
+};
+
+export const isIdentifierType = (value: IAnyType | MSTAnyType): value is IReferenceType<IAnyComplexType> => {
+  if (mstIsType(value)) {
+    return mstIsIdentifierType(value);
+  }
+  return mstIsIdentifierType(value.mstType);
 };
 
 export function cast<O extends string | number | boolean | null | undefined = never>(snapshotOrInstance: O): O;

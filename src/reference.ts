@@ -41,7 +41,6 @@ export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
     if (!snapshot || !(snapshot in context.referenceCache)) {
       throw new Error(`can't resolve reference ${snapshot}`);
     }
-
     return referenceProxy(this, context.referenceCache[snapshot]);
   }
 }
