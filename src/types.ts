@@ -106,12 +106,7 @@ export type IMaybeNullType<T extends IAnyType> = IType<
   MSTMaybeNullType<T["mstType"]>
 >;
 
-export type IReferenceType<T extends IAnyComplexType> = IType<
-  string,
-  string,
-  T["InstanceTypeWithoutSTN"],
-  MSTReferenceType<T["mstType"]>
->;
+export type IReferenceType<T extends IAnyComplexType> = IType<string, string, T["InstanceTypeWithoutSTN"], MSTReferenceType<T["mstType"]>>;
 
 export type IOptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> = IType<
   T["InputType"] | OptionalValues[number],

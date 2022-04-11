@@ -4,10 +4,7 @@ import type { CreateTypes, IAnyType, InstantiateContext, IOptionalType, ValidOpt
 
 export type DefaultFuncOrValue<T extends IAnyType> = T["InputType"] | T["OutputType"] | (() => CreateTypes<T>);
 
-export class OptionalType<
-  T extends IAnyType,
-  OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]
-> extends BaseType<
+export class OptionalType<T extends IAnyType, OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]> extends BaseType<
   T["InputType"] | OptionalValues[number],
   T["OutputType"],
   T["InstanceTypeWithoutSTN"],
@@ -64,10 +61,7 @@ export type OptionalFactory = {
   ): IOptionalType<T, OptionalValues>;
 };
 
-export const optional: OptionalFactory = <
-  T extends IAnyType,
-  OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]
->(
+export const optional: OptionalFactory = <T extends IAnyType, OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]>(
   type: T,
   defaultValue: DefaultFuncOrValue<T>,
   undefinedValues?: OptionalValues

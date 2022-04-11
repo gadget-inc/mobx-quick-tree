@@ -1,15 +1,5 @@
 import { types } from "../src";
-import {
-  getEnv,
-  getParent,
-  getParentOfType,
-  getRoot,
-  getSnapshot,
-  isArrayType,
-  isMapType,
-  isModelType,
-  isRoot,
-} from "../src/api";
+import { getEnv, getParent, getParentOfType, getRoot, getSnapshot, isArrayType, isMapType, isModelType, isRoot } from "../src/api";
 import { NamedThing, TestModel, TestModelSnapshot } from "./fixtures/TestModel";
 
 describe("getParent", () => {

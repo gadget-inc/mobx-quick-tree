@@ -95,10 +95,7 @@ export const getParent = <T extends IAnyType>(value: IAnyStateTreeNode, depth = 
   return value;
 };
 
-export function getParentOfType<T extends IAnyComplexType | MSTAnyComplexType>(
-  value: IAnyStateTreeNode,
-  type: T
-): QuickOrMSTInstance<T> {
+export function getParentOfType<T extends IAnyComplexType | MSTAnyComplexType>(value: IAnyStateTreeNode, type: T): QuickOrMSTInstance<T> {
   if (mstIsStateTreeNode(value)) {
     if (mstIsType(type)) {
       return mstGetParentOfType(value, type);

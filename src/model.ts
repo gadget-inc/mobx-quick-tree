@@ -1,10 +1,4 @@
-import {
-  IModelType as MSTModelType,
-  Instance as MSTInstance,
-  isReferenceType,
-  isStateTreeNode,
-  types as mstTypes,
-} from "mobx-state-tree";
+import { IModelType as MSTModelType, Instance as MSTInstance, isReferenceType, isStateTreeNode, types as mstTypes } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
 import { $identifier, $modelType, $type } from "./symbols";
 import type {
@@ -21,9 +15,7 @@ import type {
 } from "./types";
 
 const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): MSTPropertiesForModelProps<Props> => {
-  return (
-    props ? Object.fromEntries(Object.entries(props).map(([k, v]) => [k, v.mstType])) : {}
-  ) as MSTPropertiesForModelProps<Props>;
+  return (props ? Object.fromEntries(Object.entries(props).map(([k, v]) => [k, v.mstType])) : {}) as MSTPropertiesForModelProps<Props>;
 };
 
 const assignProps = (target: any, source: any, cache = true) => {

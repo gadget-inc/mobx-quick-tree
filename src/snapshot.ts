@@ -1,8 +1,4 @@
-import {
-  getSnapshot as mstGetSnapshot,
-  IAnyType as MSTAnyType,
-  isStateTreeNode as mstIsStateTreeNode,
-} from "mobx-state-tree";
+import { getSnapshot as mstGetSnapshot, IAnyType as MSTAnyType, isStateTreeNode as mstIsStateTreeNode } from "mobx-state-tree";
 import { getType, isModelType, isReferenceType, isStateTreeNode } from "./api";
 import { QuickArray } from "./array";
 import { QuickMap } from "./map";

@@ -19,16 +19,10 @@ type ComposeFactory = {
     PropsFromTypes<Types>,
     OthersFromTypes<Types>
   >;
-  <Types extends [IAnyModelType, ...IAnyModelType[]]>(...types: Types): IModelType<
-    PropsFromTypes<Types>,
-    OthersFromTypes<Types>
-  >;
+  <Types extends [IAnyModelType, ...IAnyModelType[]]>(...types: Types): IModelType<PropsFromTypes<Types>, OthersFromTypes<Types>>;
 };
 
-export const compose: ComposeFactory = (
-  nameOrType: IAnyModelType | string,
-  ...types: IAnyModelType[]
-): IAnyModelType => {
+export const compose: ComposeFactory = (nameOrType: IAnyModelType | string, ...types: IAnyModelType[]): IAnyModelType => {
   let name: string | undefined = undefined;
   if (typeof nameOrType == "string") {
     name = nameOrType;
