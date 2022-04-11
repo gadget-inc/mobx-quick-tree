@@ -9,9 +9,9 @@ import {
 import { ReferenceT } from "mobx-state-tree/dist/internal";
 import { BaseType } from "./base";
 import { $type } from "./symbols";
-import type { EmptyObject, IAnyComplexType, IMaybeType, InstantiateContext, IReferenceType } from "./types";
+import type { IAnyComplexType, IMaybeType, InstantiateContext, IReferenceType } from "./types";
 
-export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsGetSet<T["mstType"]> | EmptyObject) & {
+export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsGetSet<T["mstType"]> | Record<string, unknown>) & {
   acceptsUndefined?: boolean;
   onInvalidated?: OnReferenceInvalidated<ReferenceT<T["mstType"]>>;
 };

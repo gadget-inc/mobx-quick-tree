@@ -218,7 +218,6 @@ export type ModelPropertiesDeclaration = Record<string, string | number | boolea
 export type ModelProperties = Record<string, IAnyType>;
 export type ModelActions = Record<string, Function>;
 export type ModelViews = Record<string, unknown>;
-export type EmptyObject = Record<string, unknown>; // not really an empty object, but `never` doesn't play nicely where this is used
 
 export type TypesForModelPropsDeclaration<T extends ModelPropertiesDeclaration> = {
   [K in keyof T]: T[K] extends IAnyType

@@ -1,18 +1,18 @@
 import { types as mstTypes } from "mobx-state-tree";
 import { ModelType } from "./model";
-import type { EmptyObject, IAnyModelType, IModelType } from "./types";
+import type { IAnyModelType, IModelType } from "./types";
 
 type PropsFromTypes<T> = T extends IModelType<infer P, any>
   ? P
   : T extends [IModelType<infer P, any>, ...infer Tail]
   ? P & PropsFromTypes<Tail>
-  : EmptyObject;
+  : {};
 
 type OthersFromTypes<T> = T extends IModelType<any, infer O>
   ? O
   : T extends [IModelType<any, infer O>, ...infer Tail]
   ? O & OthersFromTypes<Tail>
-  : EmptyObject;
+  : {};
 
 type ComposeFactory = {
   <Types extends [IAnyModelType, ...IAnyModelType[]]>(name: string, ...types: Types): IModelType<

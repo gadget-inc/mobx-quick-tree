@@ -3,7 +3,6 @@ import { types } from ".";
 import { BaseType, setParent, setType } from "./base";
 import { $identifier, $modelType, $type } from "./symbols";
 import type {
-  EmptyObject,
   IModelType,
   InputsForModel,
   InputTypesForModelProps,
@@ -212,17 +211,14 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 }
 
 export type ModelFactory = {
-  <Props extends ModelPropertiesDeclaration>(properties?: Props): IModelType<TypesForModelPropsDeclaration<Props>, EmptyObject>;
-  <Props extends ModelPropertiesDeclaration>(name: string, properties?: Props): IModelType<
-    TypesForModelPropsDeclaration<Props>,
-    EmptyObject
-  >;
+  <Props extends ModelPropertiesDeclaration>(properties?: Props): IModelType<TypesForModelPropsDeclaration<Props>, {}>;
+  <Props extends ModelPropertiesDeclaration>(name: string, properties?: Props): IModelType<TypesForModelPropsDeclaration<Props>, {}>;
 };
 
 export const model: ModelFactory = <Props extends ModelPropertiesDeclaration>(
   nameOrProperties: string | Props | undefined,
   properties?: Props
-): IModelType<TypesForModelPropsDeclaration<Props>, EmptyObject> => {
+): IModelType<TypesForModelPropsDeclaration<Props>, {}> => {
   let propsDecl: Props;
   let name = "model";
   if (typeof nameOrProperties === "string") {
