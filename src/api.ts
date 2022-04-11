@@ -11,6 +11,7 @@ import {
   isArrayType as mstIsArrayType,
   isMapType as mstIsMapType,
   isModelType as mstIsModelType,
+  isReferenceType as mstIsReferenceType,
   isRoot as mstIsRoot,
   isStateTreeNode as mstIsStateTreeNode,
   IStateTreeNode as MSTStateTreeNode,
@@ -28,6 +29,7 @@ import type {
   IMapType,
   Instance,
   IQuickTreeNode,
+  IReferenceType,
   IStateTreeNode,
   QuickOrMSTInstance,
 } from "./types";
@@ -218,6 +220,13 @@ export const isModelType = (value: IAnyType | MSTAnyType): value is IAnyModelTyp
     return mstIsModelType(value);
   }
   return mstIsModelType(value.mstType);
+};
+
+export const isReferenceType = (value: IAnyType | MSTAnyType): value is IReferenceType<IAnyComplexType> => {
+  if (mstIsType(value)) {
+    return mstIsReferenceType(value);
+  }
+  return mstIsReferenceType(value.mstType);
 };
 
 export function cast<O extends string | number | boolean | null | undefined = never>(snapshotOrInstance: O): O;

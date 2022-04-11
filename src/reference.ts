@@ -8,6 +8,7 @@ import {
 } from "mobx-state-tree";
 import { ReferenceT } from "mobx-state-tree/dist/internal";
 import { BaseType } from "./base";
+import { $type } from "./symbols";
 import type { IAnyComplexType, IMaybeType, InstantiateContext, IReferenceType } from "./types";
 
 export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsGetSet<T["mstType"]> | {}) & {
@@ -15,7 +16,16 @@ export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsG
   onInvalidated?: OnReferenceInvalidated<ReferenceT<T["mstType"]>>;
 };
 
-// FIXME although we say the output types are strings, technically they'll actually be the instance type right now
+const referenceProxy = (referenceType: any, target: any) => {
+  return new Proxy(target, {
+    get(target, prop, _receiver) {
+      if (prop === $type) {
+        return referenceType;
+      }
+      return target[prop];
+    },
+  });
+};
 
 export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
   string,
@@ -31,7 +41,8 @@ export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
     if (!snapshot || !(snapshot in context.referenceCache)) {
       throw new Error(`can't resolve reference ${snapshot}`);
     }
-    return context.referenceCache[snapshot] as this["InstanceType"];
+
+    return referenceProxy(this, context.referenceCache[snapshot]);
   }
 }
 
@@ -46,10 +57,10 @@ export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseT
   }
 
   instantiate(snapshot: string | undefined, context: InstantiateContext): this["InstanceType"] {
-    if (!snapshot) {
+    if (!snapshot || !(snapshot in context.referenceCache)) {
       return undefined as this["InstanceType"];
     }
-    return context.referenceCache[snapshot] as this["InstanceType"];
+    return referenceProxy(this, context.referenceCache[snapshot]);
   }
 }
 

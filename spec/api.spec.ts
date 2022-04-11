@@ -10,7 +10,7 @@ import {
   isModelType,
   isRoot,
 } from "../src/api";
-import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
+import { NamedThing, TestModel, TestModelSnapshot } from "./fixtures/TestModel";
 
 describe("getParent", () => {
   test("returns the proper root for a read-only instance", () => {
@@ -65,7 +65,6 @@ describe("getRoot", () => {
 });
 
 describe("getSnapshot", () => {
-  // TODO currently failing with `Method Map.prototype.entries called on incompatible receiver #<QuickMap>`
   test("returns the expected snapshot for a read-only instance", () => {
     const m = TestModel.createReadOnly(TestModelSnapshot);
     expect(getSnapshot(m)).toEqual(expect.objectContaining(TestModelSnapshot));
@@ -86,6 +85,28 @@ describe("getSnapshot", () => {
   test("returns undefined for a maybeNull(frozen)", () => {
     const m = types.maybeNull(types.frozen()).createReadOnly();
     expect(getSnapshot(m)).toEqual(undefined);
+  });
+
+  test("returns a string for reference types", () => {
+    const m = types.model({
+      testModels: types.array(TestModel),
+      ref: types.reference(NamedThing),
+    });
+
+    const instance = m.createReadOnly({
+      testModels: [
+        { bool: true, nested: { key: "a", name: "a 1" }, frozen: { test: "string" } },
+        { bool: false, nested: { key: "b", name: "b 2" }, frozen: { test: "string" } },
+      ],
+      ref: "b",
+    });
+
+    expect(instance.ref.name).toEqual("b 2");
+    expect(getSnapshot(instance)).toEqual(
+      expect.objectContaining({
+        ref: "b",
+      })
+    );
   });
 
   test("returns the proper root for an MST instance", () => {

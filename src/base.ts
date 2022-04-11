@@ -65,7 +65,7 @@ export const setType = (value: unknown, type: IAnyType) => {
   if (value && typeof value == "object") {
     Reflect.defineProperty(value, $type, {
       value: type,
-      configurable: false,
+      configurable: true,
       enumerable: false,
       writable: false,
     });

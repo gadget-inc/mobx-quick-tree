@@ -16,8 +16,6 @@ export class CustomType<InputType, OutputType> extends BaseType<
     if (snapshot === undefined) {
       throw new Error("can't initialize custom type with undefined");
     }
-
-    // TODO figure out how to avoid the cast, maybe need to also consider setting $parent, etc
     return this.options.fromSnapshot(snapshot) as this["InstanceType"];
   }
 }
