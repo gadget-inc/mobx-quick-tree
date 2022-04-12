@@ -14,7 +14,6 @@ import {
   IStateTreeNode as MSTStateTreeNode,
   IType as MSTType,
   SnapshotOrInstance as MSTSnapshotOrInstance,
-  SnapshotOut as MSTSnapshotOut,
 } from "mobx-state-tree";
 import { $quickType, $type } from "./symbols";
 
@@ -173,7 +172,7 @@ export interface IMSTMap<T extends IAnyType> {
   put(value: CreateTypes<T>): Instance<T>;
   replace(values: IMSTMap<IAnyType> | Record<string, CreateTypes<T>> | any): this;
   set(key: string, value: CreateTypes<T>): this;
-  toJSON(): Record<string, MSTSnapshotOut<T["mstType"]>>;
+  toJSON(): Record<string, SnapshotOut<T>>;
   toString(): string;
   values(): IterableIterator<Instance<T>>;
 }
