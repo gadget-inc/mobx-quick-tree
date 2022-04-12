@@ -1,4 +1,5 @@
 import {
+  applySnapshot as mstApplySnapshot,
   getEnv as mstGetEnv,
   getParent as mstGetParent,
   getParentOfType as mstGetParentOfType,
@@ -33,13 +34,13 @@ import type {
   IQuickTreeNode,
   IReferenceType,
   IStateTreeNode,
+  IType,
 } from "./types";
 
 export {
   addDisposer,
   addMiddleware,
   applyPatch,
-  applySnapshot,
   clone,
   createActionTrackingMiddleware2,
   destroy,
@@ -199,6 +200,15 @@ export function resolveIdentifier<T extends IAnyModelType | MSTAnyModelType>(
 
   throw new Error("not yet implemented");
 }
+
+export const applySnapshot = <C>(target: IStateTreeNode<IType<C, any, any, any>>, snapshot: C): void => {
+  if (mstIsStateTreeNode(target)) {
+    mstApplySnapshot<C>(target, snapshot);
+    return;
+  }
+
+  throw new Error("can't apply a snapshot to a mobx-quick-tree node");
+};
 
 export const isArrayType = (value: IAnyType | MSTAnyType): value is IArrayType<IAnyType> => {
   if (mstIsType(value)) {

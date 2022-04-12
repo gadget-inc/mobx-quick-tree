@@ -1,5 +1,16 @@
-import { types } from "../src";
-import { getEnv, getParent, getParentOfType, getRoot, getSnapshot, isArrayType, isMapType, isModelType, isRoot } from "../src/api";
+import { SnapshotOut, types } from "../src";
+import {
+  applySnapshot,
+  getEnv,
+  getParent,
+  getParentOfType,
+  getRoot,
+  getSnapshot,
+  isArrayType,
+  isMapType,
+  isModelType,
+  isRoot,
+} from "../src/api";
 import { NamedThing, TestModel, TestModelSnapshot } from "./fixtures/TestModel";
 
 describe("getParent", () => {
@@ -151,5 +162,33 @@ describe("isModelType", () => {
     expect(isModelType(types.map(TestModel))).toEqual(false);
     expect(isModelType(types.array(TestModel))).toEqual(false);
     expect(isModelType(types.string)).toEqual(false);
+  });
+});
+
+describe("applySnapshot", () => {
+  test("applies successfully to an MST node", () => {
+    const m = TestModel.create(TestModelSnapshot);
+    const snap: SnapshotOut<typeof TestModel> = {
+      ...getSnapshot(m),
+      optional: "a different value",
+    };
+
+    applySnapshot(m, snap);
+
+    expect(m).toEqual(
+      expect.objectContaining({
+        optional: "a different value",
+      })
+    );
+  });
+
+  test("throws for an MQT node", () => {
+    const m = TestModel.createReadOnly(TestModelSnapshot);
+    const snap: SnapshotOut<typeof TestModel> = {
+      ...getSnapshot(m),
+      optional: "a different value",
+    };
+
+    expect(() => applySnapshot(m, snap)).toThrow();
   });
 });
