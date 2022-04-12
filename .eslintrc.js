@@ -13,6 +13,7 @@ module.exports = {
         extendDefaults: true,
         types: {
           Function: false,
+          "{}": false,
         },
       },
     ],
