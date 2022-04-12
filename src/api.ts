@@ -6,6 +6,7 @@ import {
   getType as mstGetType,
   IAnyComplexType as MSTAnyComplexType,
   IAnyModelType as MSTAnyModelType,
+  IAnyStateTreeNode as MSTAnyStateTreeNode,
   IAnyType as MSTAnyType,
   Instance as MSTInstance,
   isArrayType as mstIsArrayType,
@@ -120,6 +121,7 @@ export function getParentOfType<T extends IAnyComplexType | MSTAnyComplexType>(v
   return value;
 }
 
+export function getType(value: MSTAnyStateTreeNode): MSTAnyComplexType;
 export function getType(value: IQuickTreeNode<IAnyType>): IAnyComplexType;
 export function getType(value: IAnyStateTreeNode): MSTAnyComplexType | IAnyComplexType {
   if (mstIsStateTreeNode(value)) {
