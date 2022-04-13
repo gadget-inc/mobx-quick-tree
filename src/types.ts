@@ -223,9 +223,7 @@ export type TypesForModelPropsDeclaration<T extends ModelPropertiesDeclaration> 
     ? IOptionalType<ISimpleType<number>, [undefined]>
     : T[K] extends boolean
     ? IOptionalType<ISimpleType<boolean>, [undefined]>
-    : T[K] extends Date
-    ? IOptionalType<IDateType, [undefined]>
-    : never;
+    : IOptionalType<IDateType, [undefined]>;
 };
 
 export type InputTypesForModelProps<T extends ModelProperties> = {

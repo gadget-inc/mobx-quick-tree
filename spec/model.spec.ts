@@ -106,6 +106,7 @@ test("can compose models", () => {
     .model("B", { b: types.optional(types.number, 10) })
     .views((self) => ({
       get doubleLength() {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         return (self as any).a.length * 2;
       },
     }))
@@ -132,4 +133,26 @@ test("can compose models", () => {
   expect(instance.lenA()).toEqual(5);
   expect(instance.doubleLength).toEqual(10);
   expect(instance.bSquared).toEqual(16);
+});
+
+test("can compose a model without properties", () => {
+  const modelAType = types.model().views(() => ({
+    random() {
+      return Math.random();
+    },
+  }));
+
+  const modelBType = types.model("B", { b: types.optional(types.number, 10) }).views((self) => ({
+    get bSquared() {
+      return self.b * self.b;
+    },
+  }));
+
+  const composedType = types.compose("C", modelAType, modelBType);
+
+  expect(composedType.name).toEqual("C");
+
+  const instance = composedType.createReadOnly({ b: 10 });
+  expect(typeof instance.random()).toEqual("number");
+  expect(instance.bSquared).toEqual(100);
 });
