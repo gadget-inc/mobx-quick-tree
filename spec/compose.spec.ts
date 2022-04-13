@@ -1,13 +1,8 @@
-import { isStateTreeNode } from "mobx-state-tree";
-import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
+import { types } from "../src";
 
 test("a read-only instance", () => {
-  const m = TestModel.createReadOnly(TestModelSnapshot);
-  expect(m.bool).toEqual(true);
-  expect(m.notBool).toEqual(false);
-  expect(m.frozen.test).toEqual("string");
-  expect(m.nested.name).toEqual("MiXeD CaSe");
-  expect(m.nested.lowerCasedName()).toEqual("mixed case");
-  expect(m.nested.upperCasedName()).toEqual("MIXED CASE");
-  expect(isStateTreeNode(m)).toEqual(false);
+  const TestModel = types.compose("MyType", types.model({ test: "value" }), types.model({ strings: types.array(types.string) }));
+  const m = TestModel.createReadOnly({ strings: ["a", "b", "c"] });
+  expect(m.test).toEqual("value");
+  expect(m.strings).toEqual(["a", "b", "c"]);
 });
