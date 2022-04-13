@@ -136,11 +136,14 @@ test("can compose models", () => {
 });
 
 test("can compose a model without properties", () => {
-  const modelAType = types.model().views(() => ({
-    random() {
-      return Math.random();
-    },
-  }));
+  const modelAType = types
+    .model()
+    .views(() => ({
+      random() {
+        return Math.random();
+      },
+    }))
+    .volatile(() => ({ a: "test" }));
 
   const modelBType = types.model("B", { b: types.optional(types.number, 10) }).views((self) => ({
     get bSquared() {
@@ -148,11 +151,15 @@ test("can compose a model without properties", () => {
     },
   }));
 
-  const composedType = types.compose("C", modelAType, modelBType);
-
+  let composedType = types.compose("C", modelAType, modelBType);
+  let instance = composedType.createReadOnly({ b: 10 });
   expect(composedType.name).toEqual("C");
+  expect(typeof instance.random()).toEqual("number");
+  expect(instance.bSquared).toEqual(100);
 
-  const instance = composedType.createReadOnly({ b: 10 });
+  composedType = types.compose("C", modelBType, modelAType);
+  instance = composedType.createReadOnly({ b: 10 });
+  expect(composedType.name).toEqual("C");
   expect(typeof instance.random()).toEqual("number");
   expect(instance.bSquared).toEqual(100);
 });
