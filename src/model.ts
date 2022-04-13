@@ -213,12 +213,14 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 }
 
 export type ModelFactory = {
-  <Props extends ModelPropertiesDeclaration>(properties?: Props): IModelType<TypesForModelPropsDeclaration<Props>, {}>;
-  <Props extends ModelPropertiesDeclaration>(name: string, properties?: Props): IModelType<TypesForModelPropsDeclaration<Props>, {}>;
+  (): IModelType<{}, {}>;
+  (name: string): IModelType<{}, {}>;
+  <Props extends ModelPropertiesDeclaration>(properties: Props): IModelType<TypesForModelPropsDeclaration<Props>, {}>;
+  <Props extends ModelPropertiesDeclaration>(name: string, properties: Props): IModelType<TypesForModelPropsDeclaration<Props>, {}>;
 };
 
 export const model: ModelFactory = <Props extends ModelPropertiesDeclaration>(
-  nameOrProperties: string | Props | undefined,
+  nameOrProperties?: string | Props,
   properties?: Props
 ): IModelType<TypesForModelPropsDeclaration<Props>, {}> => {
   let propsDecl: Props;
