@@ -8,6 +8,7 @@ import {
   IAnyComplexType as MSTAnyComplexType,
   IAnyModelType as MSTAnyModelType,
   IAnyType as MSTAnyType,
+  IDisposer,
   Instance as MSTInstance,
   isArrayType as mstIsArrayType,
   isIdentifierType as mstIsIdentifierType,
@@ -18,6 +19,7 @@ import {
   isStateTreeNode as mstIsStateTreeNode,
   IStateTreeNode as MSTStateTreeNode,
   isType as mstIsType,
+  onSnapshot as mstOnSnapshot,
   resolveIdentifier as mstResolveIdentifier,
 } from "mobx-state-tree";
 import { $env, $parent, $quickType, $type } from "./symbols";
@@ -56,7 +58,6 @@ export {
   joinJsonPath,
   onAction,
   onPatch,
-  onSnapshot,
   recordPatches,
   resolvePath,
   setLivelinessChecking,
@@ -207,6 +208,14 @@ export const applySnapshot = <C>(target: IStateTreeNode<IType<C, any, any, any>>
   }
 
   throw new Error("can't apply a snapshot to a mobx-quick-tree node");
+};
+
+export const onSnapshot = <S>(target: IStateTreeNode<IType<any, S, any, any>>, callback: (snapshot: S) => void): IDisposer => {
+  if (mstIsStateTreeNode(target)) {
+    return mstOnSnapshot<S>(target, callback);
+  }
+
+  throw new Error("can't use onSnapshot with a mobx-quick-tree node");
 };
 
 export const isArrayType = (value: IAnyType | MSTAnyType): value is IArrayType<IAnyType> => {
