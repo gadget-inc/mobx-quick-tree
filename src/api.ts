@@ -7,7 +7,6 @@ import {
   getType as mstGetType,
   IAnyComplexType as MSTAnyComplexType,
   IAnyModelType as MSTAnyModelType,
-  IAnyStateTreeNode as MSTAnyStateTreeNode,
   IAnyType as MSTAnyType,
   Instance as MSTInstance,
   isArrayType as mstIsArrayType,
@@ -122,11 +121,11 @@ export function getParentOfType<T extends IAnyComplexType | MSTAnyComplexType>(v
   return value;
 }
 
-export function getType(value: MSTAnyStateTreeNode): MSTAnyComplexType;
-export function getType(value: IQuickTreeNode<IAnyType>): IAnyComplexType;
-export function getType(value: IAnyStateTreeNode): MSTAnyComplexType | IAnyComplexType {
+export function getType(value: IQuickTreeNode<IAnyType>): IAnyComplexType {
   if (mstIsStateTreeNode(value)) {
-    return mstGetType(value);
+    // This is probably wrong, but as long it comes back through an MQT function, we should be okay. I tried overloading the function
+    // signature, but it was problematic, so I took this approach for now (but we should figure out how to make it play nicely).
+    return mstGetType(value) as unknown as IAnyComplexType;
   }
 
   return value[$type];
