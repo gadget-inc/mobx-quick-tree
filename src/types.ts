@@ -174,13 +174,11 @@ export interface InstantiateContext {
   env?: unknown;
 }
 
-export type SnapshotIn<T extends IAnyType> = T["InputType"];
-export type SnapshotOut<T extends IAnyType> = T["OutputType"];
+export type SnapshotIn<T> = T extends IAnyType ? T["InputType"] : T;
+export type SnapshotOut<T> = T extends IAnyType ? T["OutputType"] : T;
 export type Instance<T> = T extends IAnyType ? T["InstanceType"] : T;
-
-export type SnapshotOrInstance<T> = T extends IAnyType ? T["InputType"] | T["InstanceType"] : T;
-
-export declare type CreateTypes<T extends IAnyType> = T["InputType"] | T["OutputType"] | T["InstanceType"];
+export type SnapshotOrInstance<T> = SnapshotIn<T> | Instance<T>;
+export type CreateTypes<T extends IAnyType> = T["InputType"] | T["OutputType"] | T["InstanceType"];
 
 export type ValidOptionalValue = string | boolean | number | null | undefined;
 export type Primitives = string | number | boolean | Date | null | undefined;
