@@ -49,11 +49,14 @@ const assignProps = (target: any, source: any, cache = true) => {
     for (const [name, desc] of Object.entries(descriptors)) {
       const getter = desc.get;
       if (cache && getter) {
+        let cached = false;
+        let cachedValue: unknown;
         Object.defineProperty(target, name, {
           get() {
-            const value = desc.get?.apply(target);
-            Object.defineProperty(target, name, { value });
-            return value;
+            if (cached) return cachedValue;
+            cachedValue = getter.apply(target);
+            cached = true;
+            return cachedValue;
           },
           configurable: true,
         });
