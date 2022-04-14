@@ -1,23 +1,13 @@
-import {
-  getSnapshot as mstGetSnapshot,
-  IAnyType as MSTAnyType,
-  isStateTreeNode as mstIsStateTreeNode,
-  IStateTreeNode as MSTStateTreeNode,
-  IType as MSTType,
-} from "mobx-state-tree";
+import { getSnapshot as mstGetSnapshot, isStateTreeNode as mstIsStateTreeNode, IStateTreeNode as MSTStateTreeNode } from "mobx-state-tree";
 import { getType, isModelType, isReferenceType, isStateTreeNode } from "./api";
 import { QuickArray } from "./array";
 import { QuickMap } from "./map";
 import { $identifier } from "./symbols";
-import { IQuickTreeNode, IStateTreeNode, IType } from "./types";
+import { IStateTreeNode, IType } from "./types";
 
-export function getSnapshot<S>(value: MSTStateTreeNode<MSTType<any, S, any>>): S;
-export function getSnapshot<S, M extends MSTAnyType>(value: IStateTreeNode<IType<any, S, any, M>>): S;
-export function getSnapshot<S, M extends MSTAnyType>(
-  value: IStateTreeNode<IType<any, S, any, M>> | MSTStateTreeNode<MSTType<any, S, any>>
-): S {
+export function getSnapshot<S>(value: IStateTreeNode<IType<any, S, any, any>>): S {
   if (mstIsStateTreeNode(value)) {
-    return mstGetSnapshot(value);
+    return mstGetSnapshot<S>(value as MSTStateTreeNode);
   }
 
   return snapshot(value) as S;
@@ -37,7 +27,7 @@ const snapshot = (value: any): unknown => {
   }
 
   if (isStateTreeNode(value)) {
-    const type = getType(value as IQuickTreeNode);
+    const type = getType(value);
     if (isModelType(type)) {
       return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, snapshot(v)]));
     } else if (isReferenceType(type)) {

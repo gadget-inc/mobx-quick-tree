@@ -1,14 +1,21 @@
-import { types } from "../src";
+import { Instance, types } from "../src";
 
 const Referrable = types.model("Referenced", {
   key: types.identifier,
   count: types.number,
 });
 
-const Referencer = types.model("Referencer", {
-  ref: types.reference(Referrable),
-  safeRef: types.safeReference(Referrable),
-});
+const Referencer = types
+  .model("Referencer", {
+    ref: types.reference(Referrable),
+    safeRef: types.safeReference(Referrable),
+  })
+  .actions((self) => ({
+    setRef(ref: Instance<typeof Referrable>) {
+      // Just here for typechecking
+      self.ref = ref;
+    },
+  }));
 
 const Root = types.model("Reference Model", {
   model: Referencer,

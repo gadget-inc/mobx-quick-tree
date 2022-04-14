@@ -1,8 +1,9 @@
 import { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
-import { IMapType as MSTMapType, isStateTreeNode, SnapshotOut as MSTSnapshotOut, types } from "mobx-state-tree";
+import { IMapType as MSTMapType, isStateTreeNode, types } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
+import { getSnapshot } from "./snapshot";
 import { $identifier, $type } from "./symbols";
-import type { CreateTypes, IAnyStateTreeNode, IAnyType, IMapType, IMSTMap, Instance, InstantiateContext } from "./types";
+import type { CreateTypes, IAnyStateTreeNode, IAnyType, IMapType, IMSTMap, Instance, InstantiateContext, SnapshotOut } from "./types";
 
 export class QuickMap<T extends IAnyType> extends Map<string, T["InstanceType"]> implements IMSTMap<T> {
   static get [Symbol.species]() {
@@ -27,8 +28,8 @@ export class QuickMap<T extends IAnyType> extends Map<string, T["InstanceType"]>
     throw new Error("replace not supported in QuickMap");
   }
 
-  toJSON(): Record<string, MSTSnapshotOut<T["mstType"]>> {
-    return Object.fromEntries(super.entries());
+  toJSON(): Record<string, SnapshotOut<T>> {
+    return getSnapshot(this);
   }
 
   observe(_listener: (changes: IMapDidChange<string, Instance<T>>) => void, _fireImmediately?: boolean): Lambda {
@@ -88,7 +89,7 @@ export class MapType<T extends IAnyType> extends BaseType<
 
     setType(map, this);
 
-    return map;
+    return map as this["InstanceType"];
   }
 }
 

@@ -6,10 +6,8 @@ import {
   getRoot as mstGetRoot,
   getType as mstGetType,
   IAnyComplexType as MSTAnyComplexType,
-  IAnyModelType as MSTAnyModelType,
   IAnyType as MSTAnyType,
   IDisposer,
-  Instance as MSTInstance,
   isArrayType as mstIsArrayType,
   isIdentifierType as mstIsIdentifierType,
   isMapType as mstIsMapType,
@@ -32,7 +30,6 @@ import type {
   IArrayType,
   IMapType,
   Instance,
-  IQuickTreeNode,
   IReferenceType,
   IStateTreeNode,
   IType,
@@ -136,7 +133,7 @@ export function getEnv<Env = any>(value: IAnyStateTreeNode): Env {
   }
 
   // Assumes no cycles, otherwise this is an infinite loop
-  let currentNode: IQuickTreeNode<IAnyType> = value;
+  let currentNode: IStateTreeNode = value;
   while (currentNode) {
     const env = currentNode[$env];
     if (env !== undefined) {
@@ -173,26 +170,16 @@ export const isRoot = (value: IAnyStateTreeNode): boolean => {
   return value[$parent] === undefined;
 };
 
-export function resolveIdentifier<T extends IAnyModelType | MSTAnyModelType>(
-  type: T,
-  target: IQuickTreeNode<IAnyType>,
-  identifier: string
-): Instance<T> | undefined;
-export function resolveIdentifier<T extends IAnyModelType | MSTAnyModelType>(
-  type: T,
-  target: MSTStateTreeNode<MSTAnyType>,
-  identifier: string
-): MSTInstance<T> | undefined;
-export function resolveIdentifier<T extends IAnyModelType | MSTAnyModelType>(
+export function resolveIdentifier<T extends IAnyModelType>(
   type: T,
   target: IStateTreeNode<IAnyType>,
   identifier: string
 ): Instance<T> | undefined {
   if (mstIsStateTreeNode(target)) {
-    if (mstIsType(type)) {
-      return mstResolveIdentifier(type, target, identifier);
-    } else {
+    if (isType(type)) {
       return mstResolveIdentifier(type.mstType, target, identifier);
+    } else {
+      return mstResolveIdentifier(type, target, identifier);
     }
   }
 
@@ -201,7 +188,7 @@ export function resolveIdentifier<T extends IAnyModelType | MSTAnyModelType>(
 
 export const applySnapshot = <C>(target: IStateTreeNode<IType<C, any, any, any>>, snapshot: C): void => {
   if (mstIsStateTreeNode(target)) {
-    mstApplySnapshot<C>(target, snapshot);
+    mstApplySnapshot<C>(target as MSTStateTreeNode, snapshot);
     return;
   }
 
@@ -210,7 +197,7 @@ export const applySnapshot = <C>(target: IStateTreeNode<IType<C, any, any, any>>
 
 export const onSnapshot = <S>(target: IStateTreeNode<IType<any, S, any, any>>, callback: (snapshot: S) => void): IDisposer => {
   if (mstIsStateTreeNode(target)) {
-    return mstOnSnapshot<S>(target, callback);
+    return mstOnSnapshot<S>(target as MSTStateTreeNode, callback);
   }
 
   throw new Error("can't use onSnapshot with a mobx-quick-tree node");

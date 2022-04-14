@@ -1,4 +1,4 @@
-import { IModelType as MSTModelType, Instance as MSTInstance, isReferenceType, isStateTreeNode, types as mstTypes } from "mobx-state-tree";
+import { IModelType as MSTModelType, isReferenceType, isStateTreeNode, types as mstTypes } from "mobx-state-tree";
 import { types } from ".";
 import { BaseType, setParent, setType } from "./base";
 import { $identifier, $modelType, $type } from "./symbols";
@@ -77,7 +77,6 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   readonly [$modelType] = undefined;
   readonly Props!: Props;
   readonly Others!: Others;
-  readonly QuickOrSlowInstance!: this["InstanceType"] | MSTInstance<this["mstType"]>;
 
   private identifierProp: string | undefined;
 

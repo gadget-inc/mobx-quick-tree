@@ -1,4 +1,4 @@
-import type { IAnyType as AnyMSTType, Instance as MSTInstance } from "mobx-state-tree";
+import type { IAnyType as AnyMSTType } from "mobx-state-tree";
 import { $env, $parent, $quickType, $type } from "./symbols";
 import type { IAnyStateTreeNode, IAnyType, InstantiateContext, StateTreeNode } from "./types";
 
@@ -21,7 +21,7 @@ export abstract class BaseType<InputType, OutputType, InstanceType, MSTType exte
     });
   }
 
-  create(snapshot?: this["InputType"], env?: any): MSTInstance<MSTType> {
+  create(snapshot?: this["InputType"], env?: any): this["InstanceType"] {
     return this.mstType.create(snapshot, env);
   }
 

@@ -72,7 +72,7 @@ class ArrayType<T extends IAnyType> extends BaseType<
 
     setType(array, this);
 
-    return array;
+    return array as this["InstanceType"];
   }
 }
 

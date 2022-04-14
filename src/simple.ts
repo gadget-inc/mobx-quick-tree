@@ -22,7 +22,7 @@ export class DateType extends BaseType<Date | number, number, Date, typeof types
     }
 
     if (typeof snapshot == "number") {
-      return new Date(snapshot);
+      snapshot = new Date(snapshot);
     }
 
     return snapshot as this["InstanceType"];

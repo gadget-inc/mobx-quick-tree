@@ -8,23 +8,13 @@ import {
   IMaybe as MSTMaybeType,
   IMaybeNull as MSTMaybeNullType,
   IModelType as MSTModelType,
-  Instance as MSTInstance_,
   IReferenceType as MSTReferenceType,
   ISimpleType as MSTSimpleType,
-  IStateTreeNode as MSTStateTreeNode,
   IType as MSTType,
-  SnapshotOrInstance as MSTSnapshotOrInstance,
 } from "mobx-state-tree";
 import { $quickType, $type } from "./symbols";
 
-export type {
-  IJsonPatch,
-  IMiddlewareEvent,
-  IPatchRecorder,
-  IStateTreeNode as MSTStateTreeNode,
-  ReferenceOptions,
-  UnionOptions,
-} from "mobx-state-tree";
+export type { IJsonPatch, IMiddlewareEvent, IPatchRecorder, ReferenceOptions, UnionOptions } from "mobx-state-tree";
 
 export interface IType<InputType, OutputType, InstanceType, MSTType extends MSTAnyType> {
   readonly [$quickType]: undefined;
@@ -40,7 +30,7 @@ export interface IType<InputType, OutputType, InstanceType, MSTType extends MSTA
   is(value: IAnyStateTreeNode): value is this["InstanceType"];
   is(value: any): value is this["InputType"] | this["InstanceType"];
 
-  create(snapshot?: InputType, env?: any): MSTInstance_<MSTType>;
+  create(snapshot?: InputType, env?: any): this["InstanceType"];
   createReadOnly(snapshot?: InputType, env?: any): this["InstanceType"];
 
   /** @hidden */
@@ -187,26 +177,20 @@ export interface InstantiateContext {
 export type SnapshotIn<T extends IAnyType> = T["InputType"];
 export type SnapshotOut<T extends IAnyType> = T["OutputType"];
 export type Instance<T> = T extends IAnyType ? T["InstanceType"] : T;
-export type MSTInstance<T> = T extends IAnyType ? MSTInstance_<T["mstType"]> : MSTInstance_<T>;
 
-export type SnapshotOrInstance<T> = T extends IAnyType
-  ? T["InputType"] | T["InstanceType"]
-  : T extends MSTAnyType
-  ? MSTSnapshotOrInstance<T>
-  : T;
+export type SnapshotOrInstance<T> = T extends IAnyType ? T["InputType"] | T["InstanceType"] : T;
 
 export declare type CreateTypes<T extends IAnyType> = T["InputType"] | T["OutputType"] | T["InstanceType"];
 
 export type ValidOptionalValue = string | boolean | number | null | undefined;
 export type Primitives = string | number | boolean | Date | null | undefined;
 
-export interface IQuickTreeNode<T extends IAnyType = IAnyType> {
-  readonly [$type]: T;
+export interface IStateTreeNode<T extends IAnyType = IAnyType> {
+  readonly [$type]?: [T] | [any];
   readonly [key: string | symbol]: any;
 }
 
 export type StateTreeNode<T, IT extends IAnyType> = T extends object ? T & IStateTreeNode<IT> : T;
-export type IStateTreeNode<T extends IAnyType = IAnyType> = IQuickTreeNode<T> | MSTStateTreeNode<T["mstType"]>;
 export type IAnyStateTreeNode = StateTreeNode<any, IAnyType>;
 
 export type ModelPropertiesDeclaration = Record<string, string | number | boolean | Date | IAnyType>;
