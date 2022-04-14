@@ -104,11 +104,7 @@ describe("getSnapshot", () => {
     });
 
     expect(instance.ref.name).toEqual("b 2");
-    expect(getSnapshot(instance)).toEqual(
-      expect.objectContaining({
-        ref: "b",
-      })
-    );
+    expect(getSnapshot(instance).ref).toEqual("b");
   });
 
   test("returns the proper root for an MST instance", () => {

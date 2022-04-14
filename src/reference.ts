@@ -8,23 +8,11 @@ import {
 } from "mobx-state-tree";
 import { ReferenceT } from "mobx-state-tree/dist/internal";
 import { BaseType } from "./base";
-import { $type } from "./symbols";
 import type { IAnyComplexType, IMaybeType, InstantiateContext, IReferenceType } from "./types";
 
 export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsGetSet<T["mstType"]> | Record<string, unknown>) & {
   acceptsUndefined?: boolean;
   onInvalidated?: OnReferenceInvalidated<ReferenceT<T["mstType"]>>;
-};
-
-const referenceProxy = (referenceType: any, target: any) => {
-  return new Proxy(target, {
-    get(target, prop, _receiver) {
-      if (prop === $type) {
-        return referenceType;
-      }
-      return target[prop];
-    },
-  });
 };
 
 export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
@@ -41,7 +29,7 @@ export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
     if (!snapshot || !(snapshot in context.referenceCache)) {
       throw new Error(`can't resolve reference ${snapshot}`);
     }
-    return referenceProxy(this, context.referenceCache[snapshot]);
+    return context.referenceCache[snapshot];
   }
 }
 
@@ -59,7 +47,7 @@ export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseT
     if (!snapshot || !(snapshot in context.referenceCache)) {
       return undefined as this["InstanceType"];
     }
-    return referenceProxy(this, context.referenceCache[snapshot]);
+    return context.referenceCache[snapshot];
   }
 }
 
