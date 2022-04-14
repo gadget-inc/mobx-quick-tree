@@ -1,5 +1,10 @@
 import { types } from "../src";
 
+const InventoryItem = types.model("Inventory Item", {
+  name: types.identifier,
+  amount: types.optional(types.number, 0),
+});
+
 test("can create a map of simple types", () => {
   const mapType = types.map(types.string);
   expect(mapType.createReadOnly().toJSON()).toEqual({});
@@ -7,34 +12,13 @@ test("can create a map of simple types", () => {
 });
 
 test("can create a map of complex types", () => {
-  const inventoryType = types.model("Inventory Item", {
-    itemName: types.string,
-    amount: types.optional(types.number, 0),
-  });
-
-  const mapType = types.map(inventoryType);
+  const mapType = types.map(InventoryItem);
 
   expect(mapType.createReadOnly().toJSON()).toEqual({});
-  expect(mapType.createReadOnly({ itemA: { itemName: "A", amount: 10 }, itemB: { itemName: "B" } }).toJSON()).toEqual(
+  expect(mapType.createReadOnly({ A: { name: "A", amount: 10 }, B: { name: "B" } }).toJSON()).toEqual(
     expect.objectContaining({
-      itemA: expect.objectContaining({ itemName: "A", amount: 10 }),
-      itemB: expect.objectContaining({ itemName: "B", amount: 0 }),
-    })
-  );
-});
-
-test("can create a map of complex types that have an identifier attribute", () => {
-  const inventoryType = types.model("Inventory Item", {
-    itemName: types.identifier,
-    amount: types.optional(types.number, 0),
-  });
-
-  const mapType = types.map(inventoryType);
-  expect(mapType.createReadOnly().toJSON()).toEqual({});
-  expect(mapType.createReadOnly({ itemA: { itemName: "A", amount: 10 }, itemB: { itemName: "B" } }).toJSON()).toEqual(
-    expect.objectContaining({
-      A: expect.objectContaining({ itemName: "A", amount: 10 }),
-      B: expect.objectContaining({ itemName: "B", amount: 0 }),
+      A: expect.objectContaining({ name: "A", amount: 10 }),
+      B: expect.objectContaining({ name: "B", amount: 0 }),
     })
   );
 });
