@@ -1,8 +1,8 @@
-import type { IAnyType as AnyMSTType } from "mobx-state-tree";
+import type { IAnyType as MSTAnyType } from "mobx-state-tree";
 import { $env, $parent, $quickType, $type } from "./symbols";
 import type { IAnyStateTreeNode, IAnyType, InstantiateContext, StateTreeNode } from "./types";
 
-export abstract class BaseType<InputType, OutputType, InstanceType, MSTType extends AnyMSTType> {
+export abstract class BaseType<InputType, OutputType, InstanceType> {
   readonly [$quickType] = undefined;
 
   readonly InputType!: InputType;
@@ -10,9 +10,9 @@ export abstract class BaseType<InputType, OutputType, InstanceType, MSTType exte
   readonly InstanceType!: StateTreeNode<InstanceType, this>;
   readonly InstanceTypeWithoutSTN!: InstanceType;
 
-  readonly mstType!: MSTType;
+  readonly mstType!: MSTAnyType;
 
-  constructor(readonly name: string, mstType: MSTType) {
+  constructor(readonly name: string, mstType: MSTAnyType) {
     Reflect.defineProperty(this, "mstType", {
       value: mstType,
       enumerable: false,

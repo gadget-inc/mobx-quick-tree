@@ -5,8 +5,7 @@ import type { IAnyType, InstantiateContext, IUnionType } from "./types";
 export class UnionType<Types extends IAnyType[]> extends BaseType<
   Types[number]["InputType"],
   Types[number]["OutputType"],
-  Types[number]["InstanceTypeWithoutSTN"],
-  Types[number]["mstType"]
+  Types[number]["InstanceTypeWithoutSTN"]
 > {
   constructor(private types: Types, readonly options?: UnionOptions) {
     super("union", options ? mstTypes.union(options, ...types.map((x) => x.mstType)) : mstTypes.union(...types.map((x) => x.mstType)));

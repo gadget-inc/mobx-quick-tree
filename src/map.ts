@@ -1,5 +1,5 @@
 import { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
-import { IMapType as MSTMapType, isStateTreeNode, types } from "mobx-state-tree";
+import { isStateTreeNode, types } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
 import { getSnapshot } from "./snapshot";
 import { $identifier, $type } from "./symbols";
@@ -44,8 +44,7 @@ export class QuickMap<T extends IAnyType> extends Map<string, T["InstanceType"]>
 export class MapType<T extends IAnyType> extends BaseType<
   Record<string, T["InputType"]> | undefined,
   Record<string, T["OutputType"]>,
-  IMSTMap<T>,
-  MSTMapType<T["mstType"]>
+  IMSTMap<T>
 > {
   constructor(readonly childrenType: T) {
     super(`map<${childrenType.name}>`, types.map(childrenType.mstType));

@@ -7,8 +7,7 @@ export type DefaultFuncOrValue<T extends IAnyType> = T["InputType"] | T["OutputT
 export class OptionalType<T extends IAnyType, OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]> extends BaseType<
   T["InputType"] | OptionalValues[number],
   T["OutputType"],
-  T["InstanceTypeWithoutSTN"],
-  T["mstType"]
+  T["InstanceTypeWithoutSTN"]
 > {
   constructor(
     readonly type: T,

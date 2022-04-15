@@ -2,7 +2,7 @@ import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import type { IAnyType, InstantiateContext } from "./types";
 
-export class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputType"], T["InstanceTypeWithoutSTN"], T["mstType"]> {
+export class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputType"], T["InstanceTypeWithoutSTN"]> {
   private cachedType: T | null | undefined;
 
   constructor(private readonly fn: () => T) {

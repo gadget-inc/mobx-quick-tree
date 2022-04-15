@@ -1,13 +1,8 @@
-import { ISimpleType as MSTSimpleType, types } from "mobx-state-tree";
+import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import type { IAnyStateTreeNode, InstantiateContext, ISimpleType } from "./types";
 
-export class EnumerationType<EnumOptions extends string> extends BaseType<
-  EnumOptions,
-  EnumOptions,
-  EnumOptions,
-  MSTSimpleType<EnumOptions>
-> {
+export class EnumerationType<EnumOptions extends string> extends BaseType<EnumOptions, EnumOptions, EnumOptions> {
   constructor(readonly name: string, readonly options: EnumOptions[]) {
     super(name, types.enumeration<EnumOptions>(options));
   }

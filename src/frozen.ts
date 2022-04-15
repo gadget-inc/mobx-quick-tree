@@ -1,8 +1,8 @@
-import { ISimpleType as MSTSimpleType, types } from "mobx-state-tree";
+import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import { InstantiateContext, ISimpleType } from "./types";
 
-export class FrozenType<T> extends BaseType<T, T, T, MSTSimpleType<T>> {
+export class FrozenType<T> extends BaseType<T, T, T> {
   constructor() {
     super("frozen", types.frozen<T>());
   }

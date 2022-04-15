@@ -1,4 +1,10 @@
-import { IModelType as MSTModelType, isReferenceType, isStateTreeNode as mstIsStateTreeNode, types as mstTypes } from "mobx-state-tree";
+import {
+  IAnyModelType as MSTAnyModelType,
+  IAnyType as MSTAnyType,
+  isReferenceType,
+  isStateTreeNode as mstIsStateTreeNode,
+  types as mstTypes,
+} from "mobx-state-tree";
 import { types } from ".";
 import { isStateTreeNode } from "./api";
 import { BaseType, setParent, setType } from "./base";
@@ -15,7 +21,6 @@ import type {
   ModelProperties,
   ModelPropertiesDeclaration,
   ModelViews,
-  MSTPropertiesForModelProps,
   OutputTypesForModelProps,
   TypesForModelPropsDeclaration,
 } from "./types";
@@ -40,8 +45,8 @@ const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDeclaration
   ) as TypesForModelPropsDeclaration<Props>;
 };
 
-const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): MSTPropertiesForModelProps<Props> => {
-  return (props ? Object.fromEntries(Object.entries(props).map(([k, v]) => [k, v.mstType])) : {}) as MSTPropertiesForModelProps<Props>;
+const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): Record<string, MSTAnyType> => {
+  return props ? Object.fromEntries(Object.entries(props).map(([k, v]) => [k, v.mstType])) : {};
 };
 
 const assignProps = (target: any, source: any, cache = true) => {
@@ -75,22 +80,17 @@ const assignProps = (target: any, source: any, cache = true) => {
 export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   InputsForModel<InputTypesForModelProps<Props>>,
   OutputTypesForModelProps<Props>,
-  InstanceTypesForModelProps<Props> & Others,
-  MSTModelType<MSTPropertiesForModelProps<Props>, Others>
+  InstanceTypesForModelProps<Props> & Others
 > {
   readonly [$modelType] = undefined;
   readonly Props!: Props;
   readonly Others!: Others;
+  readonly mstType!: MSTAnyModelType;
 
   private identifierProp: string | undefined;
 
-  constructor(
-    name: string,
-    readonly properties: Props,
-    readonly initializeViewsAndActions: (self: any) => any,
-    mstModel: MSTModelType<MSTPropertiesForModelProps<Props>, Others>
-  ) {
-    super(name, mstModel);
+  constructor(name: string, readonly properties: Props, readonly initializeViewsAndActions: (self: any) => any, mstType: MSTAnyModelType) {
+    super(name, mstType);
     this.identifierProp = this.mstType.identifierAttribute;
   }
 

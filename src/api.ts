@@ -6,6 +6,7 @@ import {
   getRoot as mstGetRoot,
   getType as mstGetType,
   IAnyComplexType as MSTAnyComplexType,
+  IAnyModelType as MSTAnyModelType,
   IAnyType as MSTAnyType,
   IDisposer,
   isArrayType as mstIsArrayType,
@@ -177,7 +178,7 @@ export function resolveIdentifier<T extends IAnyModelType>(
 ): Instance<T> | undefined {
   if (mstIsStateTreeNode(target)) {
     if (isType(type)) {
-      return mstResolveIdentifier(type.mstType, target, identifier);
+      return mstResolveIdentifier(type.mstType as MSTAnyModelType, target, identifier);
     } else {
       return mstResolveIdentifier(type, target, identifier);
     }
@@ -186,7 +187,7 @@ export function resolveIdentifier<T extends IAnyModelType>(
   throw new Error("not yet implemented");
 }
 
-export const applySnapshot = <C>(target: IStateTreeNode<IType<C, any, any, any>>, snapshot: C): void => {
+export const applySnapshot = <C>(target: IStateTreeNode<IType<C, any, any>>, snapshot: C): void => {
   if (mstIsStateTreeNode(target)) {
     mstApplySnapshot<C>(target as MSTStateTreeNode, snapshot);
     return;
@@ -195,7 +196,7 @@ export const applySnapshot = <C>(target: IStateTreeNode<IType<C, any, any, any>>
   throw new Error("can't apply a snapshot to a mobx-quick-tree node");
 };
 
-export const onSnapshot = <S>(target: IStateTreeNode<IType<any, S, any, any>>, callback: (snapshot: S) => void): IDisposer => {
+export const onSnapshot = <S>(target: IStateTreeNode<IType<any, S, any>>, callback: (snapshot: S) => void): IDisposer => {
   if (mstIsStateTreeNode(target)) {
     return mstOnSnapshot<S>(target as MSTStateTreeNode, callback);
   }

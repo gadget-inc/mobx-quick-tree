@@ -1,4 +1,4 @@
-import { IArrayType as MSTArrayType, isStateTreeNode, types } from "mobx-state-tree";
+import { isStateTreeNode, types } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
 import { $type } from "./symbols";
 import type { IAnyStateTreeNode, IAnyType, IArrayType, IMSTArray, Instance, InstantiateContext } from "./types";
@@ -29,12 +29,7 @@ export class QuickArray<T extends IAnyType> extends Array<T["InstanceType"]> imp
   }
 }
 
-class ArrayType<T extends IAnyType> extends BaseType<
-  Array<T["InputType"]> | undefined,
-  T["OutputType"][],
-  IMSTArray<T>,
-  MSTArrayType<T["mstType"]>
-> {
+class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]> | undefined, T["OutputType"][], IMSTArray<T>> {
   constructor(readonly childrenType: T) {
     super(`array<${childrenType.name}>`, types.array(childrenType.mstType));
   }

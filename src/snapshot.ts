@@ -5,7 +5,7 @@ import { QuickMap } from "./map";
 import { $identifier } from "./symbols";
 import { IAnyType, IStateTreeNode, IType } from "./types";
 
-export function getSnapshot<S>(value: IStateTreeNode<IType<any, S, any, any>>): S {
+export function getSnapshot<S>(value: IStateTreeNode<IType<any, S, any>>): S {
   if (mstIsStateTreeNode(value)) {
     return mstGetSnapshot<S>(value as MSTStateTreeNode);
   }

@@ -1,13 +1,8 @@
-import { CustomTypeOptions, IType as MSTType, types } from "mobx-state-tree";
+import { CustomTypeOptions, types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import type { InstantiateContext, IType } from "./types";
 
-export class CustomType<InputType, OutputType> extends BaseType<
-  InputType,
-  OutputType,
-  OutputType,
-  MSTType<InputType | OutputType, InputType, OutputType>
-> {
+export class CustomType<InputType, OutputType> extends BaseType<InputType, OutputType, OutputType> {
   constructor(readonly options: CustomTypeOptions<InputType, OutputType>) {
     super(options.name, types.custom<InputType, OutputType>(options));
   }
@@ -22,6 +17,6 @@ export class CustomType<InputType, OutputType> extends BaseType<
 
 export const custom = <InputType, OutputType>(
   options: CustomTypeOptions<InputType, OutputType>
-): IType<InputType, OutputType, OutputType, MSTType<InputType | OutputType, InputType, OutputType>> => {
+): IType<InputType, OutputType, OutputType> => {
   return new CustomType(options);
 };
