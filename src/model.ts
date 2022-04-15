@@ -103,10 +103,14 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   readonly mstType!: MSTAnyModelType;
 
   private identifierProp: string | undefined;
+  private base: this["InstanceType"];
 
   constructor(name: string, readonly properties: Props, readonly initializers: ModelInitializer[], mstType: MSTAnyModelType) {
     super(name, mstType);
     this.identifierProp = this.mstType.identifierAttribute;
+
+    this.base = {} as this["InstanceType"];
+    setType(this.base, this);
   }
 
   views<Views extends ModelViews>(fn: (self: Instance<this>) => Views): ModelType<Props, Others & Views> {
@@ -169,20 +173,20 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 
   is(value: IAnyStateTreeNode): value is this["InstanceType"];
   is(value: any): value is this["InputType"] | this["InstanceType"] {
-    if (mstIsStateTreeNode(value)) {
-      return this.mstType.is(value);
-    }
-
     if (typeof value !== "object" || value === null) {
-      return false;
-    }
-
-    if (Object.getPrototypeOf(value) != Object.prototype) {
       return false;
     }
 
     if (value[$type] === this) {
       return true;
+    }
+
+    if (mstIsStateTreeNode(value)) {
+      return this.mstType.is(value);
+    }
+
+    if (Object.getPrototypeOf(value) !== Object.prototype) {
+      return false;
     }
 
     for (const name in this.properties) {
@@ -199,8 +203,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
       return snapshot as this["InstanceType"];
     }
 
-    const instance: Record<string | symbol, any> = {};
-    setType(instance, this);
+    const instance: Record<string | symbol, any> = Object.create(this.base);
 
     for (const propName in this.properties) {
       const propType = this.properties[propName];
