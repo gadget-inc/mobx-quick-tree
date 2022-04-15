@@ -1,5 +1,5 @@
 import { types as mstTypes } from "mobx-state-tree";
-import { ModelType } from "./model";
+import { ModelInitializer, ModelType } from "./model";
 import type { IAnyModelType, IModelType } from "./types";
 
 type PropsFromTypes<T> = T extends IModelType<infer P, any>
@@ -32,17 +32,11 @@ export const compose: ComposeFactory = (nameOrType: IAnyModelType | string, ...t
   }
 
   const props = types.reduce((props, model) => ({ ...props, ...model.properties }), {});
-  const initializer = (self: any) => {
-    for (const type of types) {
-      // TODO see if there's a good way to not have to do this cast
-      (type as any).initializeViewsAndActions(self);
-    }
-    return self;
-  };
+  const initializers = types.reduce<ModelInitializer[]>((inits, model) => (model as ModelType<any, any>).initializers.concat(inits), []);
 
   // We ignore the overloading MST has put on compose, to avoid writing out an annoying `switch`
   const mstComposedModel = (mstTypes.compose as any)(name, ...types.map((t) => t.mstType));
 
   // TODO see if there's a good way to not have to do this cast
-  return new ModelType(name, props, initializer, mstComposedModel) as any;
+  return new ModelType(name, props, initializers, mstComposedModel) as any;
 };
