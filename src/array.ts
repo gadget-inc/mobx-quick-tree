@@ -31,7 +31,7 @@ export class QuickArray<T extends IAnyType> extends Array<T["InstanceType"]> imp
 
 class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]> | undefined, T["OutputType"][], IMSTArray<T>> {
   constructor(readonly childrenType: T) {
-    super(`array<${childrenType.name}>`, types.array(childrenType.mstType));
+    super(types.array(childrenType.mstType));
   }
 
   is(value: IAnyStateTreeNode): value is this["InstanceType"];

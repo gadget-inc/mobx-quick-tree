@@ -19,7 +19,7 @@ export * from "./types";
 
 export const types = {
   boolean: SimpleType.for(mstTypes.boolean),
-  Date: new DateType("Date", mstTypes.Date),
+  Date: new DateType(mstTypes.Date),
   identifier: SimpleType.for(mstTypes.identifier),
   integer: SimpleType.for(mstTypes.integer),
   literal,

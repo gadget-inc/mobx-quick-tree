@@ -4,7 +4,7 @@ import { InstantiateContext, ISimpleType } from "./types";
 
 export class FrozenType<T> extends BaseType<T, T, T> {
   constructor() {
-    super("frozen", types.frozen<T>());
+    super(types.frozen<T>());
   }
 
   instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext): this["InstanceType"] {

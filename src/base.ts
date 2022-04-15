@@ -10,10 +10,13 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
   readonly InstanceType!: StateTreeNode<InstanceType, this>;
   readonly InstanceTypeWithoutSTN!: InstanceType;
 
+  readonly name: string;
   readonly mstType!: MSTAnyType;
 
-  constructor(readonly name: string, mstType: MSTAnyType) {
-    Reflect.defineProperty(this, "mstType", {
+  constructor(mstType: MSTAnyType) {
+    this.name = mstType.name;
+
+    Object.defineProperty(this, "mstType", {
       value: mstType,
       enumerable: false,
       writable: false,
@@ -27,8 +30,8 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
 
   is(value: IAnyStateTreeNode): value is this["InstanceType"];
   is(value: any): value is this["InputType"] | this["InstanceType"] {
-    if (value && value[$type]) {
-      return value[$type] == this;
+    if (value && value[$type] == this) {
+      return true;
     }
     return this.mstType.is(value);
   }

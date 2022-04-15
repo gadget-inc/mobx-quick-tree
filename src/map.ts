@@ -47,7 +47,7 @@ export class MapType<T extends IAnyType> extends BaseType<
   IMSTMap<T>
 > {
   constructor(readonly childrenType: T) {
-    super(`map<${childrenType.name}>`, types.map(childrenType.mstType));
+    super(types.map(childrenType.mstType));
   }
 
   is(value: IAnyStateTreeNode): value is this["InstanceType"];

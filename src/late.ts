@@ -6,10 +6,7 @@ export class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["Ou
   private cachedType: T | null | undefined;
 
   constructor(private readonly fn: () => T) {
-    super(
-      "late",
-      types.late<T["mstType"]>(() => this.type?.mstType as T["mstType"])
-    );
+    super(types.late<T["mstType"]>(() => this.type?.mstType as T["mstType"]));
   }
 
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {

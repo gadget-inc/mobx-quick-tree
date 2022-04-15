@@ -4,7 +4,7 @@ import type { InstantiateContext, ISimpleType, Primitives } from "./types";
 
 export class SimpleType<T> extends BaseType<T, T, T> {
   static for<MSTType extends MSTSimpleType<any>>(mstType: MSTType): ISimpleType<SnapshotIn<MSTType>> {
-    return new SimpleType(mstType.name, mstType);
+    return new SimpleType(mstType);
   }
 
   instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext): this["InstanceType"] {
@@ -31,8 +31,7 @@ export class DateType extends BaseType<Date | number, number, Date> {
 
 export class LiteralType<T extends Primitives> extends SimpleType<T> {
   constructor(readonly value: T) {
-    const mstType = types.literal<T>(value);
-    super(mstType.name, mstType);
+    super(types.literal<T>(value));
   }
 
   instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext): this["InstanceType"] {

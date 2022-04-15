@@ -4,7 +4,7 @@ import type { InstantiateContext, IType } from "./types";
 
 export class CustomType<InputType, OutputType> extends BaseType<InputType, OutputType, OutputType> {
   constructor(readonly options: CustomTypeOptions<InputType, OutputType>) {
-    super(options.name, types.custom<InputType, OutputType>(options));
+    super(types.custom<InputType, OutputType>(options));
   }
 
   instantiate(snapshot: InputType, _context: InstantiateContext): this["InstanceType"] {

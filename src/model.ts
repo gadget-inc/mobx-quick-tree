@@ -101,8 +101,8 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   private identifierProp: string | undefined;
   private base: this["InstanceType"];
 
-  constructor(name: string, readonly properties: Props, readonly initializers: ModelInitializer[], mstType: MSTAnyModelType) {
-    super(name, mstType);
+  constructor(readonly properties: Props, readonly initializers: ModelInitializer[], mstType: MSTAnyModelType) {
+    super(mstType);
     this.identifierProp = this.mstType.identifierAttribute;
 
     this.base = {} as this["InstanceType"];
@@ -111,38 +111,28 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 
   views<Views extends ModelViews>(fn: (self: Instance<this>) => Views): ModelType<Props, Others & Views> {
     const init = (self: Instance<this>) => assignProps(self, fn(self));
-    return new ModelType<Props, Others & Views>(this.name, this.properties, [...this.initializers, init], this.mstType.views(fn as any));
+    return new ModelType<Props, Others & Views>(this.properties, [...this.initializers, init], this.mstType.views(fn));
   }
 
   actions<Actions extends ModelActions>(fn: (self: Instance<this>) => Actions): ModelType<Props, Others & Actions> {
     const init = (self: Instance<this>) => assignProps(self, fn(self));
-    return new ModelType<Props, Others & Actions>(
-      this.name,
-      this.properties,
-      [...this.initializers, init],
-      this.mstType.actions(fn as any)
-    );
+    return new ModelType<Props, Others & Actions>(this.properties, [...this.initializers, init], this.mstType.actions(fn));
   }
 
   props<AdditionalProps extends ModelPropertiesDeclaration>(
     propsDecl: AdditionalProps
   ): ModelType<Props & TypesForModelPropsDeclaration<AdditionalProps>, Others> {
     const props = propsFromModelPropsDeclaration(propsDecl);
-    return new ModelType(this.name, { ...this.properties, ...props }, this.initializers, this.mstType.props(mstPropsFromQuickProps(props)));
+    return new ModelType({ ...this.properties, ...props }, this.initializers, this.mstType.props(mstPropsFromQuickProps(props)));
   }
 
   named(newName: string): ModelType<Props, Others> {
-    return new ModelType(newName, this.properties, this.initializers, this.mstType);
+    return new ModelType(this.properties, this.initializers, this.mstType.named(newName));
   }
 
   volatile<VolatileState extends ModelViews>(fn: (self: Instance<this>) => VolatileState): IModelType<Props, Others & VolatileState> {
     const init = (self: Instance<this>) => assignProps(self, fn(self));
-    return new ModelType<Props, Others & VolatileState>(
-      this.name,
-      this.properties,
-      [...this.initializers, init],
-      this.mstType.volatile(fn as any)
-    );
+    return new ModelType<Props, Others & VolatileState>(this.properties, [...this.initializers, init], this.mstType.volatile(fn));
   }
 
   extend<Actions extends ModelActions, Views extends ModelViews, VolatileState extends ModelViews>(
@@ -160,10 +150,9 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     };
 
     return new ModelType<Props, Others & Actions & Views & VolatileState>(
-      this.name,
       this.properties,
       [...this.initializers, init],
-      this.mstType.extend<Actions, Views, VolatileState>(fn as any)
+      this.mstType.extend<Actions, Views, VolatileState>(fn)
     );
   }
 
@@ -250,7 +239,6 @@ export const model: ModelFactory = <Props extends ModelPropertiesDeclaration>(
     propsDecl = nameOrProperties ?? ({} as Props);
   }
 
-  // TODO figure out how to make these types compatible
   const props = propsFromModelPropsDeclaration(propsDecl);
-  return new ModelType(name, props, [], mstTypes.model(name, mstPropsFromQuickProps(props))) as any;
+  return new ModelType(props, [], mstTypes.model(name, mstPropsFromQuickProps(props)));
 };

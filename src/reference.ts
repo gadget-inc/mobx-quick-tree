@@ -10,7 +10,7 @@ export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsG
 
 export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<string, string, TargetType["InstanceTypeWithoutSTN"]> {
   constructor(readonly targetType: IAnyComplexType, options?: ReferenceOptions<TargetType["mstType"]>) {
-    super(`reference<${targetType.name}>`, types.reference(targetType.mstType, options));
+    super(types.reference(targetType.mstType, options));
   }
 
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
@@ -27,7 +27,7 @@ export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseT
   TargetType["InstanceTypeWithoutSTN"] | undefined
 > {
   constructor(readonly targetType: IAnyComplexType, options?: SafeReferenceOptions<TargetType>) {
-    super(`safeReference<${targetType.name}>`, types.safeReference(targetType.mstType, options));
+    super(types.safeReference(targetType.mstType, options));
   }
 
   instantiate(snapshot: string | undefined, context: InstantiateContext): this["InstanceType"] {

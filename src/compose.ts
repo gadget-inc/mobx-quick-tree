@@ -38,5 +38,5 @@ export const compose: ComposeFactory = (nameOrType: IAnyModelType | string, ...t
   const mstComposedModel = (mstTypes.compose as any)(name, ...types.map((t) => t.mstType));
 
   // TODO see if there's a good way to not have to do this cast
-  return new ModelType(name, props, initializers, mstComposedModel) as any;
+  return new ModelType(props, initializers, mstComposedModel);
 };

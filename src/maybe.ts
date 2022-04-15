@@ -8,7 +8,7 @@ export class MaybeType<Type extends IAnyType> extends BaseType<
   Type["InstanceTypeWithoutSTN"] | undefined
 > {
   constructor(private type: Type) {
-    super(`maybe<${type.name}>`, mstTypes.maybe(type.mstType));
+    super(mstTypes.maybe(type.mstType));
   }
 
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
@@ -32,7 +32,7 @@ export class MaybeNullType<Type extends IAnyType> extends BaseType<
   Type["InstanceTypeWithoutSTN"] | null
 > {
   constructor(private type: Type) {
-    super(`maybe<${type.name}>`, mstTypes.maybeNull(type.mstType));
+    super(mstTypes.maybeNull(type.mstType));
   }
 
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {

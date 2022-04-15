@@ -4,7 +4,7 @@ import type { IAnyStateTreeNode, InstantiateContext, ISimpleType } from "./types
 
 export class EnumerationType<EnumOptions extends string> extends BaseType<EnumOptions, EnumOptions, EnumOptions> {
   constructor(readonly name: string, readonly options: EnumOptions[]) {
-    super(name, types.enumeration<EnumOptions>(options));
+    super(types.enumeration<EnumOptions>(options));
   }
 
   instantiate(snapshot: this["InputType"], _context: InstantiateContext): this["InstanceType"] {

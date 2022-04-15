@@ -15,7 +15,6 @@ export class OptionalType<T extends IAnyType, OptionalValues extends [ValidOptio
     private readonly undefinedValues?: OptionalValues
   ) {
     super(
-      `optional<${type.name}>`,
       undefinedValues
         ? mstTypes.optional(type.mstType, defaultValueOrFunc, undefinedValues)
         : mstTypes.optional(type.mstType, defaultValueOrFunc)
