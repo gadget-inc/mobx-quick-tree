@@ -62,28 +62,24 @@ const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): Re
   return mstProps;
 };
 
-const assignProps = (target: any, source: any, cache = true) => {
+const assignProps = (target: any, source: any) => {
   if (target && source) {
     const descriptors = Object.getOwnPropertyDescriptors(source);
     for (const name in descriptors) {
       const desc = descriptors[name];
       const getter = desc.get;
       if (getter) {
-        if (cache) {
-          let cached = false;
-          let cachedValue: unknown;
-          Object.defineProperty(target, name, {
-            get() {
-              if (cached) return cachedValue;
-              cachedValue = getter.apply(target);
-              cached = true;
-              return cachedValue;
-            },
-            configurable: true,
-          });
-        } else {
-          Object.defineProperty(target, name, desc);
-        }
+        let cached = false;
+        let cachedValue: unknown;
+        Object.defineProperty(target, name, {
+          get() {
+            if (cached) return cachedValue;
+            cachedValue = getter.apply(target);
+            cached = true;
+            return cachedValue;
+          },
+          configurable: true,
+        });
       } else {
         target[name] = desc.value;
       }
@@ -119,7 +115,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   }
 
   actions<Actions extends ModelActions>(fn: (self: Instance<this>) => Actions): ModelType<Props, Others & Actions> {
-    const init = (self: Instance<this>) => assignProps(self, fn(self), false);
+    const init = (self: Instance<this>) => assignProps(self, fn(self));
     return new ModelType<Props, Others & Actions>(
       this.name,
       this.properties,
@@ -160,7 +156,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
       const { actions, views, state } = fn(self);
       assignProps(self, views);
       assignProps(self, state);
-      assignProps(self, actions, false);
+      assignProps(self, actions);
     };
 
     return new ModelType<Props, Others & Actions & Views & VolatileState>(
