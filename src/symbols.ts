@@ -1,5 +1,5 @@
 /** @hidden */
-export const $quickType = Symbol.for("quickType");
+export const $quickType = Symbol.for("MQT_quickType");
 
 /** @hidden */
 export const $env = Symbol.for("MQT_env");
