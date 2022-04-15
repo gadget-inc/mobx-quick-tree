@@ -28,13 +28,8 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
     return this.mstType.create(snapshot, env);
   }
 
-  is(value: IAnyStateTreeNode): value is this["InstanceType"];
-  is(value: any): value is this["InputType"] | this["InstanceType"] {
-    if (value && value[$type] == this) {
-      return true;
-    }
-    return this.mstType.is(value);
-  }
+  abstract is(value: IAnyStateTreeNode): value is this["InstanceType"];
+  abstract is(value: any): value is this["InputType"] | this["InstanceType"];
 
   createReadOnly(snapshot?: InputType, env?: any): this["InstanceType"] {
     const context: InstantiateContext = {

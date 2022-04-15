@@ -11,21 +11,21 @@ import { model } from "./model";
 import { optional } from "./optional";
 import { reference, safeReference } from "./reference";
 import { refinement } from "./refinement";
-import { DateType, literal, SimpleType } from "./simple";
+import { DateType, IntegerType, literal, NullType, SimpleType } from "./simple";
 import { lazyUnion, union } from "./union";
 
 export * from "./api";
 export * from "./types";
 
 export const types = {
-  boolean: SimpleType.for(mstTypes.boolean),
+  boolean: SimpleType.for("boolean", mstTypes.boolean),
   Date: new DateType(mstTypes.Date),
-  identifier: SimpleType.for(mstTypes.identifier),
-  integer: SimpleType.for(mstTypes.integer),
+  identifier: SimpleType.for("string", mstTypes.identifier),
+  integer: new IntegerType(),
   literal,
-  null: SimpleType.for(mstTypes.null),
-  number: SimpleType.for(mstTypes.number),
-  string: SimpleType.for(mstTypes.string),
+  null: new NullType(),
+  number: SimpleType.for("number", mstTypes.number),
+  string: SimpleType.for("string", mstTypes.string),
 
   array,
   compose,

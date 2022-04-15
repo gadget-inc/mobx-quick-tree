@@ -13,6 +13,11 @@ class CustomType<InputType, OutputType> extends BaseType<InputType, OutputType, 
     }
     return this.options.fromSnapshot(snapshot) as this["InstanceType"];
   }
+
+  is(value: any): value is this["InstanceType"];
+  is(value: any): value is this["InputType"] | this["InstanceType"] {
+    return this.mstType.is(value);
+  }
 }
 
 export const custom = <InputType, OutputType>(

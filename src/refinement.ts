@@ -14,6 +14,11 @@ class RefinementType<T extends IAnyType> extends BaseType<T["InputType"], T["Out
     }
     return instance;
   }
+
+  is(value: any): value is this["InstanceType"];
+  is(value: any): value is this["InputType"] | this["InstanceType"] {
+    return this.type.is(value) && this.predicate(value);
+  }
 }
 
 export const refinement = <T extends IAnyType>(

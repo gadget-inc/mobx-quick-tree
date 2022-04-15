@@ -8,7 +8,16 @@ class FrozenType<T> extends BaseType<T, T, T> {
   }
 
   instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext): this["InstanceType"] {
+    if (typeof snapshot == "function") {
+      throw new Error("frozen types can't be instantiated with functions");
+    }
     return snapshot as this["InstanceType"];
+  }
+
+  is(value: any): value is this["InstanceType"];
+  is(value: any): value is this["InputType"] | this["InstanceType"] {
+    // Valid values for frozen types have to be serializable
+    return typeof value !== "function";
   }
 }
 

@@ -19,6 +19,11 @@ class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<string,
     }
     return context.referenceCache.get(snapshot);
   }
+
+  is(value: any): value is this["InstanceType"];
+  is(value: any): value is this["InputType"] | this["InstanceType"] {
+    return typeof value == "string";
+  }
 }
 
 class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseType<
@@ -35,6 +40,11 @@ class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseType<
       return undefined as this["InstanceType"];
     }
     return context.referenceCache.get(snapshot);
+  }
+
+  is(value: any): value is this["InstanceType"];
+  is(value: any): value is this["InputType"] | this["InstanceType"] {
+    return typeof value == "string";
   }
 }
 

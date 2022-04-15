@@ -154,7 +154,6 @@ export type SnapshotOrInstance<T> = SnapshotIn<T> | Instance<T>;
 export type CreateTypes<T extends IAnyType> = T["InputType"] | T["OutputType"] | T["InstanceType"];
 
 export type ValidOptionalValue = string | boolean | number | null | undefined;
-export type Primitives = string | number | boolean | Date | null | undefined;
 
 export interface IStateTreeNode<T extends IAnyType = IAnyType> {
   readonly [$type]?: [T] | [any];

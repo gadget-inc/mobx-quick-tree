@@ -19,6 +19,7 @@ class UnionType<Types extends IAnyType[]> extends BaseType<
     return type.instantiate(snapshot, context);
   }
 
+  is(value: any): value is this["InstanceType"];
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     return this.types.some((type) => type.is(value));
   }
