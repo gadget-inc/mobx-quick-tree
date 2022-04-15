@@ -174,13 +174,12 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return Object.entries(this.properties).every(([name, prop]) => prop.is(value[name]));
   }
 
-  instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
     if (isStateTreeNode(snapshot)) {
       return snapshot as this["InstanceType"];
     }
 
     const instance: Record<string | symbol, any> = {};
-
     setType(instance, this);
 
     for (const [propName, propType] of Object.entries(this.properties)) {
@@ -200,7 +199,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     if (this.identifierProp) {
       const id = instance[this.identifierProp];
       instance[$identifier] = id;
-      context.referenceCache[id] = instance;
+      context.referenceCache.set(id, instance);
     }
 
     for (const init of this.initializers) {

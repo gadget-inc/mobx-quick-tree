@@ -35,7 +35,7 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
 
   createReadOnly(snapshot?: InputType, env?: any): this["InstanceType"] {
     const context: InstantiateContext = {
-      referenceCache: {},
+      referenceCache: new Map(),
       referencesToResolve: [],
       env,
     };
@@ -66,7 +66,7 @@ export const setType = (value: unknown, type: IAnyType) => {
   if (value && typeof value == "object") {
     Reflect.defineProperty(value, $type, {
       value: type,
-      configurable: true,
+      configurable: false,
       enumerable: false,
       writable: false,
     });

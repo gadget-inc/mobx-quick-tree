@@ -142,7 +142,7 @@ export interface IMSTMap<T extends IAnyType> {
 
 /** @hidden */
 export interface InstantiateContext {
-  referenceCache: Record<string, Instance<IAnyModelType>>;
+  referenceCache: Map<string, Instance<IAnyModelType>>;
   referencesToResolve: (() => void)[];
   env?: unknown;
 }
