@@ -79,11 +79,11 @@ export class MapType<T extends IAnyType> extends BaseType<
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
     const map = new QuickMap<T>();
     if (snapshot) {
-      Object.entries(snapshot).forEach(([key, value]) => {
-        const item = this.childrenType.instantiate(value, context);
+      for (const key in snapshot) {
+        const item = this.childrenType.instantiate(snapshot[key], context);
         setParent(item, map);
         map.set(item[$identifier] ?? key, item);
-      });
+      }
     }
 
     setType(map, this);

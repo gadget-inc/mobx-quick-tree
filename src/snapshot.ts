@@ -3,7 +3,7 @@ import { getType, isModelType, isReferenceType, isStateTreeNode } from "./api";
 import { QuickArray } from "./array";
 import { QuickMap } from "./map";
 import { $identifier } from "./symbols";
-import { IAnyType, IStateTreeNode, IType } from "./types";
+import { IStateTreeNode, IType } from "./types";
 
 export function getSnapshot<S>(value: IStateTreeNode<IType<any, S, any>>): S {
   if (mstIsStateTreeNode(value)) {
@@ -30,7 +30,8 @@ const snapshot = (value: any): unknown => {
     const type = getType(value);
     if (isModelType(type)) {
       const modelSnapshot: Record<string, any> = {};
-      for (const [name, propType] of Object.entries<IAnyType>(type.properties)) {
+      for (const name in type.properties) {
+        const propType = type.properties[name];
         if (isReferenceType(propType)) {
           modelSnapshot[name] = value[name][$identifier];
         } else {

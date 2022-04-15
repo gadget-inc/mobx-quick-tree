@@ -11,6 +11,7 @@ import { BaseType, setParent, setType } from "./base";
 import { $identifier, $type } from "./symbols";
 import type {
   IAnyStateTreeNode,
+  IAnyType,
   IModelType,
   InputsForModel,
   InputTypesForModelProps,
@@ -25,34 +26,47 @@ import type {
   TypesForModelPropsDeclaration,
 } from "./types";
 
-const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDeclaration>(props: Props): TypesForModelPropsDeclaration<Props> => {
-  return Object.fromEntries(
-    Object.entries(props).map(([k, v]) => {
-      switch (typeof v) {
-        case "string":
-          return [k, types.optional(types.string, v)];
-        case "boolean":
-          return [k, types.optional(types.boolean, v)];
-        case "number":
-          return [k, types.optional(types.number, v)];
-        default:
-          if (v instanceof Date) {
-            return [k, types.optional(types.Date, v)];
-          }
-          return [k, v];
-      }
-    })
-  ) as TypesForModelPropsDeclaration<Props>;
+const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDeclaration>(
+  propsDecl: Props
+): TypesForModelPropsDeclaration<Props> => {
+  const props: Record<string, IAnyType> = {};
+  for (const name in propsDecl) {
+    const value = propsDecl[name];
+    switch (typeof value) {
+      case "string":
+        props[name] = types.optional(types.string, value);
+        break;
+      case "boolean":
+        props[name] = types.optional(types.boolean, value);
+        break;
+      case "number":
+        props[name] = types.optional(types.number, value);
+        break;
+      default:
+        if (value instanceof Date) {
+          props[name] = types.optional(types.Date, value);
+          break;
+        }
+        props[name] = value;
+        break;
+    }
+  }
+  return props as TypesForModelPropsDeclaration<Props>;
 };
 
 const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): Record<string, MSTAnyType> => {
-  return props ? Object.fromEntries(Object.entries(props).map(([k, v]) => [k, v.mstType])) : {};
+  const mstProps: Record<string, MSTAnyType> = {};
+  for (const name in props) {
+    mstProps[name] = props[name].mstType;
+  }
+  return mstProps;
 };
 
 const assignProps = (target: any, source: any, cache = true) => {
   if (target && source) {
     const descriptors = Object.getOwnPropertyDescriptors(source);
-    for (const [name, desc] of Object.entries(descriptors)) {
+    for (const name in descriptors) {
+      const desc = descriptors[name];
       const getter = desc.get;
       if (cache && getter) {
         let cached = false;
@@ -171,7 +185,13 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
       return true;
     }
 
-    return Object.entries(this.properties).every(([name, prop]) => prop.is(value[name]));
+    for (const name in this.properties) {
+      if (!this.properties[name].is(value[name])) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
@@ -182,7 +202,8 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     const instance: Record<string | symbol, any> = {};
     setType(instance, this);
 
-    for (const [propName, propType] of Object.entries(this.properties)) {
+    for (const propName in this.properties) {
+      const propType = this.properties[propName];
       if (isReferenceType(propType.mstType)) {
         context.referencesToResolve.push(() => {
           const propValue = propType.instantiate(snapshot?.[propName], context);
