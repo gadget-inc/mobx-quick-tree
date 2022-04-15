@@ -8,7 +8,7 @@ import {
 import { types } from ".";
 import { isStateTreeNode } from "./api";
 import { BaseType, setParent, setType } from "./base";
-import { $identifier, $modelType, $type } from "./symbols";
+import { $identifier, $type } from "./symbols";
 import type {
   IAnyStateTreeNode,
   IModelType,
@@ -84,7 +84,6 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   OutputTypesForModelProps<Props>,
   InstanceTypesForModelProps<Props> & Others
 > {
-  readonly [$modelType] = undefined;
   readonly Props!: Props;
   readonly Others!: Others;
   readonly mstType!: MSTAnyModelType;

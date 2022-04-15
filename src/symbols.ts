@@ -8,9 +8,6 @@ export const $env = Symbol.for("MQT_env");
 export const $parent = Symbol.for("MQT_parent");
 
 /** @hidden */
-export const $modelType = Symbol.for("MQT_modelType");
-
-/** @hidden */
 export const $identifier = Symbol.for("MQT_identifier");
 
 /** @hidden */
