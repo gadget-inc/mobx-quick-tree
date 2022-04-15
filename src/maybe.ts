@@ -2,7 +2,7 @@ import { types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
 import type { IAnyStateTreeNode, IAnyType, IMaybeNullType, IMaybeType, InstantiateContext } from "./types";
 
-export class MaybeType<Type extends IAnyType> extends BaseType<
+class MaybeType<Type extends IAnyType> extends BaseType<
   Type["InputType"] | undefined,
   Type["OutputType"] | undefined,
   Type["InstanceTypeWithoutSTN"] | undefined
@@ -26,7 +26,7 @@ export class MaybeType<Type extends IAnyType> extends BaseType<
   }
 }
 
-export class MaybeNullType<Type extends IAnyType> extends BaseType<
+class MaybeNullType<Type extends IAnyType> extends BaseType<
   Type["InputType"] | null | undefined,
   Type["OutputType"] | null,
   Type["InstanceTypeWithoutSTN"] | null

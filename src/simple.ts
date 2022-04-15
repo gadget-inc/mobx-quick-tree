@@ -29,7 +29,7 @@ export class DateType extends BaseType<Date | number, number, Date> {
   }
 }
 
-export class LiteralType<T extends Primitives> extends SimpleType<T> {
+class LiteralType<T extends Primitives> extends SimpleType<T> {
   constructor(readonly value: T) {
     super(types.literal<T>(value));
   }

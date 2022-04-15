@@ -4,7 +4,7 @@ import type { CreateTypes, IAnyStateTreeNode, IAnyType, InstantiateContext, IOpt
 
 export type DefaultFuncOrValue<T extends IAnyType> = T["InputType"] | T["OutputType"] | (() => CreateTypes<T>);
 
-export class OptionalType<T extends IAnyType, OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]> extends BaseType<
+class OptionalType<T extends IAnyType, OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]> extends BaseType<
   T["InputType"] | OptionalValues[number],
   T["OutputType"],
   T["InstanceTypeWithoutSTN"]

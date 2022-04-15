@@ -8,7 +8,7 @@ export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsG
   onInvalidated?: OnReferenceInvalidated<ReferenceT<T["mstType"]>>;
 };
 
-export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<string, string, TargetType["InstanceTypeWithoutSTN"]> {
+class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<string, string, TargetType["InstanceTypeWithoutSTN"]> {
   constructor(readonly targetType: IAnyComplexType, options?: ReferenceOptions<TargetType["mstType"]>) {
     super(types.reference(targetType.mstType, options));
   }
@@ -21,7 +21,7 @@ export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
   }
 }
 
-export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseType<
+class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseType<
   string | undefined,
   string | undefined,
   TargetType["InstanceTypeWithoutSTN"] | undefined
