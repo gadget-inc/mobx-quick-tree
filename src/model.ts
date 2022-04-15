@@ -68,24 +68,24 @@ const assignProps = (target: any, source: any, cache = true) => {
     for (const name in descriptors) {
       const desc = descriptors[name];
       const getter = desc.get;
-      if (cache && getter) {
-        let cached = false;
-        let cachedValue: unknown;
-        Object.defineProperty(target, name, {
-          get() {
-            if (cached) return cachedValue;
-            cachedValue = getter.apply(target);
-            cached = true;
-            return cachedValue;
-          },
-          configurable: true,
-        });
+      if (getter) {
+        if (cache) {
+          let cached = false;
+          let cachedValue: unknown;
+          Object.defineProperty(target, name, {
+            get() {
+              if (cached) return cachedValue;
+              cachedValue = getter.apply(target);
+              cached = true;
+              return cachedValue;
+            },
+            configurable: true,
+          });
+        } else {
+          Object.defineProperty(target, name, desc);
+        }
       } else {
-        Object.defineProperty(target, name, {
-          ...desc,
-          enumerable: false,
-          writable: true,
-        });
+        target[name] = desc.value;
       }
     }
   }
