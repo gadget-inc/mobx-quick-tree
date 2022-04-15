@@ -1,5 +1,6 @@
-import { IModelType as MSTModelType, isReferenceType, isStateTreeNode, types as mstTypes } from "mobx-state-tree";
+import { IModelType as MSTModelType, isReferenceType, isStateTreeNode as mstIsStateTreeNode, types as mstTypes } from "mobx-state-tree";
 import { types } from ".";
+import { isStateTreeNode } from "./api";
 import { BaseType, setParent, setType } from "./base";
 import { $identifier, $modelType, $type } from "./symbols";
 import type {
@@ -164,7 +165,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 
   is(value: IAnyStateTreeNode): value is this["InstanceType"];
   is(value: any): value is this["InputType"] | this["InstanceType"] {
-    if (isStateTreeNode(value)) {
+    if (mstIsStateTreeNode(value)) {
       return this.mstType.is(value);
     }
 
@@ -184,6 +185,10 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   }
 
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
+    if (isStateTreeNode(snapshot)) {
+      return snapshot as this["InstanceType"];
+    }
+
     const instance: Record<string | symbol, any> = {};
 
     setType(instance, this);
