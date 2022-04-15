@@ -153,10 +153,10 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     }
   ): IModelType<Props, Others & Actions & Views & VolatileState> {
     const init = (self: Instance<this>) => {
-      const { actions, views, state } = fn(self);
-      assignProps(self, views);
-      assignProps(self, state);
-      assignProps(self, actions);
+      const result = fn(self);
+      assignProps(self, result.views);
+      assignProps(self, result.state);
+      assignProps(self, result.actions);
     };
 
     return new ModelType<Props, Others & Actions & Views & VolatileState>(
