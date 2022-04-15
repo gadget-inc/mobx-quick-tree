@@ -21,11 +21,7 @@ export class DateType extends BaseType<Date | number, number, Date> {
       throw new Error(`can't initialize simple type ${this.name} with undefined`);
     }
 
-    if (typeof snapshot == "number") {
-      snapshot = new Date(snapshot);
-    }
-
-    return snapshot as this["InstanceType"];
+    return new Date(snapshot);
   }
 }
 
