@@ -6,7 +6,6 @@ import {
   types as mstTypes,
 } from "mobx-state-tree";
 import { types } from ".";
-import { isStateTreeNode } from "./api";
 import { BaseType, setParent, setType } from "./base";
 import { $identifier, $type } from "./symbols";
 import type {
@@ -184,10 +183,6 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   }
 
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
-    if (isStateTreeNode(snapshot)) {
-      return snapshot as this["InstanceType"];
-    }
-
     const instance: Record<string | symbol, any> = Object.create(this.base);
 
     for (const propName in this.properties) {
