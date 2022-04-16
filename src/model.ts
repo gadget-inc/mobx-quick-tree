@@ -207,7 +207,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 
     if (this.identifierProp) {
       const id = instance[this.identifierProp];
-      instance[$identifier] = id;
+      Object.defineProperty(instance, $identifier, { value: id });
       context.referenceCache.set(id, instance);
     }
 
