@@ -10,6 +10,7 @@ export class QuickMap<T extends IAnyType> extends Map<string, T["InstanceType"]>
     return Map;
   }
 
+  [$type]?: [this] | [any];
   [Symbol.toStringTag]: "Map";
 
   forEach(callbackfn: (value: Instance<T>, key: string, map: this) => void, thisArg?: any): void {

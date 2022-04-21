@@ -157,7 +157,6 @@ export type ValidOptionalValue = string | boolean | number | null | undefined;
 
 export interface IStateTreeNode<T extends IAnyType = IAnyType> {
   readonly [$type]?: [T] | [any];
-  readonly [key: string | symbol]: any;
 }
 
 export type StateTreeNode<T, IT extends IAnyType> = T extends object ? T & IStateTreeNode<IT> : T;

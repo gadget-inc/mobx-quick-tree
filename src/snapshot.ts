@@ -33,9 +33,9 @@ const snapshot = (value: any): unknown => {
       for (const name in type.properties) {
         const propType = type.properties[name];
         if (isReferenceType(propType)) {
-          modelSnapshot[name] = value[name][$identifier];
+          modelSnapshot[name] = (value as any)[name][$identifier];
         } else {
-          modelSnapshot[name] = snapshot(value[name]);
+          modelSnapshot[name] = snapshot((value as any)[name]);
         }
       }
       return modelSnapshot;

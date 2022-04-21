@@ -136,12 +136,12 @@ export function getEnv<Env = any>(value: IAnyStateTreeNode): Env {
   // Assumes no cycles, otherwise this is an infinite loop
   let currentNode: IStateTreeNode = value;
   while (currentNode) {
-    const env = currentNode[$env];
+    const env = (currentNode as any)[$env];
     if (env !== undefined) {
       return env;
     }
 
-    currentNode = currentNode[$parent];
+    currentNode = (currentNode as any)[$parent];
   }
 
   return {} as Env;
