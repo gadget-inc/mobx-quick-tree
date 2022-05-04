@@ -7,6 +7,7 @@ import {
 } from "mobx-state-tree";
 import { types } from ".";
 import { BaseType, setParent, setType } from "./base";
+import { CantRunActionError } from "./errors";
 import { $identifier, $type } from "./symbols";
 import type {
   IAnyStateTreeNode,
@@ -86,6 +87,12 @@ const assignProps = (target: any, source: any) => {
   }
 };
 
+const defaultThrowAction = (name: string) => {
+  return () => {
+    throw new CantRunActionError(`Can't run action "${name}" for a readonly instance`);
+  };
+};
+
 export type ModelInitializer = (self: any) => void;
 
 export class ModelType<Props extends ModelProperties, Others> extends BaseType<
@@ -98,31 +105,45 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   readonly mstType!: MSTAnyModelType;
 
   private identifierProp: string | undefined;
-  private base: this["InstanceType"];
+  private prototype: this["InstanceType"];
 
-  constructor(readonly properties: Props, readonly initializers: ModelInitializer[], mstType: MSTAnyModelType) {
+  constructor(readonly properties: Props, readonly initializers: ModelInitializer[], mstType: MSTAnyModelType, prototype?: any) {
     super(mstType);
     this.identifierProp = this.mstType.identifierAttribute;
 
-    this.base = {} as this["InstanceType"];
-    setType(this.base, this);
+    if (prototype) {
+      this.prototype = Object.create(prototype);
+    } else {
+      this.prototype = {} as this["InstanceType"];
+    }
+    setType(this.prototype, this);
   }
 
   views<Views extends ModelViews>(fn: (self: Instance<this>) => Views): ModelType<Props, Others & Views> {
     const init = (self: Instance<this>) => assignProps(self, fn(self));
-    return new ModelType<Props, Others & Views>(this.properties, [...this.initializers, init], this.mstType.views(fn));
+    return new ModelType<Props, Others & Views>(this.properties, [...this.initializers, init], this.mstType.views(fn), this.prototype);
   }
 
   actions<Actions extends ModelActions>(fn: (self: Instance<this>) => Actions): ModelType<Props, Others & Actions> {
-    const init = (self: Instance<this>) => assignProps(self, fn(self));
-    return new ModelType<Props, Others & Actions>(this.properties, [...this.initializers, init], this.mstType.actions(fn));
+    const prototype = Object.create(this.prototype);
+    const actions = fn(null as Instance<this>); // assumes action blocks are never referencing `self` during instantiation
+    for (const name of Object.keys(actions)) {
+      prototype[name] = defaultThrowAction(name);
+    }
+
+    return new ModelType<Props, Others & Actions>(this.properties, this.initializers, this.mstType.actions(fn), prototype);
   }
 
   props<AdditionalProps extends ModelPropertiesDeclaration>(
     propsDecl: AdditionalProps
   ): ModelType<Props & TypesForModelPropsDeclaration<AdditionalProps>, Others> {
     const props = propsFromModelPropsDeclaration(propsDecl);
-    return new ModelType({ ...this.properties, ...props }, this.initializers, this.mstType.props(mstPropsFromQuickProps(props)));
+    return new ModelType(
+      { ...this.properties, ...props },
+      this.initializers,
+      this.mstType.props(mstPropsFromQuickProps(props)),
+      this.prototype
+    );
   }
 
   named(newName: string): ModelType<Props, Others> {
@@ -183,7 +204,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   }
 
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
-    const instance: Record<string | symbol, any> = Object.create(this.base);
+    const instance: Record<string | symbol, any> = Object.create(this.prototype);
 
     for (const propName in this.properties) {
       const propType = this.properties[propName];
