@@ -1,5 +1,6 @@
 import { isStateTreeNode } from "mobx-state-tree";
 import { types } from "../src";
+import { CantRunActionError } from "../src/errors";
 import { $identifier } from "../src/symbols";
 import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
 
@@ -82,10 +83,10 @@ describe("is", () => {
 });
 
 describe("actions", () => {
-  test("succeed on a read-only instance", () => {
+  test("throw on a read-only instance", () => {
     const m = TestModel.createReadOnly(TestModelSnapshot);
-    m.setB(false);
-    expect(m.bool).toEqual(false);
+    expect(() => m.setB(false)).toThrowError(CantRunActionError);
+    expect(m.bool).toEqual(true);
   });
 
   test("succeed on an MST instance", () => {
