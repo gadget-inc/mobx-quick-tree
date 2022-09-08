@@ -211,6 +211,7 @@ describe("custom", () => {
 
 describe("enumeration", () => {
   const enumType = types.enumeration<"a" | "b">(["a", "b"]);
+  const _enumTypeWithConst = types.enumeration<"a" | "b">(["a", "b"] as const);
 
   test("can create a read-only instance", () => {
     expect(enumType.createReadOnly("a")).toEqual("a");

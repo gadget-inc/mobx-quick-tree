@@ -153,6 +153,7 @@ export const getRoot = <T extends IAnyType>(value: IAnyStateTreeNode): Instance<
   }
 
   // Assumes no cycles, otherwise this is an infinite loop
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const newValue = value[$parent];
     if (newValue) {

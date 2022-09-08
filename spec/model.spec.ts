@@ -85,7 +85,7 @@ describe("is", () => {
 describe("actions", () => {
   test("throw on a read-only instance", () => {
     const m = TestModel.createReadOnly(TestModelSnapshot);
-    expect(() => m.setB(false)).toThrowError(CantRunActionError);
+    expect(() => m.setB(false)).toThrow(CantRunActionError);
     expect(m.bool).toEqual(true);
   });
 

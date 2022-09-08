@@ -9,7 +9,10 @@ export class QuickArray<T extends IAnyType> extends Array<T["InstanceType"]> imp
   }
 
   [$type]?: [this] | [any];
-  [Symbol.toStringTag]: "Array";
+
+  get [Symbol.toStringTag]() {
+    return "Array" as const;
+  }
 
   spliceWithArray(_index: number, _deleteCount?: number, _newItems?: Instance<T>[]): Instance<T>[] {
     throw new Error("cannot spliceWithArray on a QuickArray instance");
