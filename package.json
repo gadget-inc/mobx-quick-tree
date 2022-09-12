@@ -34,7 +34,7 @@
     "@babel/preset-typescript": "^7.16.7",
     "@gadgetinc/eslint-config": "*",
     "@gadgetinc/prettier-config": "*",
-    "@types/jest": "^27.4.1",
+    "@types/jest": "^29.0.1",
     "@typescript-eslint/eslint-plugin": "^5.16.0",
     "eslint": "^8.12.0",
     "eslint-plugin-jest": "^26.1.3",
