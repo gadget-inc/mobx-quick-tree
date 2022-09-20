@@ -93,6 +93,8 @@ describe("getSnapshot", () => {
     const m = types.model({
       testModels: types.array(TestModel),
       ref: types.reference(NamedThing),
+      safeRef1: types.safeReference(NamedThing),
+      safeRef2: types.safeReference(NamedThing),
     });
 
     const instance = m.createReadOnly({
@@ -101,10 +103,14 @@ describe("getSnapshot", () => {
         { bool: false, nested: { key: "b", name: "b 2" }, frozen: { test: "string" } },
       ],
       ref: "b",
+      safeRef1: "x",
+      safeRef2: "a",
     });
 
     expect(instance.ref.name).toEqual("b 2");
     expect(getSnapshot(instance).ref).toEqual("b");
+    expect(getSnapshot(instance).safeRef1).toBeUndefined();
+    expect(getSnapshot(instance).safeRef2).toEqual("a");
   });
 
   test("returns the proper root for an MST instance", () => {

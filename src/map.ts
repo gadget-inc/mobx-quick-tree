@@ -2,7 +2,7 @@ import { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
 import { isStateTreeNode, types } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
 import { getSnapshot } from "./snapshot";
-import { $identifier, $type } from "./symbols";
+import { $type } from "./symbols";
 import type { CreateTypes, IAnyStateTreeNode, IAnyType, IMapType, IMSTMap, Instance, InstantiateContext, SnapshotOut } from "./types";
 
 export class QuickMap<T extends IAnyType> extends Map<string, T["InstanceType"]> implements IMSTMap<T> {
@@ -86,7 +86,7 @@ class MapType<T extends IAnyType> extends BaseType<
       for (const key in snapshot) {
         const item = this.childrenType.instantiate(snapshot[key], context);
         setParent(item, map);
-        map.set(item[$identifier] ?? key, item);
+        map.set(key, item);
       }
     }
 

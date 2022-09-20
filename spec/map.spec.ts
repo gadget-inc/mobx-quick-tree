@@ -11,6 +11,17 @@ test("can create a map of simple types", () => {
   expect(mapType.createReadOnly({ a: "A", b: "B" }).toJSON()).toEqual(expect.objectContaining({ a: "A", b: "B" }));
 });
 
+test("is can create a map of frozen types from a snapshot", () => {
+  const mapType = types.map(types.frozen<string | null>());
+  const snapshot = { A: "one", B: null };
+  expect(mapType.createReadOnly(snapshot).toJSON()).toEqual(
+    expect.objectContaining({
+      A: "one",
+      B: null,
+    })
+  );
+});
+
 test("can create a map of complex types", () => {
   const mapType = types.map(InventoryItem);
 
