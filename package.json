@@ -21,7 +21,8 @@
     "build": "rm -rf dist && tsc",
     "watch": "rm -rf dist && tsc --watch --preserveWatchOutput",
     "prepublishOnly": "yarn run build",
-    "prerelease": "gitpkg publish"
+    "prerelease": "gitpkg publish",
+    "clean": "rm -rf *.0x *-v8.log"
   },
   "dependencies": {
     "lodash.memoize": "^4.1.2",
@@ -36,6 +37,8 @@
     "@swc/jest": "^0.2.23",
     "@types/jest": "^29.2.3",
     "@typescript-eslint/eslint-plugin": "^5.16.0",
+    "conditional-type-checks": "^1.0.6",
+    "deep-freeze-es6": "^1.4.1",
     "eslint": "^8.28.0",
     "eslint-plugin-jest": "^27.1.6",
     "jest": "^29.3.1",

@@ -4,14 +4,14 @@ import { getType, isModelType, isReferenceType, isStateTreeNode } from "./api";
 import { QuickArray } from "./array";
 import { QuickMap } from "./map";
 import { $identifier } from "./symbols";
-import type { IStateTreeNode, IType } from "./types";
+import type { IAnyType, IStateTreeNode, SnapshotOut } from "./types";
 
-export function getSnapshot<S>(value: IStateTreeNode<IType<any, S, any>>): S {
+export function getSnapshot<T extends IAnyType, Snapshot = SnapshotOut<T>>(value: IStateTreeNode<T>): Snapshot {
   if (mstIsStateTreeNode(value)) {
-    return mstGetSnapshot<S>(value as MSTStateTreeNode);
+    return mstGetSnapshot<Snapshot>(value as MSTStateTreeNode);
   }
 
-  return snapshot(value) as S;
+  return snapshot(value) as Snapshot;
 }
 
 const snapshot = (value: any): unknown => {

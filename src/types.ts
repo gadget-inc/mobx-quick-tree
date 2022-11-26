@@ -25,12 +25,23 @@ export interface IType<InputType, OutputType, InstanceType> {
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"];
 }
 
-export type IAnyType = IType<any, any, any>;
+/**
+ * Any type object in the system.
+ * Examples: `types.string`, `types.model({})`, `types.array(types.string)`, `class Example extends ClassModel({})`, etc.
+ */
+export type IAnyType = IType<any, any, any> | IClassModelType<any, any>;
 export type ISimpleType<T> = IType<T, T, T>;
 export type IDateType = IType<Date | number, number, Date>;
-export type IAnyComplexType = IType<any, any, object>;
+export type IAnyComplexType = IType<any, any, object> | IClassModelType<any, any>;
 
-export interface IModelType<Props extends ModelProperties, Others>
+/** Given any MQT type, get the type of an instance of the MQT type */
+export type InstanceWithoutSTNTypeForType<T extends IAnyType> = T extends IType<any, any, any>
+  ? T["InstanceTypeWithoutSTN"]
+  : T extends IClassModelType<any, any>
+  ? InstanceType<T>
+  : T;
+
+export interface INodeModelType<Props extends ModelProperties, Others>
   extends IType<
     InputsForModel<InputTypesForModelProps<Props>>,
     OutputTypesForModelProps<Props>,
@@ -38,57 +49,112 @@ export interface IModelType<Props extends ModelProperties, Others>
   > {
   readonly properties: Props;
 
-  named(newName: string): IModelType<Props, Others>;
-  props<Props2 extends ModelPropertiesDeclaration>(props: Props2): IModelType<Props & TypesForModelPropsDeclaration<Props2>, Others>;
-  views<V extends ModelViews>(fn: (self: Instance<this>) => V): IModelType<Props, Others & V>;
-  actions<A extends ModelActions>(fn: (self: Instance<this>) => A): IModelType<Props, Others & A>;
-  volatile<TP extends ModelViews>(fn: (self: Instance<this>) => TP): IModelType<Props, Others & TP>;
+  named(newName: string): INodeModelType<Props, Others>;
+  props<Props2 extends ModelPropertiesDeclaration>(props: Props2): INodeModelType<Props & TypesForModelPropsDeclaration<Props2>, Others>;
+  views<V extends ModelViews>(fn: (self: Instance<this>) => V): INodeModelType<Props, Others & V>;
+  actions<A extends ModelActions>(fn: (self: Instance<this>) => A): INodeModelType<Props, Others & A>;
+  volatile<TP extends ModelViews>(fn: (self: Instance<this>) => TP): INodeModelType<Props, Others & TP>;
   extend<A extends ModelActions, V extends ModelViews, VS extends ModelViews>(
     fn: (self: Instance<this>) => {
       actions?: A;
       views?: V;
       state?: VS;
     }
-  ): IModelType<Props, Others & A & V & VS>;
+  ): INodeModelType<Props, Others & A & V & VS>;
 }
 
 // TODO see if we can make this work for `IModelType<any, any>`, or some other way to simplify
 // This isn't quite IModelType<any, any>. In particular, InputType is any, which is key to make a lot of things typecheck
-export interface IAnyModelType extends IType<any, any, any> {
+export interface IAnyNodeModelType extends IType<any, any, any> {
   readonly properties: any;
 
-  named(newName: string): IAnyModelType;
-  props<Props2 extends ModelPropertiesDeclaration>(props: Props2): IAnyModelType;
-  views<V extends ModelViews>(fn: (self: Instance<this>) => V): IAnyModelType;
-  actions<A extends ModelActions>(fn: (self: Instance<this>) => A): IAnyModelType;
-  volatile<TP extends ModelViews>(fn: (self: Instance<this>) => TP): IAnyModelType;
+  named(newName: string): IAnyNodeModelType;
+  props<Props2 extends ModelPropertiesDeclaration>(props: Props2): IAnyNodeModelType;
+  views<V extends ModelViews>(fn: (self: Instance<this>) => V): IAnyNodeModelType;
+  actions<A extends ModelActions>(fn: (self: Instance<this>) => A): IAnyNodeModelType;
+  volatile<TP extends ModelViews>(fn: (self: Instance<this>) => TP): IAnyNodeModelType;
   extend<A extends ModelActions, V extends ModelViews, VS extends ModelViews>(
     fn: (self: Instance<this>) => {
       actions?: A;
       views?: V;
       state?: VS;
     }
-  ): IAnyModelType;
+  ): IAnyNodeModelType;
 }
+
+/**
+ * IClassModelType represents the type of MQT class models. This is the class-level type, not the instance level type, so it has a typed `new()` and all the static functions/properties of a MQT class model.
+ *
+ * Note: `IClassModelType` is *not* an `IType` (regrettably). IClassModelType is an interface that all class models implement, and the concrete type of the base class models returned by the ClassModel class factory. But, crucially, there's no TypeScript way to get the resulting type of a class after it has been defined and start referring to or changing the type. Decorators don't let us get a handle on the finished type of a class model and change it, and so we can't capture a reference to the actual instance type of a class model. The instance type of a class model is actually a bit simpler than the instance type of an MQT type -- the type of an instance of a class is the class itself. Whereas usually, we need to do
+ *
+ * type Instance<T extends IAnyType> = T["InstanceType"];
+ *
+ * in the case of class models, we can do:
+ *
+ * type Instance<T extends IClassModelType> = InstanceType<T>;
+ *
+ * using the `InstanceType` built-in helper type from TypeScript
+ **/
+export interface IClassModelType<Props extends ModelProperties, InputType = InputsForModel<InputTypesForModelProps<Props>>> {
+  readonly [$quickType]: undefined;
+
+  readonly InputType: InputType;
+  readonly OutputType: OutputTypesForModelProps<Props>;
+
+  readonly properties: Props;
+  readonly name: string;
+  readonly mstType: MSTAnyType;
+
+  /** @hidden */
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): InstanceType<this>;
+
+  is(value: IAnyStateTreeNode): value is InstanceType<this>;
+  is(value: any): value is this["InputType"] | InstanceType<this>;
+
+  /**
+   * Create a new instance of this class model.
+   * Use the `new` operator if possible
+   * @deprecated
+   */
+  create(snapshot?: this["InputType"], env?: any): InstanceType<this>;
+  /**
+   * Create a new instance of this class model.
+   * Use the `new` operator if possible for performance
+   * @deprecated
+   */
+  createReadOnly(snapshot?: this["InputType"], env?: any): InstanceType<this>;
+
+  isMQTClassModel: true;
+
+  new (attrs?: this["InputType"], env?: any, readonly?: boolean, context?: InstantiateContext): InstanceTypesForModelProps<
+    TypesForModelPropsDeclaration<Props>
+  > & {
+    readonly [$type]?: [IClassModelType<Props, InputType>] | [any];
+  };
+}
+
+export type IAnyClassModelType = IClassModelType<any, any>;
+
+export type IAnyModelType = IAnyNodeModelType | IAnyClassModelType;
 
 export type IMaybeType<T extends IAnyType> = IType<
   T["InputType"] | undefined,
   T["OutputType"] | undefined,
-  T["InstanceTypeWithoutSTN"] | undefined
+  InstanceWithoutSTNTypeForType<T> | undefined
 >;
 
 export type IMaybeNullType<T extends IAnyType> = IType<
   T["InputType"] | null | undefined,
   T["OutputType"] | null,
-  T["InstanceTypeWithoutSTN"] | null
+  InstanceWithoutSTNTypeForType<T> | null
 >;
 
-export type IReferenceType<T extends IAnyComplexType> = IType<string, string, T["InstanceTypeWithoutSTN"]>;
+export type IReferenceType<T extends IAnyComplexType> = IType<string, string, InstanceWithoutSTNTypeForType<T>>;
 
 export type IOptionalType<T extends IAnyType, OptionalValues extends ValidOptionalValue[]> = IType<
   T["InputType"] | OptionalValues[number],
   T["OutputType"],
-  T["InstanceTypeWithoutSTN"]
+  InstanceWithoutSTNTypeForType<T>
 >;
 
 export type IMapType<T extends IAnyType> = IType<Record<string, T["InputType"]> | undefined, Record<string, T["OutputType"]>, IMSTMap<T>>;
@@ -98,7 +164,7 @@ export type IArrayType<T extends IAnyType> = IType<Array<T["InputType"]> | undef
 export type IUnionType<Types extends [IAnyType, ...IAnyType[]]> = IType<
   Types[number]["InputType"],
   Types[number]["OutputType"],
-  Types[number]["InstanceTypeWithoutSTN"]
+  InstanceWithoutSTNTypeForType<Types[number]>
 >;
 
 // Utility types
@@ -142,28 +208,45 @@ export interface IMSTMap<T extends IAnyType> {
 
 /** @hidden */
 export interface InstantiateContext {
-  referenceCache: Map<string, Instance<IAnyModelType>>;
+  referenceCache: Map<string, Instance<IAnyNodeModelType>>;
   referencesToResolve: (() => void)[];
   env?: unknown;
 }
 
+/**
+ * The input type used to create a readonly or observable node from a JSON snapshot.
+ * Reflects which properties are required and optional, and accepts input data in the raw JSON form.
+ */
 export type SnapshotIn<T> = T extends IAnyType ? T["InputType"] : T;
+
+/**
+ * The output type retrieved from a readonly or observable node with all the properties in the JSON.
+ */
 export type SnapshotOut<T> = T extends IAnyType ? T["OutputType"] : T;
-export type Instance<T> = T extends IAnyType ? T["InstanceType"] : T;
+
+/**
+ * A readonly or observable node that has been created and is ready for use.
+ */
+export type Instance<T> = T extends IType<any, any, any> ? T["InstanceType"] : T extends IAnyClassModelType ? InstanceType<T> : T;
+
 export type SnapshotOrInstance<T> = SnapshotIn<T> | Instance<T>;
-export type CreateTypes<T extends IAnyType> = T["InputType"] | T["OutputType"] | T["InstanceType"];
+export type CreateTypes<T extends IAnyType> = T["InputType"] | T["OutputType"] | Instance<T>;
 
 export type ValidOptionalValue = string | boolean | number | null | undefined;
 
-export interface IStateTreeNode<T extends IAnyType = IAnyType> {
+export type IStateTreeNode<T extends IAnyType = IAnyType> = {
   readonly [$type]?: [T] | [any];
-}
+};
 
 export type StateTreeNode<T, IT extends IAnyType> = T extends object ? T & IStateTreeNode<IT> : T;
 export type IAnyStateTreeNode = StateTreeNode<any, IAnyType>;
 
+/** The incoming properties passed to a types.model() or ClassModel() model factory */
 export type ModelPropertiesDeclaration = Record<string, string | number | boolean | Date | IAnyType>;
+
+/** The processed properties describing the shape of a model */
 export type ModelProperties = Record<string, IAnyType>;
+
 export type ModelActions = Record<string, Function>;
 export type ModelViews = Record<string, unknown>;
 
@@ -196,5 +279,5 @@ export type OutputTypesForModelProps<T extends ModelProperties> = {
 };
 
 export type InstanceTypesForModelProps<T extends ModelProperties> = {
-  [K in keyof T]: T[K]["InstanceType"];
+  [K in keyof T]: Instance<T[K]>;
 };

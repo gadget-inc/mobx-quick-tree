@@ -5,7 +5,7 @@ import { getSnapshot } from "./snapshot";
 import { $type } from "./symbols";
 import type { CreateTypes, IAnyStateTreeNode, IAnyType, IMapType, IMSTMap, Instance, InstantiateContext, SnapshotOut } from "./types";
 
-export class QuickMap<T extends IAnyType> extends Map<string, T["InstanceType"]> implements IMSTMap<T> {
+export class QuickMap<T extends IAnyType> extends Map<string, Instance<T>> implements IMSTMap<T> {
   static get [Symbol.species]() {
     return Map;
   }

@@ -3,7 +3,7 @@ import { BaseType, setParent, setType } from "./base";
 import { $type } from "./symbols";
 import type { IAnyStateTreeNode, IAnyType, IArrayType, IMSTArray, Instance, InstantiateContext } from "./types";
 
-export class QuickArray<T extends IAnyType> extends Array<T["InstanceType"]> implements IMSTArray<T> {
+export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implements IMSTArray<T> {
   static get [Symbol.species]() {
     return Array;
   }

@@ -66,6 +66,7 @@ export {
   typecheck,
   walk,
 } from "mobx-state-tree";
+export { action, ClassModel, register, view } from "./class-model";
 export { getSnapshot } from "./snapshot";
 
 export const isType = (value: any): value is IAnyType => {

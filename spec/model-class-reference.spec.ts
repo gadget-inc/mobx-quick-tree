@@ -1,29 +1,31 @@
-import type { Instance } from "../src";
 import { types } from "../src";
+import { action, ClassModel, register } from "../src/class-model";
 
-const Referrable = types.model("Referenced", {
+@register
+class Referrable extends ClassModel({
   key: types.identifier,
   count: types.number,
-});
+}) {}
 
-const Referencer = types
-  .model("Referencer", {
-    ref: types.reference(Referrable),
-    safeRef: types.safeReference(Referrable),
-  })
-  .actions((self) => ({
-    setRef(ref: Instance<typeof Referrable>) {
-      // Just here for typechecking
-      self.ref = ref;
-    },
-  }));
+@register
+class Referencer extends ClassModel({
+  ref: types.reference(Referrable),
+  safeRef: types.safeReference(Referrable),
+}) {
+  @action
+  setRef(ref: Referrable) {
+    // Just here for typechecking
+    this.ref = ref;
+  }
+}
 
-const Root = types.model("Reference Model", {
+@register
+class Root extends ClassModel({
   model: Referencer,
   refs: types.array(Referrable),
-});
+}) {}
 
-describe("read only node references", () => {
+describe("model class references", () => {
   test("can resolve valid references", () => {
     const root = Root.createReadOnly({
       model: {

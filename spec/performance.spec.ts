@@ -1,3 +1,4 @@
+import { TestClassModel } from "./fixtures/TestClassModel";
 import { TestModel } from "./fixtures/TestModel";
 
 describe("performance", () => {
@@ -22,6 +23,12 @@ describe("performance", () => {
   test(`can create ${N} quick instances`, () => {
     for (let x = 0; x < N; ++x) {
       TestModel.createReadOnly(TestModelSnapshot);
+    }
+  });
+
+  test(`can create ${N} class model instances`, () => {
+    for (let x = 0; x < N; ++x) {
+      new TestClassModel(TestModelSnapshot, undefined, true);
     }
   });
 

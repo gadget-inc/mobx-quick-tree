@@ -1,13 +1,21 @@
 import { types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
-import type { CreateTypes, IAnyStateTreeNode, IAnyType, InstantiateContext, IOptionalType, ValidOptionalValue } from "./types";
+import type {
+  CreateTypes,
+  IAnyStateTreeNode,
+  IAnyType,
+  InstanceWithoutSTNTypeForType,
+  InstantiateContext,
+  IOptionalType,
+  ValidOptionalValue,
+} from "./types";
 
 export type DefaultFuncOrValue<T extends IAnyType> = T["InputType"] | T["OutputType"] | (() => CreateTypes<T>);
 
 class OptionalType<T extends IAnyType, OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]> extends BaseType<
   T["InputType"] | OptionalValues[number],
   T["OutputType"],
-  T["InstanceTypeWithoutSTN"]
+  InstanceWithoutSTNTypeForType<T>
 > {
   constructor(
     readonly type: T,
