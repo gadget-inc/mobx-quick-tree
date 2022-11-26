@@ -1,4 +1,4 @@
-import { types } from "../src";
+import { create, types } from "../src";
 
 const InventoryItem = types.model("Inventory Item", {
   name: types.identifier,
@@ -7,14 +7,14 @@ const InventoryItem = types.model("Inventory Item", {
 
 test("can create a map of simple types", () => {
   const mapType = types.map(types.string);
-  expect(mapType.createReadOnly().toJSON()).toEqual({});
-  expect(mapType.createReadOnly({ a: "A", b: "B" }).toJSON()).toEqual(expect.objectContaining({ a: "A", b: "B" }));
+  expect(create(mapType, undefined, true).toJSON()).toEqual({});
+  expect(create(mapType, { a: "A", b: "B" }, true).toJSON()).toEqual(expect.objectContaining({ a: "A", b: "B" }));
 });
 
 test("is can create a map of frozen types from a snapshot", () => {
   const mapType = types.map(types.frozen<string | null>());
   const snapshot = { A: "one", B: null };
-  expect(mapType.createReadOnly(snapshot).toJSON()).toEqual(
+  expect(create(mapType, snapshot, true).toJSON()).toEqual(
     expect.objectContaining({
       A: "one",
       B: null,
@@ -25,8 +25,8 @@ test("is can create a map of frozen types from a snapshot", () => {
 test("can create a map of complex types", () => {
   const mapType = types.map(InventoryItem);
 
-  expect(mapType.createReadOnly().toJSON()).toEqual({});
-  expect(mapType.createReadOnly({ A: { name: "A", amount: 10 }, B: { name: "B" } }).toJSON()).toEqual(
+  expect(create(mapType, undefined, true).toJSON()).toEqual({});
+  expect(create(mapType, { A: { name: "A", amount: 10 }, B: { name: "B" } }, true).toJSON()).toEqual(
     expect.objectContaining({
       A: expect.objectContaining({ name: "A", amount: 10 }),
       B: expect.objectContaining({ name: "B", amount: 0 }),

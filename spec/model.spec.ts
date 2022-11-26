@@ -1,12 +1,12 @@
 import { isStateTreeNode } from "mobx-state-tree";
-import { types } from "../src";
+import { create, types } from "../src";
 import { CantRunActionError } from "../src/errors";
 import { $identifier } from "../src/symbols";
 import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
 
 describe("can create", () => {
   test("a read-only instance", () => {
-    const m = TestModel.createReadOnly(TestModelSnapshot);
+    const m = create(TestModel, TestModelSnapshot, true);
     expect(m.bool).toEqual(true);
     expect(m.notBool).toEqual(false);
     expect(m.optional).toEqual("value");
@@ -18,10 +18,14 @@ describe("can create", () => {
   });
 
   test("a read-only instance with new props", () => {
-    const m = TestModel.props({ newThing: types.literal("COOL") }).createReadOnly({
-      ...TestModelSnapshot,
-      newThing: "COOL",
-    });
+    const m = create(
+      TestModel.props({ newThing: types.literal("COOL") }),
+      {
+        ...TestModelSnapshot,
+        newThing: "COOL",
+      },
+      true
+    );
 
     expect(m.bool).toEqual(true);
     expect(m.notBool).toEqual(false);
@@ -36,12 +40,12 @@ describe("can create", () => {
 
   test("a read-only instance with an optional identifier", () => {
     const model = types.model("Test", { key: types.optional(types.identifier, () => "test") });
-    const m = model.createReadOnly(TestModelSnapshot);
+    const m = create(model, TestModelSnapshot, true);
     expect((m as any)[$identifier]).toEqual("test");
   });
 
   test("an MST instance", () => {
-    const m = TestModel.create(TestModelSnapshot);
+    const m = create(TestModel, TestModelSnapshot);
     expect(m.bool).toEqual(true);
     expect(m.notBool).toEqual(false);
     expect(m.frozen.test).toEqual("string");
@@ -64,7 +68,7 @@ describe("named", () => {
 
 describe("is", () => {
   test("can verify a read-only instance", () => {
-    const value = TestModel.createReadOnly(TestModelSnapshot);
+    const value = create(TestModel, TestModelSnapshot, true);
     expect(TestModel.is(value)).toEqual(true);
     expect(TestModel.is(TestModelSnapshot)).toEqual(true);
     expect(TestModel.is(true)).toEqual(false);
@@ -73,7 +77,7 @@ describe("is", () => {
   });
 
   test("can verify an MST instance", () => {
-    const value = TestModel.create(TestModelSnapshot);
+    const value = create(TestModel, TestModelSnapshot);
     expect(TestModel.is(value)).toEqual(TestModel.mstType.is(value));
     expect(TestModel.is(TestModelSnapshot)).toEqual(TestModel.mstType.is(TestModelSnapshot));
     expect(TestModel.is(true)).toEqual(TestModel.mstType.is(true));
@@ -84,13 +88,13 @@ describe("is", () => {
 
 describe("actions", () => {
   test("throw on a read-only instance", () => {
-    const m = TestModel.createReadOnly(TestModelSnapshot);
+    const m = create(TestModel, TestModelSnapshot, true);
     expect(() => m.setB(false)).toThrow(CantRunActionError);
     expect(m.bool).toEqual(true);
   });
 
   test("succeed on an MST instance", () => {
-    const m = TestModel.create(TestModelSnapshot);
+    const m = create(TestModel, TestModelSnapshot);
     m.setB(false);
     expect(m.bool).toEqual(false);
   });
@@ -121,14 +125,14 @@ test("can compose models", () => {
 
   expect(composedType.name).toEqual("C");
 
-  let instance = composedType.createReadOnly({ a: "xyz" });
+  let instance = create(composedType, { a: "xyz" }, true);
   expect(instance.a).toEqual("xyz");
   expect(instance.b).toEqual(10);
   expect(instance.lenA()).toEqual(3);
   expect(instance.doubleLength).toEqual(6);
   expect(instance.bSquared).toEqual(100);
 
-  instance = composedType.createReadOnly({ a: "abcde", b: 4 });
+  instance = create(composedType, { a: "abcde", b: 4 }, true);
   expect(instance.a).toEqual("abcde");
   expect(instance.b).toEqual(4);
   expect(instance.lenA()).toEqual(5);
@@ -153,13 +157,13 @@ test("can compose a model without properties", () => {
   }));
 
   let composedType = types.compose("C", modelAType, modelBType);
-  let instance = composedType.createReadOnly({ b: 10 });
+  let instance = create(composedType, { b: 10 }, true);
   expect(composedType.name).toEqual("C");
   expect(typeof instance.random()).toEqual("number");
   expect(instance.bSquared).toEqual(100);
 
   composedType = types.compose("C", modelBType, modelAType);
-  instance = composedType.createReadOnly({ b: 10 });
+  instance = create(composedType, { b: 10 }, true);
   expect(composedType.name).toEqual("C");
   expect(typeof instance.random()).toEqual("number");
   expect(instance.bSquared).toEqual(100);

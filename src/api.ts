@@ -23,7 +23,7 @@ import {
   onSnapshot as mstOnSnapshot,
   resolveIdentifier as mstResolveIdentifier,
 } from "mobx-state-tree";
-import { $env, $parent, $quickType, $type } from "./symbols";
+import { $env, $parent, $quickType, $readOnly, $type } from "./symbols";
 import type {
   CreateTypes,
   IAnyComplexType,
@@ -36,6 +36,7 @@ import type {
   IReferenceType,
   IStateTreeNode,
   IType,
+  SnapshotIn,
 } from "./types";
 
 export {
@@ -72,12 +73,26 @@ export const isType = (value: any): value is IAnyType => {
   return $quickType in value;
 };
 
+/**
+ * Returns true if the given object is a complex type in observable mode
+ * @param value any object
+ * @returns
+ */
 export const isStateTreeNode = (value: any): value is IStateTreeNode => {
   if (mstIsStateTreeNode(value)) {
     return true;
   }
 
   return typeof value === "object" && value !== null && $type in value;
+};
+
+/**
+ * Returns true if the given object is a complex type in readonly mode
+ * @param value any object
+ * @returns
+ */
+export const isReadOnlyNode = (value: any): value is IStateTreeNode => {
+  return typeof value === "object" && value !== null && $readOnly in value;
 };
 
 export const getParent = <T extends IAnyType>(value: IAnyStateTreeNode, depth = 1): Instance<T> => {
@@ -248,3 +263,18 @@ export function cast(snapshotOrInstance: never): never;
 export function cast(snapshotOrInstance: any): any {
   return snapshotOrInstance;
 }
+/**
+ * Create a new root instance of a type
+ *
+ * @param type The type to create. Can be any type
+ * @param snapshot The snapshot of the type to create
+ * @param readOnly If true, the instance will be readOnly and created faster
+ * @param env The optional environment to decorate the whole tree with
+ */
+export const create = <T extends IAnyType>(type: T, snapshot?: SnapshotIn<T>, readOnly = false, env?: Record<string, any>): Instance<T> => {
+  if (readOnly) {
+    return type.createReadOnly(snapshot, env);
+  } else {
+    return type.create(snapshot, env);
+  }
+};

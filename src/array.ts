@@ -1,6 +1,6 @@
 import { isStateTreeNode, types } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
-import { $type } from "./symbols";
+import { $readOnly, $type } from "./symbols";
 import type { IAnyStateTreeNode, IAnyType, IArrayType, IMSTArray, Instance, InstantiateContext } from "./types";
 
 export class QuickArray<T extends IAnyType> extends Array<T["InstanceType"]> implements IMSTArray<T> {
@@ -12,6 +12,10 @@ export class QuickArray<T extends IAnyType> extends Array<T["InstanceType"]> imp
 
   get [Symbol.toStringTag]() {
     return "Array" as const;
+  }
+
+  get [$readOnly]() {
+    return true;
   }
 
   spliceWithArray(_index: number, _deleteCount?: number, _newItems?: Instance<T>[]): Instance<T>[] {

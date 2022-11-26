@@ -1,9 +1,9 @@
-import { getSnapshot, types } from "../src";
+import { create, getSnapshot, types } from "../src";
 
 describe("boolean", () => {
   test("can create a read-only instance", () => {
-    expect(types.boolean.createReadOnly(true)).toEqual(true);
-    expect(types.boolean.createReadOnly(false)).toEqual(false);
+    expect(create(types.boolean, true, true)).toEqual(true);
+    expect(create(types.boolean, false, true)).toEqual(false);
   });
 
   test("can be verified with is", () => {
@@ -16,8 +16,8 @@ describe("boolean", () => {
 
 describe("string", () => {
   test("can create a read-only instance", () => {
-    expect(types.string.createReadOnly("")).toEqual("");
-    expect(types.string.createReadOnly("words")).toEqual("words");
+    expect(create(types.string, "", true)).toEqual("");
+    expect(create(types.string, "words", true)).toEqual("words");
   });
 
   test("can be verified with is", () => {
@@ -32,8 +32,8 @@ describe("string", () => {
 describe("Date", () => {
   test("can create a read-only instance", () => {
     const date = new Date();
-    expect(types.Date.createReadOnly(date.getTime())).toEqual(date);
-    expect(types.Date.createReadOnly(date)).toEqual(date);
+    expect(create(types.Date, date.getTime(), true)).toEqual(date);
+    expect(create(types.Date, date, true)).toEqual(date);
   });
 
   test("can be verified with is", () => {
@@ -51,7 +51,7 @@ describe("late", () => {
   const lateType = types.late(() => modelType);
 
   test("can create a read-only instance", () => {
-    expect(lateType.createReadOnly({ a: "my value", b: 2 })).toEqual({ a: "my value", b: 2 });
+    expect(create(lateType, { a: "my value", b: 2 }, true)).toEqual({ a: "my value", b: 2 });
   });
 
   test("can be verified with is", () => {
@@ -68,9 +68,9 @@ describe("maybe", () => {
   const maybeType = types.maybe(types.string);
 
   test("can create a read-only instance", () => {
-    expect(maybeType.createReadOnly()).toEqual(undefined);
-    expect(maybeType.createReadOnly(undefined)).toEqual(undefined);
-    expect(maybeType.createReadOnly("value 2")).toEqual("value 2");
+    expect(create(maybeType, undefined, true)).toEqual(undefined);
+    expect(create(maybeType, undefined, true)).toEqual(undefined);
+    expect(create(maybeType, "value 2", true)).toEqual("value 2");
   });
 
   test("can be verified with is", () => {
@@ -86,9 +86,9 @@ describe("maybeNull", () => {
   const maybeNullType = types.maybeNull(types.string);
 
   test("can create a read-only instance", () => {
-    expect(maybeNullType.createReadOnly(null)).toEqual(null);
-    expect(maybeNullType.createReadOnly(undefined)).toEqual(null);
-    expect(maybeNullType.createReadOnly("value 2")).toEqual("value 2");
+    expect(create(maybeNullType, null, true)).toEqual(null);
+    expect(create(maybeNullType, undefined, true)).toEqual(null);
+    expect(create(maybeNullType, "value 2", true)).toEqual("value 2");
   });
 
   test("can be verified with is", () => {
@@ -104,9 +104,9 @@ describe("literal", () => {
   const literal = types.literal("testing");
 
   test("can create a read-only instance", () => {
-    expect(literal.createReadOnly("testing")).toEqual("testing");
-    expect(() => literal.createReadOnly()).toThrow();
-    expect(() => literal.createReadOnly(true as any)).toThrow();
+    expect(create(literal, "testing", true)).toEqual("testing");
+    expect(() => create(literal, undefined, true)).toThrow();
+    expect(() => create(literal, true as any, true)).toThrow();
   });
 
   test("can be verified with is", () => {
@@ -122,16 +122,16 @@ describe("union", () => {
   const unionType = types.union(types.literal("value 1"), types.literal("value 2"));
 
   test("can create a read-only instance", () => {
-    expect(unionType.createReadOnly("value 1")).toEqual("value 1");
-    expect(unionType.createReadOnly("value 2")).toEqual("value 2");
-    expect(() => unionType.createReadOnly("value 3" as any)).toThrow();
+    expect(create(unionType, "value 1", true)).toEqual("value 1");
+    expect(create(unionType, "value 2", true)).toEqual("value 2");
+    expect(() => create(unionType, "value 3" as any, true)).toThrow();
   });
 
   test("can create an eager, read-only instance", () => {
     const unionType = types.lazyUnion(types.literal("value 1"), types.literal("value 2"));
-    expect(unionType.createReadOnly("value 1")).toEqual("value 1");
-    expect(unionType.createReadOnly("value 2")).toEqual("value 2");
-    expect(() => unionType.createReadOnly("value 3" as any)).toThrow();
+    expect(create(unionType, "value 1", true)).toEqual("value 1");
+    expect(create(unionType, "value 2", true)).toEqual("value 2");
+    expect(() => create(unionType, "value 3" as any, true)).toThrow();
   });
 
   test("can be verified with is", () => {
@@ -147,7 +147,7 @@ describe("union", () => {
     const modelTypeA = types.model({ x: types.string });
     const modelTypeB = types.model({ y: types.number });
     const unionType = types.union(modelTypeA, modelTypeB);
-    const unionInstance = unionType.createReadOnly({ x: "test" });
+    const unionInstance = create(unionType, { x: "test" }, true);
 
     expect(getSnapshot(unionInstance)).toEqual(
       expect.objectContaining({
@@ -161,8 +161,8 @@ describe("refinement", () => {
   const smallStringsType = types.refinement(types.string, (v: string) => v.length <= 5);
 
   test("can create a read-only instance", () => {
-    expect(smallStringsType.createReadOnly("small")).toEqual("small");
-    expect(() => smallStringsType.createReadOnly("too big")).toThrow();
+    expect(create(smallStringsType, "small", true)).toEqual("small");
+    expect(() => create(smallStringsType, "too big", true)).toThrow();
   });
 
   test("can be verified with is", () => {
@@ -195,9 +195,9 @@ describe("custom", () => {
   });
 
   test("can create a read-only instance", () => {
-    expect(csvType.createReadOnly("a")).toEqual(["a"]);
-    expect(csvType.createReadOnly("a,b,c")).toEqual(["a", "b", "c"]);
-    expect(() => csvType.createReadOnly()).toThrow();
+    expect(create(csvType, "a", true)).toEqual(["a"]);
+    expect(create(csvType, "a,b,c", true)).toEqual(["a", "b", "c"]);
+    expect(() => create(csvType, undefined, true)).toThrow();
   });
 
   test("can be verified with is", () => {
@@ -214,17 +214,17 @@ describe("enumeration", () => {
   const _enumTypeWithConst = types.enumeration<"a" | "b">(["a", "b"] as const);
 
   test("can create a read-only instance", () => {
-    expect(enumType.createReadOnly("a")).toEqual("a");
-    expect(enumType.createReadOnly("b")).toEqual("b");
-    expect(() => enumType.createReadOnly("c" as any)).toThrow();
+    expect(create(enumType, "a", true)).toEqual("a");
+    expect(create(enumType, "b", true)).toEqual("b");
+    expect(() => create(enumType, "c" as any, true)).toThrow();
   });
 
   test("can create a read-only instance with a name", () => {
     const enumType = types.enumeration<"a" | "b">("AB", ["a", "b"]);
     expect(enumType.name).toEqual("AB");
-    expect(enumType.createReadOnly("a")).toEqual("a");
-    expect(enumType.createReadOnly("b")).toEqual("b");
-    expect(() => enumType.createReadOnly("c" as any)).toThrow();
+    expect(create(enumType, "a", true)).toEqual("a");
+    expect(create(enumType, "b", true)).toEqual("b");
+    expect(() => create(enumType, "c" as any, true)).toThrow();
   });
 
   test("can create a read-only instance with a TypeScript enum", () => {
@@ -235,9 +235,9 @@ describe("enumeration", () => {
 
     const enumType = types.enumeration<Colors>("Color", Object.values(Colors));
     expect(enumType.name).toEqual("Color");
-    expect(enumType.createReadOnly(Colors.Red)).toEqual("Red");
-    expect(enumType.createReadOnly(Colors.Green)).toEqual("Green");
-    expect(() => enumType.createReadOnly("c" as any)).toThrow();
+    expect(create(enumType, Colors.Red, true)).toEqual("Red");
+    expect(create(enumType, Colors.Green, true)).toEqual("Green");
+    expect(() => create(enumType, "c" as any, true)).toThrow();
   });
 
   test("can be verified with is", () => {

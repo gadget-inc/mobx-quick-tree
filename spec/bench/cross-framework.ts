@@ -1,4 +1,5 @@
 import { Suite } from "benchmark";
+import { create } from "../../src";
 import { TestModel } from "../fixtures/TestModel";
 
 const suite = new Suite("instantiating same object with different paradigms");
@@ -22,10 +23,10 @@ const TestModelSnapshot: (typeof TestModel)["InputType"] = {
 
 suite
   .add("mobx-state-tree", function () {
-    TestModel.create(TestModelSnapshot);
+    create(TestModel, TestModelSnapshot, false);
   })
   .add("mobx-quick-tree types.model", function () {
-    TestModel.createReadOnly(TestModelSnapshot);
+    create(TestModel, TestModelSnapshot, true);
   })
   .on("cycle", function (event: any) {
     console.log(String(event.target));

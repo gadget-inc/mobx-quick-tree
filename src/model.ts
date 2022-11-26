@@ -1,9 +1,9 @@
 import type { IAnyModelType as MSTAnyModelType, IAnyType as MSTAnyType } from "mobx-state-tree";
 import { isReferenceType, isStateTreeNode as mstIsStateTreeNode, types as mstTypes } from "mobx-state-tree";
 import { types } from ".";
-import { BaseType, setParent, setType } from "./base";
+import { BaseType, setParent } from "./base";
 import { CantRunActionError } from "./errors";
-import { $identifier, $type } from "./symbols";
+import { $identifier, $readOnly, $type } from "./symbols";
 import type {
   IAnyStateTreeNode,
   IAnyType,
@@ -111,7 +111,8 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     } else {
       this.prototype = {} as this["InstanceType"];
     }
-    setType(this.prototype, this);
+    (this.prototype as any)[$type] = this;
+    (this.prototype as any)[$readOnly] = true;
   }
 
   views<Views extends ModelViews>(fn: (self: Instance<this>) => Views): ModelType<Props, Others & Views> {

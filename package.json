@@ -17,11 +17,12 @@
     "lint": "yarn run lint:prettier && yarn run lint:eslint",
     "lint:prettier": "prettier --check \"{spec,src}/**/*.{js,ts}\"",
     "lint:eslint": "eslint --quiet --ext ts,tsx spec src",
-    "lint:fix": "eslint --ext ts --fix spec src; prettier --write --check \"{spec,src}/**/*.{js,ts}\"",
+    "lint:fix": "prettier --write --check \"{spec,src}/**/*.{js,ts}\"; eslint --ext ts --fix spec src",
     "build": "rm -rf dist && tsc",
     "watch": "rm -rf dist && tsc --watch --preserveWatchOutput",
     "prepublishOnly": "yarn run build",
     "prerelease": "gitpkg publish",
+    "clean": "rm -rf *.0x *-v8.log",
     "x": "ts-node --transpile-only"
   },
   "dependencies": {
@@ -39,6 +40,8 @@
     "@types/jest": "^29.2.3",
     "@typescript-eslint/eslint-plugin": "^5.16.0",
     "benchmark": "^2.1.4",
+    "conditional-type-checks": "^1.0.6",
+    "deep-freeze-es6": "^1.4.1",
     "eslint": "^8.28.0",
     "eslint-plugin-jest": "^27.1.6",
     "jest": "^29.3.1",

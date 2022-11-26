@@ -1,3 +1,7 @@
 dist
 node_modules
 yarn.lock
+*.0x
+*-v8.log
+v8-deopt-viewer
+*.cpuprofile
