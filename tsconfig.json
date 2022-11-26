@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["es2020", "DOM"],
+    "lib": ["es2020"],
     "baseUrl": "./",
     "moduleResolution": "node",
     "module": "commonjs",
