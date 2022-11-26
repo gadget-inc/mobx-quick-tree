@@ -20,14 +20,16 @@
 ```typescript
 import { types } from "@gadgetinc/mobx-quick-tree";
 
-const MyAdder = types.model({
-  left: types.number,
-  right: types.number,
-}).views((self) => ({
-  get sum() {
-    return self.left + self.right;
-  }
-}));
+const MyAdder = types
+  .model({
+    left: types.number,
+    right: types.number,
+  })
+  .views((self) => ({
+    get sum() {
+      return self.left + self.right;
+    },
+  }));
 
 // mobx-state-tree instance
 console.log(MyAdder.create({ left: 1, right: 2 }).sum);
