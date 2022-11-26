@@ -9,6 +9,8 @@
     "outDir": "./dist",
     "strict": true,
     "declaration": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "esModuleInterop": true
   },
   "include": ["./src", "./spec"]
