@@ -1,4 +1,5 @@
-import { Instance, types } from "../src";
+import type { Instance } from "../src";
+import { types } from "../src";
 
 const Referrable = types.model("Referenced", {
   key: types.identifier,

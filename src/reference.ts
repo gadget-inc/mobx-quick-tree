@@ -1,5 +1,6 @@
-import { OnReferenceInvalidated, ReferenceOptions, ReferenceOptionsGetSet, types } from "mobx-state-tree";
-import { ReferenceT } from "mobx-state-tree/dist/internal";
+import type { OnReferenceInvalidated, ReferenceOptions, ReferenceOptionsGetSet } from "mobx-state-tree";
+import { types } from "mobx-state-tree";
+import type { ReferenceT } from "mobx-state-tree/dist/internal";
 import { BaseType } from "./base";
 import type { IAnyComplexType, IMaybeType, InstantiateContext, IReferenceType } from "./types";
 

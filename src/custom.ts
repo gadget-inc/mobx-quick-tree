@@ -1,4 +1,5 @@
-import { CustomTypeOptions, types } from "mobx-state-tree";
+import type { CustomTypeOptions } from "mobx-state-tree";
+import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import type { InstantiateContext, IType } from "./types";
 

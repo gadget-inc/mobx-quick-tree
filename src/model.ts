@@ -1,10 +1,5 @@
-import {
-  IAnyModelType as MSTAnyModelType,
-  IAnyType as MSTAnyType,
-  isReferenceType,
-  isStateTreeNode as mstIsStateTreeNode,
-  types as mstTypes,
-} from "mobx-state-tree";
+import type { IAnyModelType as MSTAnyModelType, IAnyType as MSTAnyType } from "mobx-state-tree";
+import { isReferenceType, isStateTreeNode as mstIsStateTreeNode, types as mstTypes } from "mobx-state-tree";
 import { types } from ".";
 import { BaseType, setParent, setType } from "./base";
 import { CantRunActionError } from "./errors";

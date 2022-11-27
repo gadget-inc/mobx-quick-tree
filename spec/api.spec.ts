@@ -1,4 +1,5 @@
-import { SnapshotOut, types } from "../src";
+import type { SnapshotOut } from "../src";
+import { types } from "../src";
 import {
   applySnapshot,
   getEnv,

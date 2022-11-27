@@ -1,4 +1,5 @@
-import { types as mstTypes, UnionOptions } from "mobx-state-tree";
+import type { UnionOptions } from "mobx-state-tree";
+import { types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
 import type { IAnyType, InstantiateContext, IUnionType } from "./types";
 

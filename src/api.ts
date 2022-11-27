@@ -1,3 +1,10 @@
+import type {
+  IAnyComplexType as MSTAnyComplexType,
+  IAnyModelType as MSTAnyModelType,
+  IAnyType as MSTAnyType,
+  IDisposer,
+  IStateTreeNode as MSTStateTreeNode,
+} from "mobx-state-tree";
 import {
   applySnapshot as mstApplySnapshot,
   getEnv as mstGetEnv,
@@ -5,10 +12,6 @@ import {
   getParentOfType as mstGetParentOfType,
   getRoot as mstGetRoot,
   getType as mstGetType,
-  IAnyComplexType as MSTAnyComplexType,
-  IAnyModelType as MSTAnyModelType,
-  IAnyType as MSTAnyType,
-  IDisposer,
   isArrayType as mstIsArrayType,
   isIdentifierType as mstIsIdentifierType,
   isMapType as mstIsMapType,
@@ -16,7 +19,6 @@ import {
   isReferenceType as mstIsReferenceType,
   isRoot as mstIsRoot,
   isStateTreeNode as mstIsStateTreeNode,
-  IStateTreeNode as MSTStateTreeNode,
   isType as mstIsType,
   onSnapshot as mstOnSnapshot,
   resolveIdentifier as mstResolveIdentifier,

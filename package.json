@@ -17,7 +17,7 @@
     "lint": "yarn run lint:prettier && yarn run lint:eslint",
     "lint:prettier": "prettier --check \"{spec,src}/**/*.{js,ts}\"",
     "lint:eslint": "eslint --quiet --ext ts,tsx spec src",
-    "lint:fix": "eslint --ext ts --fix packages; prettier --write --check \"{spec,src}**/*.{js,ts}\"",
+    "lint:fix": "eslint --ext ts --fix spec src; prettier --write --check \"{spec,src}**/*.{js,ts}\"",
     "build": "rm -rf dist && tsc",
     "watch": "rm -rf dist && tsc --watch --preserveWatchOutput",
     "prepublishOnly": "yarn run build",

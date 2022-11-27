@@ -1,6 +1,6 @@
 import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
-import { InstantiateContext, ISimpleType } from "./types";
+import type { InstantiateContext, ISimpleType } from "./types";
 
 class FrozenType<T> extends BaseType<T, T, T> {
   constructor() {

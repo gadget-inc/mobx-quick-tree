@@ -1,4 +1,5 @@
-import { ISimpleType as MSTSimpleType, types } from "mobx-state-tree";
+import type { ISimpleType as MSTSimpleType } from "mobx-state-tree";
+import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import type { InstantiateContext, ISimpleType } from "./types";
 

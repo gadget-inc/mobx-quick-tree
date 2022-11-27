@@ -1,4 +1,4 @@
-import { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
+import type { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
 import { isStateTreeNode, types } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
 import { getSnapshot } from "./snapshot";

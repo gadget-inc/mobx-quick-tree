@@ -1,4 +1,5 @@
-import { SnapshotIn, types } from "../../src";
+import type { SnapshotIn} from "../../src";
+import { types } from "../../src";
 
 export const NamedThing = types
   .model("BooleanWrapper", {

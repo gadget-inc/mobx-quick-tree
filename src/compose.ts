@@ -1,5 +1,6 @@
 import { types as mstTypes } from "mobx-state-tree";
-import { ModelInitializer, ModelType } from "./model";
+import type { ModelInitializer } from "./model";
+import { ModelType } from "./model";
 import type { IAnyModelType, IModelType } from "./types";
 
 type PropsFromTypes<T> = T extends IModelType<infer P, any>

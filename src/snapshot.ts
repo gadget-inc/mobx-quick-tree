@@ -1,9 +1,10 @@
-import { getSnapshot as mstGetSnapshot, isStateTreeNode as mstIsStateTreeNode, IStateTreeNode as MSTStateTreeNode } from "mobx-state-tree";
+import type { IStateTreeNode as MSTStateTreeNode } from "mobx-state-tree";
+import { getSnapshot as mstGetSnapshot, isStateTreeNode as mstIsStateTreeNode } from "mobx-state-tree";
 import { getType, isModelType, isReferenceType, isStateTreeNode } from "./api";
 import { QuickArray } from "./array";
 import { QuickMap } from "./map";
 import { $identifier } from "./symbols";
-import { IStateTreeNode, IType } from "./types";
+import type { IStateTreeNode, IType } from "./types";
 
 export function getSnapshot<S>(value: IStateTreeNode<IType<any, S, any>>): S {
   if (mstIsStateTreeNode(value)) {

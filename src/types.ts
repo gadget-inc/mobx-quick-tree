@@ -1,6 +1,6 @@
 import type { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
 import type { IAnyType as MSTAnyType } from "mobx-state-tree";
-import { $quickType, $type } from "./symbols";
+import type { $quickType, $type } from "./symbols";
 
 export type { IJsonPatch, IMiddlewareEvent, IPatchRecorder, ReferenceOptions, UnionOptions } from "mobx-state-tree";
 

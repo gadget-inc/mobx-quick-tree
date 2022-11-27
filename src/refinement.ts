@@ -1,4 +1,5 @@
-import { Instance, types } from "mobx-state-tree";
+import type { Instance } from "mobx-state-tree";
+import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import type { IAnyType, InstantiateContext, IType } from "./types";
 
