@@ -2,6 +2,7 @@ import type { IAnyModelType as MSTAnyModelType, IAnyType as MSTAnyType } from "m
 import { isReferenceType, isStateTreeNode as mstIsStateTreeNode, types as mstTypes } from "mobx-state-tree";
 import { types } from ".";
 import { BaseType, setParent, setType } from "./base";
+import { ensureRegistered } from "./class-model";
 import { CantRunActionError } from "./errors";
 import { $identifier, $type } from "./symbols";
 import type {
@@ -42,6 +43,7 @@ export const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDecl
           props[name] = types.optional(types.Date, value);
           break;
         }
+        ensureRegistered(value);
         props[name] = value;
         break;
     }

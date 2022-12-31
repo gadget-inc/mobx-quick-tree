@@ -3,8 +3,9 @@ import { types as mstTypes } from "mobx-state-tree";
 import "reflect-metadata";
 import { setEnv, setType } from "./base";
 import { defaultThrowAction, instantiateInstanceFromProperties, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
-import { $type } from "./symbols";
+import { $registered, $requiresRegistration, $type } from "./symbols";
 import type {
+  IAnyType,
   IClassModelType,
   InputsForModel,
   InputTypesForModelProps,
@@ -17,8 +18,8 @@ import type {
 const kClassModelPropertyMetadata = Symbol.for("mqt:class-model-property-metadata");
 type ClassModelPropertyMetadata =
   | {
-      type: "action";
-    }
+    type: "action";
+  }
   | { type: "view" }
   | { type: "volatile" };
 
@@ -47,6 +48,8 @@ export const ClassModel = <PropsDeclaration extends ModelPropertiesDeclaration>(
     static isMQTClassModel = true as const;
     static properties = props;
     static mstType: MSTIModelType<any, any>;
+    static readonly [$requiresRegistration] = true;
+
     readonly [$type]?: IClassModelType<TypesForModelPropsDeclaration<PropsDeclaration>>;
 
     constructor(
@@ -136,6 +139,7 @@ export function register<Klass>(object: Klass): Klass {
     .actions((self) => bindToSelf(self, mstActions));
 
   klass.prototype[$type] = klass;
+  (klass as any)[$registered] = true
 
   return klass as any;
 }
@@ -176,4 +180,22 @@ function bindToSelf<T extends Record<string, any>>(self: object, inputs: T): T {
     Object.defineProperty(outputs, key, property);
   }
   return outputs;
+}
+
+/**
+ * Ensure a given type is registered if it requires registration.
+ * Throws an error if a type requires registration but has not been registered.
+ * @hidden
+ */
+export const ensureRegistered = (type: IAnyType) => {
+  let chain = type;
+  while (chain) {
+    if ((chain as any)[$requiresRegistration]) {
+      if (!(type as any)[$registered]) {
+        throw new Error(`Type ${type.name} requires registration but has not been registered yet. Add the @register decorator to it for it to function correctly.`)
+      }
+      break;
+    }
+    chain = Object.getPrototypeOf(chain);
+  }
 }

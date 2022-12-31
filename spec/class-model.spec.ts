@@ -39,7 +39,7 @@ class AutoIdentified extends ClassModel({ key: types.optional(types.identifier, 
 }
 
 @register
-class ParentOfMQT extends ClassModel({ key: types.identifier, thing: NamedThing }) {}
+class ParentOfMQT extends ClassModel({ key: types.identifier, thing: NamedThing }) { }
 
 const ParentOfModelClass = types.model("ParentOfModelClass", {
   key: types.identifier,
@@ -203,7 +203,7 @@ describe("class models", () => {
 
     it("can create an instance with an optional identifier at the $identifier private prop", () => {
       @register
-      class AutoIdentified extends ClassModel({ key: types.optional(types.identifier, () => "test") }) {}
+      class AutoIdentified extends ClassModel({ key: types.optional(types.identifier, () => "test") }) { }
 
       const auto = new AutoIdentified(undefined, undefined, true);
       expect((auto as any)[$identifier]).toEqual("test");
@@ -387,7 +387,7 @@ describe("class models", () => {
     };
 
     @register
-    class Example extends identifiedClass({ name: types.string, number: types.number }) {}
+    class Example extends identifiedClass({ name: types.string, number: types.number }) { }
 
     const record = new Example({ key: "1", name: "Test", number: 10 });
     expect(record.key).toEqual("1");
@@ -396,5 +396,31 @@ describe("class models", () => {
     assert<IsExact<typeof record.key, string>>(true);
     assert<IsExact<typeof record.name, string>>(true);
     assert<IsExact<typeof record.number, number>>(true);
+  });
+
+  test("unregistered types throw an error when being used in maps", () => {
+    class Unregistered extends ClassModel({ name: types.string }) { }
+
+    expect(() => {
+      types.map(Unregistered)
+    }).toThrow(/requires registration but has not been registered yet/)
+  });
+
+  test("unregistered types throw an error when being used in model properties", () => {
+    class Unregistered extends ClassModel({ name: types.string }) { }
+
+    expect(() => {
+      types.model({
+        prop: Unregistered
+      })
+    }).toThrow(/requires registration but has not been registered yet/)
+  });
+
+  test("unextended class models count as unregistered", () => {
+    const Unregistered = ClassModel({ name: types.string });
+
+    expect(() => {
+      types.map(Unregistered)
+    }).toThrow(/requires registration but has not been registered yet/)
   });
 });

@@ -1,6 +1,6 @@
 import type { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
 import type { IAnyType as MSTAnyType } from "mobx-state-tree";
-import type { $quickType, $type } from "./symbols";
+import type { $quickType, $registered, $type } from "./symbols";
 
 export type { IJsonPatch, IMiddlewareEvent, IPatchRecorder, ReferenceOptions, UnionOptions } from "mobx-state-tree";
 
@@ -97,6 +97,7 @@ export interface IAnyNodeModelType extends IType<any, any, any> {
  **/
 export interface IClassModelType<Props extends ModelProperties, InputType = InputsForModel<InputTypesForModelProps<Props>>> {
   readonly [$quickType]: undefined;
+  readonly [$registered]: true;
 
   readonly InputType: InputType;
   readonly OutputType: OutputTypesForModelProps<Props>;
@@ -126,7 +127,7 @@ export interface IClassModelType<Props extends ModelProperties, InputType = Inpu
 
   isMQTClassModel: true;
 
-  new (attrs?: this["InputType"], env?: any, readonly?: boolean, context?: InstantiateContext): InstanceTypesForModelProps<
+  new(attrs?: this["InputType"], env?: any, readonly?: boolean, context?: InstantiateContext): InstanceTypesForModelProps<
     TypesForModelPropsDeclaration<Props>
   > & {
     readonly [$type]?: [IClassModelType<Props, InputType>] | [any];
@@ -252,14 +253,14 @@ export type ModelViews = Record<string, unknown>;
 
 export type TypesForModelPropsDeclaration<T extends ModelPropertiesDeclaration> = {
   [K in keyof T]: T[K] extends IAnyType
-    ? T[K]
-    : T[K] extends string
-    ? IOptionalType<ISimpleType<string>, [undefined]>
-    : T[K] extends number
-    ? IOptionalType<ISimpleType<number>, [undefined]>
-    : T[K] extends boolean
-    ? IOptionalType<ISimpleType<boolean>, [undefined]>
-    : IOptionalType<IDateType, [undefined]>;
+  ? T[K]
+  : T[K] extends string
+  ? IOptionalType<ISimpleType<string>, [undefined]>
+  : T[K] extends number
+  ? IOptionalType<ISimpleType<number>, [undefined]>
+  : T[K] extends boolean
+  ? IOptionalType<ISimpleType<boolean>, [undefined]>
+  : IOptionalType<IDateType, [undefined]>;
 };
 
 export type InputTypesForModelProps<T extends ModelProperties> = {

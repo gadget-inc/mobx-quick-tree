@@ -1,5 +1,6 @@
 import { types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
+import { ensureRegistered } from "./class-model";
 import type { IAnyStateTreeNode, IAnyType, IMaybeNullType, IMaybeType, InstanceWithoutSTNTypeForType, InstantiateContext } from "./types";
 
 class MaybeType<Type extends IAnyType> extends BaseType<
@@ -57,9 +58,11 @@ class MaybeNullType<Type extends IAnyType> extends BaseType<
 }
 
 export const maybe = <T extends IAnyType>(type: T): IMaybeType<T> => {
+  ensureRegistered(type);
   return new MaybeType(type);
 };
 
 export const maybeNull = <T extends IAnyType>(type: T): IMaybeNullType<T> => {
+  ensureRegistered(type);
   return new MaybeNullType(type);
 };

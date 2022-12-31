@@ -1,5 +1,6 @@
 import { types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
+import { ensureRegistered } from "./class-model";
 import type {
   CreateTypes,
   IAnyStateTreeNode,
@@ -73,5 +74,6 @@ export const optional: OptionalFactory = <T extends IAnyType, OptionalValues ext
   defaultValue: DefaultFuncOrValue<T>,
   undefinedValues?: OptionalValues
 ): IOptionalType<T, OptionalValues> => {
+  ensureRegistered(type);
   return new OptionalType(type, defaultValue, undefinedValues);
 };

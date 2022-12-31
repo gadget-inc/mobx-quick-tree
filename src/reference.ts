@@ -2,6 +2,7 @@ import type { OnReferenceInvalidated, ReferenceOptions, ReferenceOptionsGetSet }
 import { types } from "mobx-state-tree";
 import type { ReferenceT } from "mobx-state-tree/dist/internal";
 import { BaseType } from "./base";
+import { ensureRegistered } from "./class-model";
 import type { IAnyComplexType, IMaybeType, InstanceWithoutSTNTypeForType, InstantiateContext, IReferenceType } from "./types";
 
 export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsGetSet<T["mstType"]> | Record<string, unknown>) & {
@@ -53,6 +54,7 @@ export const reference = <TargetType extends IAnyComplexType>(
   targetType: TargetType,
   options?: ReferenceOptions<TargetType["mstType"]>
 ): IReferenceType<TargetType> => {
+  ensureRegistered(targetType);
   return new ReferenceType(targetType, options);
 };
 
@@ -60,5 +62,6 @@ export const safeReference = <TargetType extends IAnyComplexType>(
   targetType: TargetType,
   options?: SafeReferenceOptions<TargetType>
 ): IMaybeType<IReferenceType<TargetType>> => {
+  ensureRegistered(targetType);
   return new SafeReferenceType(targetType, options);
 };

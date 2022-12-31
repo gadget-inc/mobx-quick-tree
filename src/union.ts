@@ -1,6 +1,7 @@
 import type { UnionOptions } from "mobx-state-tree";
 import { types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
+import { ensureRegistered } from "./class-model";
 import type { IAnyType, InstanceWithoutSTNTypeForType, InstantiateContext, IUnionType } from "./types";
 
 class UnionType<Types extends IAnyType[]> extends BaseType<
@@ -27,9 +28,11 @@ class UnionType<Types extends IAnyType[]> extends BaseType<
 }
 
 export const union = <Types extends [IAnyType, ...IAnyType[]]>(...types: Types): IUnionType<Types> => {
+  types.forEach(ensureRegistered);
   return new UnionType(types);
 };
 
 export const lazyUnion = <Types extends [IAnyType, ...IAnyType[]]>(...types: Types): IUnionType<Types> => {
+  types.forEach(ensureRegistered);
   return new UnionType(types, { eager: false });
 };

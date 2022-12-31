@@ -1,5 +1,6 @@
 import { isStateTreeNode, types } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
+import { ensureRegistered } from "./class-model";
 import { $type } from "./symbols";
 import type { IAnyStateTreeNode, IAnyType, IArrayType, IMSTArray, Instance, InstantiateContext } from "./types";
 
@@ -78,5 +79,6 @@ class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]> | und
 }
 
 export const array = <T extends IAnyType>(childrenType: T): IArrayType<T> => {
+  ensureRegistered(childrenType);
   return new ArrayType(childrenType);
 };
