@@ -11,6 +11,11 @@ export class QuickMap<T extends IAnyType> extends Map<string, Instance<T>> imple
     return Map;
   }
 
+  constructor(type: any) {
+    super();
+    this[$type] = type;
+  }
+
   [$type]?: [this] | [any];
 
   get [Symbol.toStringTag]() {
@@ -86,7 +91,7 @@ class MapType<T extends IAnyType> extends BaseType<
   }
 
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
-    const map = new QuickMap<T>();
+    const map = new QuickMap<T>(this);
     if (snapshot) {
       for (const key in snapshot) {
         const item = this.childrenType.instantiate(snapshot[key], context);
@@ -94,8 +99,6 @@ class MapType<T extends IAnyType> extends BaseType<
         map.set(key, item);
       }
     }
-
-    setType(map, this);
 
     return map as this["InstanceType"];
   }
