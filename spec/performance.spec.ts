@@ -2,7 +2,7 @@ import { TestModel } from "./fixtures/TestModel";
 
 describe("performance", () => {
   const N = 10_000;
-  const TestModelSnapshot: typeof TestModel["InputType"] = {
+  const TestModelSnapshot: (typeof TestModel)["InputType"] = {
     bool: true,
     frozen: { test: "string" },
     nested: {
