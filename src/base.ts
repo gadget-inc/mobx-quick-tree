@@ -1,5 +1,4 @@
 import type { IAnyType as MSTAnyType } from "mobx-state-tree";
-import { QuickArray } from "./array";
 import { $env, $parent, $quickType, $type } from "./symbols";
 import type { IAnyStateTreeNode, IAnyType, InstantiateContext, StateTreeNode } from "./types";
 
@@ -44,9 +43,14 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
       resolver();
     }
 
-    const maybeObjectInstance: any = instance;
+    const maybeObjectInstance: unknown = instance;
     if (typeof maybeObjectInstance === "object" && maybeObjectInstance !== null) {
-      maybeObjectInstance[$env] = env
+      Reflect.defineProperty(maybeObjectInstance, $env, {
+        value: env,
+        configurable: false,
+        enumerable: false,
+        writable: false,
+      });
     }
 
     return instance;
@@ -56,32 +60,25 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
 }
 
 /** @hidden */
-export const setType = (value: any, type: IAnyType) => {
+export const setType = (value: unknown, type: IAnyType) => {
   if (value && typeof value == "object") {
-    if (value instanceof QuickArray) {
-      Object.defineProperty(value, $type, {
-        value: type,
-        enumerable: false,
-        writable: false
-      })
-    } else {
-      value[$type] = type;
-    }
+    Reflect.defineProperty(value, $type, {
+      value: type,
+      configurable: false,
+      enumerable: false,
+      writable: false,
+    });
   }
 };
 
 /** @hidden */
-export const setParent = (value: any, parent: any) => {
-  if (value && typeof value == "object" && !value[$parent]) {
-    if (value instanceof QuickArray) {
-      Object.defineProperty(value, $parent, {
-        value: parent,
-        enumerable: false,
-        writable: false
-      })
-    } else {
-      value[$parent] = parent
-    }
-
+export const setParent = (value: unknown, parent: any) => {
+  if (value && typeof value == "object") {
+    Reflect.defineProperty(value, $parent, {
+      value: parent,
+      configurable: false,
+      enumerable: false,
+      writable: false,
+    });
   }
 };
