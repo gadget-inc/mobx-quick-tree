@@ -2,12 +2,13 @@ import type { IAnyModelType as MSTAnyModelType, IAnyType as MSTAnyType } from "m
 import { isReferenceType, isStateTreeNode as mstIsStateTreeNode, types as mstTypes } from "mobx-state-tree";
 import { types } from ".";
 import { BaseType, setParent } from "./base";
+import { ensureRegistered } from "./class-model";
 import { CantRunActionError } from "./errors";
 import { $identifier, $readOnly, $type } from "./symbols";
 import type {
   IAnyStateTreeNode,
   IAnyType,
-  IModelType,
+  INodeModelType,
   InputsForModel,
   InputTypesForModelProps,
   Instance,
@@ -21,7 +22,7 @@ import type {
   TypesForModelPropsDeclaration,
 } from "./types";
 
-const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDeclaration>(
+export const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDeclaration>(
   propsDecl: Props
 ): TypesForModelPropsDeclaration<Props> => {
   const props: Record<string, IAnyType> = {};
@@ -42,6 +43,7 @@ const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDeclaration
           props[name] = types.optional(types.Date, value);
           break;
         }
+        ensureRegistered(value);
         props[name] = value;
         break;
     }
@@ -49,7 +51,7 @@ const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDeclaration
   return props as TypesForModelPropsDeclaration<Props>;
 };
 
-const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): Record<string, MSTAnyType> => {
+export const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Props): Record<string, MSTAnyType> => {
   const mstProps: Record<string, MSTAnyType> = {};
   for (const name in props) {
     mstProps[name] = props[name].mstType;
@@ -82,7 +84,36 @@ const assignProps = (target: any, source: any) => {
   }
 };
 
-const defaultThrowAction = (name: string) => {
+export const instantiateInstanceFromProperties = (
+  instance: any,
+  snapshot: Record<string, any> | undefined,
+  properties: ModelProperties,
+  identifierProp: string | undefined,
+  context: InstantiateContext
+) => {
+  for (const propName in properties) {
+    const propType = properties[propName];
+    if (isReferenceType(propType.mstType)) {
+      context.referencesToResolve.push(() => {
+        const propValue = propType.instantiate(snapshot?.[propName], context);
+        instance[propName] = propValue;
+      });
+      continue;
+    }
+
+    const propValue = propType.instantiate(snapshot?.[propName], context);
+    setParent(propValue, instance);
+    instance[propName] = propValue;
+  }
+
+  if (identifierProp) {
+    const id = instance[identifierProp];
+    Object.defineProperty(instance, $identifier, { value: id });
+    context.referenceCache.set(id, instance);
+  }
+};
+
+export const defaultThrowAction = (name: string) => {
   return () => {
     throw new CantRunActionError(`Can't run action "${name}" for a readonly instance`);
   };
@@ -146,7 +177,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return new ModelType(this.properties, this.initializers, this.mstType.named(newName));
   }
 
-  volatile<VolatileState extends ModelViews>(fn: (self: Instance<this>) => VolatileState): IModelType<Props, Others & VolatileState> {
+  volatile<VolatileState extends ModelViews>(fn: (self: Instance<this>) => VolatileState): INodeModelType<Props, Others & VolatileState> {
     const init = (self: Instance<this>) => assignProps(self, fn(self));
     return new ModelType<Props, Others & VolatileState>(this.properties, [...this.initializers, init], this.mstType.volatile(fn));
   }
@@ -157,7 +188,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
       views?: Views;
       state?: VolatileState;
     }
-  ): IModelType<Props, Others & Actions & Views & VolatileState> {
+  ): INodeModelType<Props, Others & Actions & Views & VolatileState> {
     const init = (self: Instance<this>) => {
       const result = fn(self);
       assignProps(self, result.views);
@@ -202,27 +233,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
     const instance: Record<string | symbol, any> = Object.create(this.prototype);
 
-    for (const propName in this.properties) {
-      const propType = this.properties[propName];
-      if (isReferenceType(propType.mstType)) {
-        context.referencesToResolve.push(() => {
-          const propValue = propType.instantiate(snapshot?.[propName], context);
-          instance[propName] = propValue;
-        });
-        continue;
-      }
-
-      const propValue = propType.instantiate(snapshot?.[propName], context);
-      setParent(propValue, instance);
-      instance[propName] = propValue;
-    }
-
-    if (this.identifierProp) {
-      const id = instance[this.identifierProp];
-      Object.defineProperty(instance, $identifier, { value: id });
-      context.referenceCache.set(id, instance);
-    }
-
+    instantiateInstanceFromProperties(instance, snapshot, this.properties, this.identifierProp, context);
     for (const init of this.initializers) {
       init(instance);
     }
@@ -232,16 +243,16 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 }
 
 export type ModelFactory = {
-  (): IModelType<{}, {}>;
-  (name: string): IModelType<{}, {}>;
-  <Props extends ModelPropertiesDeclaration>(properties: Props): IModelType<TypesForModelPropsDeclaration<Props>, {}>;
-  <Props extends ModelPropertiesDeclaration>(name: string, properties: Props): IModelType<TypesForModelPropsDeclaration<Props>, {}>;
+  (): INodeModelType<{}, {}>;
+  (name: string): INodeModelType<{}, {}>;
+  <Props extends ModelPropertiesDeclaration>(properties: Props): INodeModelType<TypesForModelPropsDeclaration<Props>, {}>;
+  <Props extends ModelPropertiesDeclaration>(name: string, properties: Props): INodeModelType<TypesForModelPropsDeclaration<Props>, {}>;
 };
 
 export const model: ModelFactory = <Props extends ModelPropertiesDeclaration>(
   nameOrProperties?: string | Props,
   properties?: Props
-): IModelType<TypesForModelPropsDeclaration<Props>, {}> => {
+): INodeModelType<TypesForModelPropsDeclaration<Props>, {}> => {
   let propsDecl: Props;
   let name = "model";
   if (typeof nameOrProperties === "string") {

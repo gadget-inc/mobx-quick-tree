@@ -1,11 +1,12 @@
 import type { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
 import { isStateTreeNode, types } from "mobx-state-tree";
 import { BaseType, setParent, setType } from "./base";
+import { ensureRegistered } from "./class-model";
 import { getSnapshot } from "./snapshot";
 import { $readOnly, $type } from "./symbols";
 import type { CreateTypes, IAnyStateTreeNode, IAnyType, IMapType, IMSTMap, Instance, InstantiateContext, SnapshotOut } from "./types";
 
-export class QuickMap<T extends IAnyType> extends Map<string, T["InstanceType"]> implements IMSTMap<T> {
+export class QuickMap<T extends IAnyType> extends Map<string, Instance<T>> implements IMSTMap<T> {
   static get [Symbol.species]() {
     return Map;
   }
@@ -101,5 +102,6 @@ class MapType<T extends IAnyType> extends BaseType<
 }
 
 export const map = <T extends IAnyType>(childrenType: T): IMapType<T> => {
+  ensureRegistered(childrenType);
   return new MapType(childrenType);
 };

@@ -1,10 +1,10 @@
 import type { Instance } from "mobx-state-tree";
 import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
-import type { IAnyType, InstantiateContext, IType } from "./types";
+import type { IAnyType, InstanceWithoutSTNTypeForType, InstantiateContext, IType } from "./types";
 
-class RefinementType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputType"], T["InstanceTypeWithoutSTN"]> {
-  constructor(readonly type: T, readonly predicate: (snapshot: T["InstanceType"] | Instance<T["mstType"]>) => boolean) {
+class RefinementType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputType"], InstanceWithoutSTNTypeForType<T>> {
+  constructor(readonly type: T, readonly predicate: (snapshot: Instance<T> | Instance<T["mstType"]>) => boolean) {
     super(types.refinement(type.mstType, predicate));
   }
 
@@ -24,7 +24,7 @@ class RefinementType<T extends IAnyType> extends BaseType<T["InputType"], T["Out
 
 export const refinement = <T extends IAnyType>(
   type: T,
-  predicate: (snapshot: T["InstanceType"] | Instance<T["mstType"]>) => boolean
-): IType<T["InputType"], T["OutputType"], T["InstanceTypeWithoutSTN"]> => {
+  predicate: (snapshot: Instance<T> | Instance<T["mstType"]>) => boolean
+): IType<T["InputType"], T["OutputType"], InstanceWithoutSTNTypeForType<T>> => {
   return new RefinementType(type, predicate);
 };

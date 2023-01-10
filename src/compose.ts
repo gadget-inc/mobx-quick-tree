@@ -1,29 +1,32 @@
 import { types as mstTypes } from "mobx-state-tree";
 import type { ModelInitializer } from "./model";
 import { ModelType } from "./model";
-import type { IAnyModelType, IModelType } from "./types";
+import type { IAnyNodeModelType, INodeModelType } from "./types";
 
-type PropsFromTypes<T> = T extends IModelType<infer P, any>
+type PropsFromTypes<T> = T extends INodeModelType<infer P, any>
   ? P
-  : T extends [IModelType<infer P, any>, ...infer Tail]
+  : T extends [INodeModelType<infer P, any>, ...infer Tail]
   ? P & PropsFromTypes<Tail>
   : {};
 
-type OthersFromTypes<T> = T extends IModelType<any, infer O>
+type OthersFromTypes<T> = T extends INodeModelType<any, infer O>
   ? O
-  : T extends [IModelType<any, infer O>, ...infer Tail]
+  : T extends [INodeModelType<any, infer O>, ...infer Tail]
   ? O & OthersFromTypes<Tail>
   : {};
 
 type ComposeFactory = {
-  <Types extends [IAnyModelType, ...IAnyModelType[]]>(name: string, ...types: Types): IModelType<
+  <Types extends [IAnyNodeModelType, ...IAnyNodeModelType[]]>(name: string, ...types: Types): INodeModelType<
     PropsFromTypes<Types>,
     OthersFromTypes<Types>
   >;
-  <Types extends [IAnyModelType, ...IAnyModelType[]]>(...types: Types): IModelType<PropsFromTypes<Types>, OthersFromTypes<Types>>;
+  <Types extends [IAnyNodeModelType, ...IAnyNodeModelType[]]>(...types: Types): INodeModelType<
+    PropsFromTypes<Types>,
+    OthersFromTypes<Types>
+  >;
 };
 
-export const compose: ComposeFactory = (nameOrType: IAnyModelType | string, ...types: IAnyModelType[]): IAnyModelType => {
+export const compose: ComposeFactory = (nameOrType: IAnyNodeModelType | string, ...types: IAnyNodeModelType[]): IAnyNodeModelType => {
   let name: string | undefined = undefined;
   if (typeof nameOrType == "string") {
     name = nameOrType;

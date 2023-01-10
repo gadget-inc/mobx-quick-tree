@@ -1,12 +1,13 @@
 import type { UnionOptions } from "mobx-state-tree";
 import { types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
-import type { IAnyType, InstantiateContext, IUnionType } from "./types";
+import { ensureRegistered } from "./class-model";
+import type { IAnyType, InstanceWithoutSTNTypeForType, InstantiateContext, IUnionType } from "./types";
 
 class UnionType<Types extends IAnyType[]> extends BaseType<
   Types[number]["InputType"],
   Types[number]["OutputType"],
-  Types[number]["InstanceTypeWithoutSTN"]
+  InstanceWithoutSTNTypeForType<Types[number]>
 > {
   constructor(private types: Types, readonly options?: UnionOptions) {
     super(options ? mstTypes.union(options, ...types.map((x) => x.mstType)) : mstTypes.union(...types.map((x) => x.mstType)));
@@ -27,9 +28,11 @@ class UnionType<Types extends IAnyType[]> extends BaseType<
 }
 
 export const union = <Types extends [IAnyType, ...IAnyType[]]>(...types: Types): IUnionType<Types> => {
+  types.forEach(ensureRegistered);
   return new UnionType(types);
 };
 
 export const lazyUnion = <Types extends [IAnyType, ...IAnyType[]]>(...types: Types): IUnionType<Types> => {
+  types.forEach(ensureRegistered);
   return new UnionType(types, { eager: false });
 };
