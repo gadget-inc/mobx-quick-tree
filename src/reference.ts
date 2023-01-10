@@ -2,14 +2,15 @@ import type { OnReferenceInvalidated, ReferenceOptions, ReferenceOptionsGetSet }
 import { types } from "mobx-state-tree";
 import type { ReferenceT } from "mobx-state-tree/dist/internal";
 import { BaseType } from "./base";
-import type { IAnyComplexType, IMaybeType, InstantiateContext, IReferenceType } from "./types";
+import { ensureRegistered } from "./class-model";
+import type { IAnyComplexType, IMaybeType, InstanceWithoutSTNTypeForType, InstantiateContext, IReferenceType } from "./types";
 
 export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsGetSet<T["mstType"]> | Record<string, unknown>) & {
   acceptsUndefined?: boolean;
   onInvalidated?: OnReferenceInvalidated<ReferenceT<T["mstType"]>>;
 };
 
-class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<string, string, TargetType["InstanceTypeWithoutSTN"]> {
+class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<string, string, InstanceWithoutSTNTypeForType<TargetType>> {
   constructor(readonly targetType: IAnyComplexType, options?: ReferenceOptions<TargetType["mstType"]>) {
     super(types.reference(targetType.mstType, options));
   }
@@ -30,7 +31,7 @@ class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<string,
 class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseType<
   string | undefined,
   string | undefined,
-  TargetType["InstanceTypeWithoutSTN"] | undefined
+  InstanceWithoutSTNTypeForType<TargetType> | undefined
 > {
   constructor(readonly targetType: IAnyComplexType, options?: SafeReferenceOptions<TargetType>) {
     super(types.safeReference(targetType.mstType, options));
@@ -53,6 +54,7 @@ export const reference = <TargetType extends IAnyComplexType>(
   targetType: TargetType,
   options?: ReferenceOptions<TargetType["mstType"]>
 ): IReferenceType<TargetType> => {
+  ensureRegistered(targetType);
   return new ReferenceType(targetType, options);
 };
 
@@ -60,5 +62,6 @@ export const safeReference = <TargetType extends IAnyComplexType>(
   targetType: TargetType,
   options?: SafeReferenceOptions<TargetType>
 ): IMaybeType<IReferenceType<TargetType>> => {
+  ensureRegistered(targetType);
   return new SafeReferenceType(targetType, options);
 };

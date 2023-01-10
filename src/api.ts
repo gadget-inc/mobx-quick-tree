@@ -7,6 +7,7 @@ import type {
 } from "mobx-state-tree";
 import {
   applySnapshot as mstApplySnapshot,
+  flow as mstFlow,
   getEnv as mstGetEnv,
   getParent as mstGetParent,
   getParentOfType as mstGetParentOfType,
@@ -23,7 +24,9 @@ import {
   onSnapshot as mstOnSnapshot,
   resolveIdentifier as mstResolveIdentifier,
 } from "mobx-state-tree";
-import { $env, $parent, $quickType, $type } from "./symbols";
+import type { FlowReturn } from "mobx-state-tree/dist/internal";
+import { CantRunActionError } from "./errors";
+import { $env, $parent, $quickType, $readOnly, $type } from "./symbols";
 import type {
   CreateTypes,
   IAnyComplexType,
@@ -47,7 +50,6 @@ export {
   destroy,
   detach,
   escapeJsonPath,
-  flow,
   getIdentifier,
   getPath,
   getPathParts,
@@ -66,18 +68,33 @@ export {
   typecheck,
   walk,
 } from "mobx-state-tree";
+export { action, ClassModel, register, view } from "./class-model";
 export { getSnapshot } from "./snapshot";
 
 export const isType = (value: any): value is IAnyType => {
   return $quickType in value;
 };
 
+/**
+ * Returns true if the given object is a complex type in observable mode
+ * @param value any object
+ * @returns
+ */
 export const isStateTreeNode = (value: any): value is IStateTreeNode => {
   if (mstIsStateTreeNode(value)) {
     return true;
   }
 
   return typeof value === "object" && value !== null && $type in value;
+};
+
+/**
+ * Returns true if the given object is a complex type in readonly mode
+ * @param value any object
+ * @returns
+ */
+export const isReadOnlyNode = (value: any): value is IStateTreeNode => {
+  return typeof value === "object" && value !== null && $readOnly in value;
 };
 
 export const getParent = <T extends IAnyType>(value: IAnyStateTreeNode, depth = 1): Instance<T> => {
@@ -247,4 +264,26 @@ export function cast<O extends IAnyType>(snapshotOrInstance: CreateTypes<O>): O;
 export function cast(snapshotOrInstance: never): never;
 export function cast(snapshotOrInstance: any): any {
   return snapshotOrInstance;
+}
+
+/**
+ * Defines a new asynchronous action that uses `yield` instead of `await` for waiting for the results of promises
+ *
+ * Accepts an incoming generator function and returns a new async function with the right mobx-state-tree wrapping.
+ */
+export function flow<R, Args extends any[], This = unknown>(
+  generator: (this: This, ...args: Args) => Generator<PromiseLike<any>, R, any>
+): (...args: Args) => Promise<FlowReturn<R>> {
+  // wrap the passed generator in a function which restores the correct value of `this`
+  const wrappedGenerator = mstFlow(function* (args: Args, instance: This) {
+    return yield* generator.call(instance, ...args);
+  });
+
+  // return an async function to set on the prototype which ensures the instance is not readonly
+  return async function (this: This, ...args: Args): Promise<FlowReturn<R>> {
+    if ((this?.constructor as any)?.isMQTClassModel) {
+      throw new CantRunActionError(`Can't run flow action for a readonly instance`);
+    }
+    return await wrappedGenerator(args, this);
+  };
 }
