@@ -27,3 +27,10 @@ export const $requiresRegistration = Symbol.for("MQT_requiresRegistration");
  * @hidden
  **/
 export const $registered = Symbol.for("MQT_registered");
+
+/**
+ * For tagging functions that define volatiles in the class model API
+ *
+ * @hidden
+ **/
+export const $volatileDefiner = Symbol.for("MQT_volatileDefiner");

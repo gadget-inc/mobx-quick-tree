@@ -437,6 +437,86 @@ const Car = types
   }));
 ```
 
+#### Dynamically defining Class Models using class expressions
+
+Usually, Class Models are defined using top level ES6 classes exported from from a file. For advanced use-cases, classes can also be built dynamically within functions using ES6 class expressions.
+
+To define a class using a class expression, you can no longer use the decorator based API suggested above, as in the latest version of TypeScript, decorators are not valid within class expressions. They work just fine in named classes, but not in dynamically defined classes that are passed around as values.
+
+Instead, you need to explicitly call the `register` function with the class and the list of decorators you'd like to apply to the class:
+
+```typescript
+// define an example function which returns a class model (a class factory)
+const buildClass = () => {
+  const klass = class extends ClassModel({
+    key: types.string,
+  }) {
+    someView() {
+      return this.key;
+    }
+
+    someAction(newKey: string) {
+      this.key = newKey;
+    }
+  };
+
+  return register(klass, {
+    someView: view,
+    someAction: action,
+  });
+};
+
+// invoke the class factory to define a class
+const Example = buildClass();
+
+const instance = Example.create({ key: "foo" });
+instance.someAction("bar");
+```
+
+This pattern is most useful for class factories that create new classes dynamically. For example, we could build a class factory to define a Set of some other type:
+
+```typescript
+import { ClassModel, types, register, view, action } from "@gadgetinc/mobx-quick-tree";
+
+// define a class factory that produces a new class model implementing a set for any type
+const buildSet = <T extends IAnyType>(type: T) => {
+  const klass = class extends ClassModel({
+    items: types.array(type),
+  }) {
+    has(item: Instance<T>) {
+      return this.items.some((existing) => existing == item);
+    }
+
+    add(item: Instance<T>) {
+      if (!this.has(item)) {
+        this.items.push(item);
+      }
+    }
+
+    remove(item: Instance<T>) {
+      this.items.remove(item);
+    }
+  };
+
+  return register(klass, {
+    add: action,
+    remove: action,
+    has: view,
+  });
+};
+
+// produce a set of numbers class
+const NumberSet = buildSet(types.number);
+
+// create an instance of the set
+const set = NumberSet.create();
+set.add(1);
+set.add(2);
+
+set.has(1); // => true
+set.has(3); // => false
+```
+
 #### Class model snapshots
 
 `mobx-state-tree` and `mobx-quick-tree` both support snapshotting the rich instances defined in JS land using the `getSnapshot` function, and both conform to the same set of rules. Snapshots are useful for persisting data from one place to another, and for later re-creating instances that match with `applySnapshot` or `.create`/`.createReadOnly`.

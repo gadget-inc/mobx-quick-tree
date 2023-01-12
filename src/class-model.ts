@@ -1,8 +1,9 @@
 import type { IModelType as MSTIModelType, ModelActions } from "mobx-state-tree";
 import { types as mstTypes } from "mobx-state-tree";
 import "reflect-metadata";
+import { RegistrationError } from "./errors";
 import { defaultThrowAction, instantiateInstanceFromProperties, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
-import { $env, $readOnly, $registered, $requiresRegistration, $type } from "./symbols";
+import { $env, $readOnly, $registered, $requiresRegistration, $type, $volatileDefiner } from "./symbols";
 import type {
   IAnyType,
   IClassModelType,
@@ -14,17 +15,19 @@ import type {
   TypesForModelPropsDeclaration,
 } from "./types";
 
+/** @internal */
 type ActionMetadata = {
   type: "action";
   property: string;
-  described: boolean;
 };
 
+/** @internal */
 type ViewMetadata = {
   type: "view";
   property: string;
 };
 
+/** @internal */
 export type VolatileMetadata = {
   type: "volatile";
   property: string;
@@ -32,11 +35,19 @@ export type VolatileMetadata = {
 };
 
 type VolatileInitializer<T> = (instance: T) => Record<string, any>;
+type PropertyMetadata = ActionMetadata | ViewMetadata | VolatileMetadata;
 
 const metadataPrefix = "mqt:properties";
 const viewKeyPrefix = `${metadataPrefix}:view`;
 const actionKeyPrefix = `${metadataPrefix}:action`;
 const volatileKeyPrefix = `${metadataPrefix}:volatile`;
+
+/**
+ * A map of property keys to indicators for how that property should behave on the registered class
+ **/
+export type RegistrationTags<T> = {
+  [key in keyof T]: typeof action | typeof view | VolatileDefiner;
+};
 
 /**
  * Create a new base class for a ClassModel to extend. This is a function that you call that returns a class (a class factory).
@@ -121,18 +132,22 @@ export const ClassModel = <PropsDeclaration extends ModelPropertiesDeclaration>(
  *   }
  * ```
  */
-export function register<Klass extends { new (...args: any[]): {} }>(object: Klass) {
+export function register<Instance, Klass extends { new (...args: any[]): Instance }>(object: Klass, tags?: RegistrationTags<Instance>) {
   const klass = object as any as IClassModelType<any>;
   const mstActions: ModelActions = {};
   const mstViews: ModelViews = {};
   const mstVolatiles: Record<string, VolatileMetadata> = {};
 
-  // list all keys defined at the prototype level to search for volatiles and actions
-  const metadataKeys = Reflect.getMetadataKeys(klass.prototype);
-  for (const metadataKey of metadataKeys.filter((key) => key.startsWith(metadataPrefix))) {
-    const metadata = Reflect.getMetadata(metadataKey, klass.prototype) as ActionMetadata | ViewMetadata | VolatileMetadata;
+  // get the metadata for each property from either the decorators on the class or the explicitly passed tags
+  const metadatas = tags ? getExplicitMetadataFromTags(tags) : getReflectionMetadata(klass);
+
+  for (const metadata of metadatas) {
     switch (metadata.type) {
       case "view": {
+        const descriptor = Object.getOwnPropertyDescriptor(klass.prototype, metadata.property);
+        if (!descriptor) {
+          throw new RegistrationError(`Property ${metadata.property} not found on ${klass} prototype, can't register view for class model`);
+        }
         Object.defineProperty(mstViews, metadata.property, {
           ...Object.getOwnPropertyDescriptor(klass.prototype, metadata.property),
           enumerable: true,
@@ -141,13 +156,19 @@ export function register<Klass extends { new (...args: any[]): {} }>(object: Kla
       }
       case "action": {
         let target: any;
-        if (metadata.described) {
+        if (metadata.property in klass.prototype) {
           target = klass.prototype;
         } else {
           // hackily instantiate the class to get at the instance level properties defined by the class body (those that aren't on the prototype)
           target = new (klass as any)({}, undefined, undefined, true);
         }
         const descriptor = Object.getOwnPropertyDescriptor(target, metadata.property);
+
+        if (!descriptor) {
+          throw new RegistrationError(
+            `Property ${metadata.property} not found on ${klass} prototype or instance, can't register action for class model`
+          );
+        }
 
         // add the action to the MST actions we'll add to the MST model type
         Object.defineProperty(mstActions, metadata.property, {
@@ -197,8 +218,8 @@ export function register<Klass extends { new (...args: any[]): {} }>(object: Kla
 /**
  * Function decorator for registering MST actions within MQT class models.
  */
-export const action = (target: any, property: string, descriptor?: PropertyDescriptor) => {
-  const metadata: ActionMetadata = { type: "action", property, described: !!descriptor };
+export const action = (target: any, property: string) => {
+  const metadata: ActionMetadata = { type: "action", property };
   Reflect.defineMetadata(`${actionKeyPrefix}:${property}`, metadata, target);
 };
 
@@ -211,30 +232,24 @@ export const view = (target: any, property: string, _descriptor: PropertyDescrip
 };
 
 /**
+ * A function for defining a volatile
+ **/
+export type VolatileDefiner = ((target: any, property: string) => void) & { [$volatileDefiner]: true; initializer: (instance: any) => any };
+
+/**
  * Function decorator for registering MST volatiles within MQT class models.
  */
-export function volatile(initializer: (instance: any) => any) {
-  return (target: any, property: string) => {
-    const metadata: VolatileMetadata = { type: "volatile", property: property, initializer };
-    Reflect.defineMetadata(`${volatileKeyPrefix}:${property}`, metadata, target);
-  };
-}
-
-function bindToSelf<T extends Record<string, any>>(self: object, inputs: T): T {
-  const outputs = {} as T;
-  for (const [key, property] of Object.entries(Object.getOwnPropertyDescriptors(inputs))) {
-    if (typeof property.value === "function") {
-      property.value = property.value.bind(self);
-    }
-    if (typeof property.get === "function") {
-      property.get = property.get.bind(self);
-    }
-    if (typeof property.set === "function") {
-      property.set = property.set.bind(self);
-    }
-    Object.defineProperty(outputs, key, property);
-  }
-  return outputs;
+export function volatile(initializer: (instance: any) => any): VolatileDefiner {
+  return Object.assign(
+    (target: any, property: string) => {
+      const metadata: VolatileMetadata = { type: "volatile", property: property, initializer };
+      Reflect.defineMetadata(`${volatileKeyPrefix}:${property}`, metadata, target);
+    },
+    {
+      [$volatileDefiner]: true,
+      initializer,
+    } as const
+  );
 }
 
 /**
@@ -262,4 +277,52 @@ function initializeVolatiles(result: Record<string, any>, node: Record<string, a
     result[key] = metadata.initializer(node);
   }
   return result;
+}
+
+function bindToSelf<T extends Record<string, any>>(self: object, inputs: T): T {
+  const outputs = {} as T;
+  for (const [key, property] of Object.entries(Object.getOwnPropertyDescriptors(inputs))) {
+    if (typeof property.value === "function") {
+      property.value = property.value.bind(self);
+    }
+    if (typeof property.get === "function") {
+      property.get = property.get.bind(self);
+    }
+    if (typeof property.set === "function") {
+      property.set = property.set.bind(self);
+    }
+    Object.defineProperty(outputs, key, property);
+  }
+  return outputs;
+}
+
+function getExplicitMetadataFromTags(tags: RegistrationTags<any>): PropertyMetadata[] {
+  return Object.entries(tags).map(([property, tag]) => {
+    if (tag == view) {
+      return {
+        type: "view",
+        property,
+      };
+    } else if (tag == action) {
+      return {
+        type: "action",
+        property,
+      };
+    } else if ($volatileDefiner in tag) {
+      return {
+        type: "volatile",
+        property,
+        initializer: tag.initializer,
+      };
+    } else {
+      throw new Error(`Unknown metadata tag for property ${property}: ${tag}`);
+    }
+  });
+}
+
+function getReflectionMetadata(klass: IClassModelType<any>): PropertyMetadata[] {
+  // list all keys defined at the prototype level to search for volatiles and actions
+  return Reflect.getMetadataKeys(klass.prototype)
+    .filter((key) => key.startsWith(metadataPrefix))
+    .map((metadataKey) => Reflect.getMetadata(metadataKey, klass.prototype) as ActionMetadata | ViewMetadata | VolatileMetadata);
 }
