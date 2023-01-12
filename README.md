@@ -132,9 +132,9 @@ To use the Class Model API and maintain compatibility with both read-only and ob
 
 - All Class Models need to subclass a base class created by the `ClassModel` base class generator
 - All Class Models need to be registered using the `@register` decorator
-- All view functions or getters on the class need to be decorated with the `@view` decorator. These are the functions that would be MST `.views()` or raw mobx `computed` functions.
 - All functions which mutate data must be decorated with the `@action` function. These are the functions that would be MST `.actions()` or raw mobx `action` functions.
-- All volatile properties (those excluded from MST snapshots) must be registered with the `@volatile` decorator. These are the properties that would be modeled using MST's `.volatile()` API
+- Any undecorated functions or getters on the class will become views. These functions can only read data, and aren't allowed to mutate it. These are the functions that would be MST `.views()` or raw mobx `computed` functions. Views can also be explicitly decorated with the `@view` decorator.
+- All [volatile](https://mobx-state-tree.js.org/concepts/volatiles) properties must be registered with the `@volatile` decorator. These are the properties that would be modeled using MST's `.volatile()` API and are excluded from any snapshots.
 
 #### Setting up a Class Model
 
@@ -149,14 +149,13 @@ class Car extends ClassModel({
   model: types.string,
   year: types.number,
 }) {
-  // define a view with a function and the @view decorator
-  @view
+  // define a view with a function
   name() {
     // refer to properties of the model with `this`
     return `${this.year} ${this.model} ${this.make}`;
   }
 
-  // define an action with a function
+  // define an action with a function, identify it as an action with the `@action` decorator
   @action
   setModel(model: string) {
     // set  properties of the model on `this`
@@ -216,11 +215,11 @@ Quick reference for type-time differences:
 | Input snapshot of a model  | `SnapshotIn<typeof Model>`  | `SnapshotIn<typeof Model>`                          |
 | Output snapshot of a model | `SnapshotOut<typeof Model>` | `SnapshotOut<typeof Model>`                         |
 
-#### Defining views with `@view`
+#### Defining views
 
 Class Models support views on instances, which are functions that derive new state from existing state. Class Model views mimic `mobx-state-tree` views defined using the `.views()` API on models defined with `types.model`. See the [`mobx-state-tree` views docs](https://mobx-state-tree.js.org/concepts/views) for more information.
 
-To define a view on a Class Model, define a function that takes no arguments or a getter within a Class Model body, and register it as a view with `@view`.
+To define a view on a Class Model, define a function that takes no arguments or a getter within a Class Model body.
 
 ```typescript
 import { ClassModel, register, view } from "@gadgetinc/mobx-quick-tree";
@@ -231,8 +230,7 @@ class Car extends ClassModel({
   model: types.string,
   year: types.number,
 }) {
-  // define a view with a function and the @view decorator
-  @view
+  // define a view with a function. any undecorated functions are automatically defined as views
   name() {
     // refer to properties of the model with `this`
     return `${this.year} ${this.model} ${this.make}`;
@@ -255,8 +253,7 @@ class Car extends ClassModel({
   model: types.string,
   year: types.number,
 }) {
-  // define a view as a property with a getter and the @view decorator
-  @view
+  // define a view as a property with a getter
   get name() {
     // refer to properties of the model with `this`
     return `${this.year} ${this.model} ${this.make}`;
@@ -269,6 +266,25 @@ car.name; // => "2008 Toyota Prius"
 ```
 
 Views are available on both read-only and observable instances of Class Models.
+
+Views can also be made explicit with the `@view` decorator:
+
+```typescript
+@register
+class Car extends ClassModel({
+  make: types.string,
+  model: types.string,
+  year: types.number,
+}) {
+  // define a view as a property with a getter and an explicit @view decorator
+  @view
+  name() {
+    return `${this.year} ${this.model} ${this.make}`;
+  }
+}
+```
+
+Explicit decoration of views is exactly equivalent to implicit declaration of views without a decorator.
 
 #### Defining actions with `@action`
 
@@ -393,7 +409,6 @@ class Car extends ClassModel({
   model: types.string,
   make: types.reference(Make),
 }) {
-  @view
   description() {
     return `${this.make.name} ${this.name}`;
   }
@@ -410,7 +425,6 @@ class Car extends ClassModel({
   model: types.string,
   make: types.reference(Make),
 }) {
-  @view
   description() {
     return `${this.make.name} ${this.name}`;
   }
@@ -562,7 +576,6 @@ class Teacher extends ClassModel({
 ```javascript
 const addName = (klass) => {
   return class extends klass {
-    @view
     name() {
       return this.firstName + " " + this.lastName;
     }
@@ -644,11 +657,9 @@ class Car extends ClassModel({
   model: types.string,
   year: types.number,
 }) {
-  @view
   get name() {
     return `${self.year} ${self.make} ${self.model}`;
   }
-  @view
   sku() {
     return `CAR-${self.year}-${self.model}`;
   }

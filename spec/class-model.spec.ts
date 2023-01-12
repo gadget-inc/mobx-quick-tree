@@ -16,7 +16,6 @@ class NameExample extends ClassModel({ key: types.identifier, name: types.string
     return true;
   }
 
-  @view
   slug() {
     return this.name.toLowerCase().replace(/ /g, "-");
   }
@@ -28,7 +27,6 @@ class NameExample extends ClassModel({ key: types.identifier, name: types.string
     return true;
   });
 
-  @view
   get nameLength() {
     return this.name.length;
   }
@@ -73,9 +71,7 @@ const DynamicNameExample = register(
   },
   {
     setName: action,
-    slug: view,
     setNameAsync: action,
-    nameLength: view,
     volatileProp: volatile(() => "test"),
     setVolatileProp: action,
   }
@@ -83,7 +79,6 @@ const DynamicNameExample = register(
 
 @register
 class AutoIdentified extends ClassModel({ key: types.optional(types.identifier, () => "test") }) {
-  @view
   testKeyIsAlwaysSet() {
     assert<IsExact<typeof this.key, string>>(true);
   }
@@ -163,6 +158,31 @@ describe("class models", () => {
       test(".is returns true for instances of the class model", () => {
         expect(NameExample.is(record)).toBeTruthy();
         expect(TestClassModel.is(record)).toBeFalsy();
+      });
+
+      test("functions without an explicit @view decorator are available as views", () => {
+        @register
+        class Test extends ClassModel({ key: types.identifier }) {
+          foo() {
+            return this.key + "-foo";
+          }
+        }
+
+        const instance = create(Test, { key: "a" }, readOnly);
+        expect(instance.foo()).toEqual("a-foo");
+      });
+
+      test("functions with an explicit @view decorator are available as views", () => {
+        @register
+        class Test extends ClassModel({ key: types.identifier }) {
+          @view
+          foo() {
+            return this.key + "-foo";
+          }
+        }
+
+        const instance = create(Test, { key: "a" }, readOnly);
+        expect(instance.foo()).toEqual("a-foo");
       });
 
       describe("interop", () => {

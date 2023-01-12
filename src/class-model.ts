@@ -55,7 +55,6 @@ export type RegistrationTags<T> = {
  * @example
  *
  * class MyModel extends ClassModel({ name: types.string }) {
- *   @view
  *   get upperCasedName() {
  *     return this.name.toUpperCase();
  *   }
@@ -125,7 +124,6 @@ export const ClassModel = <PropsDeclaration extends ModelPropertiesDeclaration>(
  * ```
  *   @register
  *   class Example extends ClassModel({ name: types.string }) {
- *     @view
  *     get bigName() {
  *       return this.name.toUpperCase();
  *     }
@@ -140,6 +138,15 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
 
   // get the metadata for each property from either the decorators on the class or the explicitly passed tags
   const metadatas = tags ? getExplicitMetadataFromTags(tags) : getReflectionMetadata(klass);
+  const explicitKeys = new Set<string>(metadatas.map((metadata) => metadata.property));
+
+  for (const property of allPrototypeFunctionProperties(klass.prototype)) {
+    if (explicitKeys.has(property)) continue;
+    metadatas.push({
+      type: "view",
+      property,
+    });
+  }
 
   for (const metadata of metadatas) {
     switch (metadata.type) {
@@ -325,4 +332,24 @@ function getReflectionMetadata(klass: IClassModelType<any>): PropertyMetadata[] 
   return Reflect.getMetadataKeys(klass.prototype)
     .filter((key) => key.startsWith(metadataPrefix))
     .map((metadataKey) => Reflect.getMetadata(metadataKey, klass.prototype) as ActionMetadata | ViewMetadata | VolatileMetadata);
+}
+
+const objectPrototype = Object.getPrototypeOf({});
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const functionPrototype = Object.getPrototypeOf(() => {});
+
+function allPrototypeFunctionProperties(obj: any): string[] {
+  const properties = new Set<string>();
+  let currentObj = obj;
+
+  while (currentObj && currentObj !== objectPrototype && currentObj !== functionPrototype) {
+    for (const [property, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(currentObj))) {
+      if (typeof descriptor.value === "function" || descriptor.get) {
+        properties.add(property);
+      }
+    }
+    currentObj = Object.getPrototypeOf(currentObj);
+  }
+
+  return [...properties.keys()].filter((key) => key != "constructor");
 }
