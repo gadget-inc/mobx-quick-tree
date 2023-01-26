@@ -1,6 +1,6 @@
 import { Suite } from "benchmark";
-import { TestClassModel } from "../fixtures/TestClassModel";
-import { TestModel } from "../fixtures/TestModel";
+import { TestClassModel } from "../spec/fixtures/TestClassModel";
+import { TestModel } from "../spec/fixtures/TestModel";
 
 const suite = new Suite("instantiating same object with different paradigms");
 
