@@ -36,10 +36,10 @@ export type IDateType = IType<Date | number, number, Date>;
 export type IAnyComplexType = IType<any, any, object> | IClassModelType<any, any>;
 
 /** Given any MQT type, get the type of an instance of the MQT type */
-export type InstanceWithoutSTNTypeForType<T extends IAnyType> = T extends IType<any, any, any>
-  ? T["InstanceTypeWithoutSTN"]
-  : T extends IClassModelType<any, any>
+export type InstanceWithoutSTNTypeForType<T extends IAnyType> = T extends IClassModelType<any, any>
   ? InstanceType<T>
+  : T extends IType<any, any, any>
+  ? T["InstanceTypeWithoutSTN"]
   : T;
 
 export interface INodeModelType<Props extends ModelProperties, Others>
@@ -84,7 +84,7 @@ export interface IAnyNodeModelType extends IType<any, any, any> {
 }
 
 /**
- * IClassModelType represents the type of MQT class models. This is the class-level type, not the instance level type, so it has a typed `new()` and all the static functions/properties of a MQT class model.
+ * `IClassModelType` represents the type of MQT class models. This is the class-level type, not the instance level type, so it has a typed `new()` and all the static functions/properties of a MQT class model.
  *
  * Note: `IClassModelType` is regrettably *not* an `IType`. `IClassModelType` is an interface that all class model classes implement. It's also the concrete type of the base class models returned by the ClassModel class factory. It'd be great if we could make `IClassModelType` extend `IType`, but, we would need to ensure the `Instance` part of `IType` is updated to reference the final version of the declared class. Crucially, there's no TypeScript way to get the resulting type of a class *after* it has been defined to then start referring to it within an interface that the class implements. Decorators don't let us get a reference to the finished type of a class, nor do they let us return a new type that could reference it, so, we can't mutate the type of a defined class model. Hence, we can't make `IClassModelType` extend `IType` without it capturing a reference to an outdated `Instance` type that doesn't have the methods / properties added after class extension. Sad.
  *

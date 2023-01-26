@@ -1,7 +1,19 @@
 import type { Has, IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
-import type { IAnyType, IClassModelType, Instance, ISimpleType, IStateTreeNode, ModelPropertiesDeclaration, SnapshotIn } from "../src";
-import { flow, isReadOnlyNode, isStateTreeNode, types } from "../src";
+import {
+  flow,
+  getType,
+  IAnyType,
+  IClassModelType,
+  Instance,
+  ISimpleType,
+  isReadOnlyNode,
+  isStateTreeNode,
+  IStateTreeNode,
+  ModelPropertiesDeclaration,
+  SnapshotIn,
+  types,
+} from "../src";
 import { action, ClassModel, register, view, volatile } from "../src/class-model";
 import { $identifier } from "../src/symbols";
 import { NamedThingClass, TestClassModel } from "./fixtures/TestClassModel";
@@ -74,7 +86,8 @@ const DynamicNameExample = register(
     setNameAsync: action,
     volatileProp: volatile(() => "test"),
     setVolatileProp: action,
-  }
+  },
+  "NameExample"
 );
 
 @register
@@ -285,6 +298,12 @@ describe("class models", () => {
           }
 
           const _instance = create(ClassWithPropSyntax, { key: "1" }, readOnly);
+        });
+
+        test("instance type's name should be NameExample", () => {
+          const type = getType(record);
+          expect(type).toBeTruthy();
+          expect(type.name).toEqual("NameExample");
         });
       });
     });

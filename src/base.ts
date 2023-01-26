@@ -25,7 +25,7 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
   }
 
   /**
-   * @deprecated Prefer the top level `create` function instead
+   * Create a new instance of this class model in observable mode. Uses an `mobx-state-tree` type under the hood.
    */
   create(snapshot?: this["InputType"], env?: any): this["InstanceType"] {
     return this.mstType.create(snapshot, env);
@@ -35,7 +35,7 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
   abstract is(value: any): value is this["InputType"] | this["InstanceType"];
 
   /**
-   * @deprecated Prefer the top level `create` function instead
+   * Create a new instance of this class model in readonly mode. Properties and views are accessible on readonly instances but actions will throw if run.
    */
   createReadOnly(snapshot?: InputType, env?: any): this["InstanceType"] {
     const context: InstantiateContext = {

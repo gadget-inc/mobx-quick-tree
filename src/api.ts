@@ -188,7 +188,7 @@ export const isRoot = (value: IAnyStateTreeNode): boolean => {
     return mstIsRoot(value);
   }
 
-  return value[$parent] === undefined;
+  return !value[$parent];
 };
 
 export function resolveIdentifier<T extends IAnyModelType>(
@@ -267,9 +267,10 @@ export function cast(snapshotOrInstance: any): any {
 }
 
 /**
- * Defines a new asynchronous action that uses `yield` instead of `await` for waiting for the results of promises
+ * Defines a new asynchronous action. `mobx-quick-tree` (and `mobx-state-tree`) require this wrapper around asynchronous actions, and require those action functions to be generators using `yield` instead of `await`.
  *
  * Accepts an incoming generator function and returns a new async function with the right mobx-state-tree wrapping.
+ * See https://mobx-state-tree.js.org/concepts/async-actions for more info.
  */
 export function flow<R, Args extends any[], This = unknown>(
   generator: (this: This, ...args: Args) => Generator<PromiseLike<any>, R, any>

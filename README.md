@@ -453,11 +453,11 @@ const Car = types
 
 #### Dynamically defining Class Models using class expressions
 
-Usually, Class Models are defined using top level ES6 classes exported from from a file. For advanced use-cases, classes can also be built dynamically within functions using ES6 class expressions.
+Usually, Class Models are defined using top level ES6 classes exported from from a file. For advanced use-cases, classes can also be built dynamically within functions using ES6 class expressions. Generally, static classes defined with decorators are clearer and more performant, but for fancy class factories and the like you may want to use class expressions which MQT supports with slightly different syntax.
 
 To define a class using a class expression, you can no longer use the decorator based API suggested above, as in the latest version of TypeScript, decorators are not valid within class expressions. They work just fine in named classes, but not in dynamically defined classes that are passed around as values.
 
-Instead, you need to explicitly call the `register` function with the class and the list of decorators you'd like to apply to the class:
+Instead, you need to explicitly call the `register` function with the class, the list of decorators you'd like to apply to the class, and optionally a string class name:
 
 ```typescript
 // define an example function which returns a class model (a class factory)
@@ -474,10 +474,14 @@ const buildClass = () => {
     }
   };
 
-  return register(klass, {
-    someView: view,
-    someAction: action,
-  });
+  return register(
+    klass,
+    {
+      someView: view,
+      someAction: action,
+    },
+    "Example"
+  );
 };
 
 // invoke the class factory to define a class
@@ -689,7 +693,7 @@ const Store = types.model("Store", {
       self.data = yield loadSomeData();
       self.state = "loaded";
     } catch (error) {
-      self.state = "error;
+      self.state = "error";
     } finally {
       self.finished = true;
     }

@@ -3,7 +3,7 @@ import { types as mstTypes } from "mobx-state-tree";
 import "reflect-metadata";
 import { RegistrationError } from "./errors";
 import { defaultThrowAction, instantiateInstanceFromProperties, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
-import { $env, $readOnly, $registered, $requiresRegistration, $type, $volatileDefiner } from "./symbols";
+import { $env, $parent, $readOnly, $registered, $requiresRegistration, $type, $volatileDefiner } from "./symbols";
 import type {
   IAnyType,
   IClassModelType,
@@ -75,7 +75,10 @@ export const ClassModel = <PropsDeclaration extends ModelPropertiesDeclaration>(
     static mstType: MSTIModelType<any, any>;
     static readonly [$requiresRegistration] = true;
 
+    /** @hidden */
     readonly [$env]?: any;
+    /** @hidden */
+    readonly [$parent] = null;
 
     constructor(
       attrs?: InputsForModel<InputTypesForModelProps<TypesForModelPropsDeclaration<PropsDeclaration>>>,
@@ -130,7 +133,11 @@ export const ClassModel = <PropsDeclaration extends ModelPropertiesDeclaration>(
  *   }
  * ```
  */
-export function register<Instance, Klass extends { new (...args: any[]): Instance }>(object: Klass, tags?: RegistrationTags<Instance>) {
+export function register<Instance, Klass extends { new (...args: any[]): Instance }>(
+  object: Klass,
+  tags?: RegistrationTags<Instance>,
+  name?: string
+) {
   const klass = object as any as IClassModelType<any>;
   const mstActions: ModelActions = {};
   const mstViews: ModelViews = {};
@@ -196,6 +203,10 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
         mstVolatiles[metadata.property] = metadata;
       }
     }
+  }
+
+  if (name) {
+    Object.defineProperty(klass, "name", { value: name });
   }
 
   klass.volatiles = mstVolatiles;
