@@ -24,6 +24,9 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
     });
   }
 
+  /**
+   * Create a new instance of this class model in observable mode. Uses an `mobx-state-tree` type under the hood.
+   */
   create(snapshot?: this["InputType"], env?: any): this["InstanceType"] {
     return this.mstType.create(snapshot, env);
   }
@@ -31,6 +34,9 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
   abstract is(value: IAnyStateTreeNode): value is this["InstanceType"];
   abstract is(value: any): value is this["InputType"] | this["InstanceType"];
 
+  /**
+   * Create a new instance of this class model in readonly mode. Properties and views are accessible on readonly instances but actions will throw if run.
+   */
   createReadOnly(snapshot?: InputType, env?: any): this["InstanceType"] {
     const context: InstantiateContext = {
       referenceCache: new Map(),
@@ -43,15 +49,7 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
       resolver();
     }
 
-    const maybeObjectInstance: unknown = instance;
-    if (typeof maybeObjectInstance === "object" && maybeObjectInstance !== null) {
-      Reflect.defineProperty(maybeObjectInstance, $env, {
-        value: env,
-        configurable: false,
-        enumerable: false,
-        writable: false,
-      });
-    }
+    setEnv(instance, env);
 
     return instance;
   }
@@ -76,6 +74,18 @@ export const setParent = (value: unknown, parent: any) => {
   if (value && typeof value == "object") {
     Reflect.defineProperty(value, $parent, {
       value: parent,
+      configurable: false,
+      enumerable: false,
+      writable: false,
+    });
+  }
+};
+
+/** @hidden */
+export const setEnv = (instance: unknown, env: any) => {
+  if (typeof instance === "object" && instance !== null) {
+    Reflect.defineProperty(instance, $env, {
+      value: env,
       configurable: false,
       enumerable: false,
       writable: false,

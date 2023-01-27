@@ -1,5 +1,6 @@
 import { Suite } from "benchmark";
-import { TestModel } from "../fixtures/TestModel";
+import { TestClassModel } from "../spec/fixtures/TestClassModel";
+import { TestModel } from "../spec/fixtures/TestModel";
 
 const suite = new Suite("instantiating same object with different paradigms");
 
@@ -26,6 +27,9 @@ suite
   })
   .add("mobx-quick-tree types.model", function () {
     TestModel.createReadOnly(TestModelSnapshot);
+  })
+  .add("mobx-quick-tree ClassModel", function () {
+    TestClassModel.createReadOnly(TestModelSnapshot);
   })
   .on("cycle", function (event: any) {
     console.log(String(event.target));

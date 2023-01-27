@@ -1,5 +1,7 @@
+import type { IsExact } from "conditional-type-checks";
+import { assert } from "conditional-type-checks";
 import type { SnapshotOut } from "../src";
-import { types } from "../src";
+import { isReadOnlyNode, types } from "../src";
 import {
   applySnapshot,
   getEnv,
@@ -12,6 +14,7 @@ import {
   isModelType,
   isRoot,
 } from "../src/api";
+import { TestClassModel } from "./fixtures/TestClassModel";
 import { NamedThing, TestModel, TestModelSnapshot } from "./fixtures/TestModel";
 
 describe("getParent", () => {
@@ -40,6 +43,16 @@ describe("getParentOfType", () => {
     const m = TestModel.create(TestModelSnapshot);
     expect(() => getParentOfType(m, TestModel)).toThrow();
     expect(getParentOfType(m.nested, TestModel)).toEqual(m);
+  });
+
+  test("returns the proper root for class model instance", () => {
+    const m = new TestClassModel(TestModelSnapshot);
+    expect(() => getParentOfType(m, TestClassModel)).toThrow();
+    const parent = getParentOfType(m.nested, TestClassModel);
+    expect(parent).toEqual(m);
+    expect(parent.optional).toEqual("value");
+    expect(parent.setB).toBeTruthy();
+    assert<IsExact<typeof parent, TestClassModel>>(true);
   });
 });
 
@@ -70,6 +83,18 @@ describe("getRoot", () => {
 describe("getSnapshot", () => {
   test("returns the expected snapshot for a read-only instance", () => {
     const m = TestModel.createReadOnly(TestModelSnapshot);
+    expect(getSnapshot(m)).toEqual(expect.objectContaining(TestModelSnapshot));
+  });
+
+  test("returns the expected snapshot for an observable class model instance", () => {
+    const m = new TestClassModel(TestModelSnapshot);
+    const snapshot = getSnapshot(m);
+    assert<IsExact<typeof snapshot.bool, boolean>>(true);
+    expect(snapshot).toEqual(expect.objectContaining(TestModelSnapshot));
+  });
+
+  test("returns the expected snapshot for a read only class model instance", () => {
+    const m = new TestClassModel(TestModelSnapshot, undefined);
     expect(getSnapshot(m)).toEqual(expect.objectContaining(TestModelSnapshot));
   });
 
@@ -131,11 +156,24 @@ describe("getEnv", () => {
     const m = TestModel.create(TestModelSnapshot, { test: 1 });
     expect(getEnv(m)).toEqual({ test: 1 });
   });
+
+  test("returns expected env for read only model class instances", () => {
+    const m = TestClassModel.createReadOnly(TestModelSnapshot, { test: 1 });
+    expect(getEnv(m)).toEqual({ test: 1 });
+    expect(getEnv(m.map.get("test_key")!)).toEqual({ test: 1 });
+    expect(getEnv(m.array[0])).toEqual({ test: 1 });
+  });
 });
 
 describe("isRoot", () => {
   test("returns true for root instances", () => {
     const m = TestModel.createReadOnly(TestModelSnapshot);
+    expect(isRoot(m)).toEqual(true);
+    expect(isRoot(m.nested)).toEqual(false);
+  });
+
+  test("returns true for root read only class model instances", () => {
+    const m = new TestClassModel(TestModelSnapshot);
     expect(isRoot(m)).toEqual(true);
     expect(isRoot(m.nested)).toEqual(false);
   });
@@ -193,5 +231,37 @@ describe("applySnapshot", () => {
     };
 
     expect(() => applySnapshot(m, snap)).toThrow();
+  });
+
+  test("throws for class model node", () => {
+    const m = new TestClassModel(TestModelSnapshot);
+    const snap: SnapshotOut<typeof TestModel> = {
+      ...getSnapshot(m),
+      optional: "a different value",
+    };
+
+    expect(() => applySnapshot(m, snap)).toThrow();
+  });
+});
+
+describe("isReadOnlyNode", () => {
+  test("reports on model instance", () => {
+    expect(isReadOnlyNode(TestModel.create(TestModelSnapshot))).toEqual(false);
+    expect(isReadOnlyNode(TestModel.createReadOnly(TestModelSnapshot))).toEqual(true);
+  });
+
+  test("reports on class model instance", () => {
+    expect(isReadOnlyNode(TestClassModel.create(TestModelSnapshot))).toEqual(false);
+    expect(isReadOnlyNode(TestClassModel.createReadOnly(TestModelSnapshot))).toEqual(true);
+  });
+
+  test("reports on array instance", () => {
+    expect(isReadOnlyNode(types.array(types.number).create([1, 2, 3]))).toEqual(false);
+    expect(isReadOnlyNode(types.array(types.number).createReadOnly([1, 2, 3]))).toEqual(true);
+  });
+
+  test("reports on map instance", () => {
+    expect(isReadOnlyNode(types.map(types.string).create({ foo: "bar" }))).toEqual(false);
+    expect(isReadOnlyNode(types.map(types.string).createReadOnly({ foo: "bar" }))).toEqual(true);
   });
 });

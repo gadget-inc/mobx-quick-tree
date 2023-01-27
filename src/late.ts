@@ -1,8 +1,9 @@
 import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
-import type { IAnyType, InstantiateContext } from "./types";
+import { ensureRegistered } from "./class-model";
+import type { IAnyType, InstanceWithoutSTNTypeForType, InstantiateContext } from "./types";
 
-class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputType"], T["InstanceTypeWithoutSTN"]> {
+class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputType"], InstanceWithoutSTNTypeForType<T>> {
   private cachedType: T | null | undefined;
 
   constructor(private readonly fn: () => T) {
@@ -19,6 +20,7 @@ class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputTyp
 
   private get type() {
     this.cachedType ??= this.fn();
+    ensureRegistered(this.cachedType);
     return this.cachedType;
   }
 }

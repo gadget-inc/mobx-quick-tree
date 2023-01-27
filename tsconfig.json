@@ -13,5 +13,5 @@
     "emitDecoratorMetadata": true,
     "esModuleInterop": true
   },
-  "include": ["./src", "./spec"]
+  "include": ["./src", "./spec", "./bench"]
 }
