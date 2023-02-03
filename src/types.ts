@@ -36,10 +36,10 @@ export type IDateType = IType<Date | number, number, Date>;
 export type IAnyComplexType = IType<any, any, object> | IClassModelType<any, any>;
 
 /** Given any MQT type, get the type of an instance of the MQT type */
-export type InstanceWithoutSTNTypeForType<T extends IAnyType> = T extends IClassModelType<any, any>
-  ? InstanceType<T>
-  : T extends IType<any, any, any>
+export type InstanceWithoutSTNTypeForType<T extends IAnyType> = T extends IType<any, any, any>
   ? T["InstanceTypeWithoutSTN"]
+  : T extends IClassModelType<any, any>
+  ? InstanceType<T>
   : T;
 
 export interface INodeModelType<Props extends ModelProperties, Others>
