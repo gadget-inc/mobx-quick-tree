@@ -1,6 +1,15 @@
 import type { Has, IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
-import type { IAnyType, IClassModelType, ISimpleType, IStateTreeNode, Instance, ModelPropertiesDeclaration, SnapshotIn } from "../src";
+import type {
+  IAnyClassModelType,
+  IAnyType,
+  IClassModelType,
+  ISimpleType,
+  IStateTreeNode,
+  Instance,
+  ModelPropertiesDeclaration,
+  SnapshotIn,
+} from "../src";
 import { flow, getSnapshot, getType, isReadOnlyNode, isStateTreeNode, types } from "../src";
 import { ClassModel, action, register, view, volatile } from "../src/class-model";
 import { $identifier } from "../src/symbols";
@@ -498,6 +507,16 @@ describe("class models", () => {
 
   test("class model classes extend IAnyType", () => {
     assert<typeof TestClassModel extends IAnyType ? true : false>(true);
+    assert<typeof NameExample extends IAnyType ? true : false>(true);
+    assert<typeof DynamicNameExample extends IAnyType ? true : false>(true);
+  });
+
+  test("class model classes extend IAnyClassModelType", () => {
+    assert<typeof TestClassModel extends IAnyClassModelType ? true : false>(true);
+    assert<typeof NameExample extends IAnyClassModelType ? true : false>(true);
+    assert<typeof DynamicNameExample extends IAnyClassModelType ? true : false>(true);
+
+    assert<typeof NamedThing extends IAnyClassModelType ? true : false>(false);
   });
 
   test("class model instances are IStateTreeNodes", () => {
@@ -522,6 +541,33 @@ describe("class models", () => {
         c: { key: "c", name: "Cherry" },
       },
       array: [{ key: "d", name: "Durian" }],
+    };
+  });
+
+  test("SnapshotIn type accepts JSON form of maps to other models properties", () => {
+    @register
+    class Child extends ClassModel({
+      key: types.identifier,
+      name: types.string,
+    }) {
+      someView() {
+        return true;
+      }
+    }
+
+    @register
+    class Root extends ClassModel({
+      children: types.map(Child),
+    }) {
+      someRootView() {
+        return true;
+      }
+    }
+    const _snapshot: SnapshotIn<typeof Root> = {
+      children: {
+        a: { key: "a", name: "Apple" },
+        b: { key: "b", name: "Banana" },
+      },
     };
   });
 

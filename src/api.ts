@@ -34,6 +34,7 @@ import type {
   IAnyStateTreeNode,
   IAnyType,
   IArrayType,
+  IClassModelType,
   IMapType,
   IReferenceType,
   IStateTreeNode,
@@ -217,7 +218,10 @@ export const applySnapshot = <T extends IAnyType>(target: IStateTreeNode<T>, sna
   throw new Error("can't apply a snapshot to a mobx-quick-tree node");
 };
 
-export const onSnapshot = <S>(target: IStateTreeNode<IType<any, S, any>>, callback: (snapshot: S) => void): IDisposer => {
+export const onSnapshot = <S>(
+  target: IStateTreeNode<IType<any, S, any>> | IStateTreeNode<IClassModelType<any, any, S>>,
+  callback: (snapshot: S) => void
+): IDisposer => {
   if (mstIsStateTreeNode(target)) {
     return mstOnSnapshot<S>(target as MSTStateTreeNode, callback);
   }

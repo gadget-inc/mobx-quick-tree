@@ -1,5 +1,9 @@
-import type { Instance } from "../src";
+import type { Has } from "conditional-type-checks";
+import { assert } from "conditional-type-checks";
+import type { Instance, SnapshotOrInstance } from "../src";
 import { types } from "../src";
+import { TestClassModel } from "./fixtures/TestClassModel";
+import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
 
 const Referrable = types.model("Referenced", {
   key: types.identifier,
@@ -13,6 +17,10 @@ const Referencer = types
   })
   .actions((self) => ({
     setRef(ref: Instance<typeof Referrable>) {
+      // Just here for typechecking
+      self.ref = ref;
+    },
+    setRefSnapshot(ref: SnapshotOrInstance<typeof Referrable>) {
       // Just here for typechecking
       self.ref = ref;
     },
@@ -124,4 +132,44 @@ test("safe references are equal to the instances they refer to", () => {
   expect(root.model.safeRef).toBe(root.refs[1]);
   expect(root.model.safeRef).toEqual(root.refs[1]);
   expect(root.model.safeRef).toStrictEqual(root.refs[1]);
+});
+
+test("instances of a model reference are assignable to instances of the model", () => {
+  const instance = TestModel.create(TestModelSnapshot);
+  const referenceType = types.reference(TestModel);
+
+  type instanceType = typeof instance;
+  type referenceInstanceType = Instance<typeof referenceType>;
+  assert<Has<instanceType, referenceInstanceType>>(true);
+  assert<Has<referenceInstanceType, instanceType>>(true);
+});
+
+test("instances of a model reference are assignable to readonly instances of the model", () => {
+  const instance = TestModel.createReadOnly(TestModelSnapshot);
+  const referenceType = types.reference(TestModel);
+
+  type instanceType = typeof instance;
+  type referenceInstanceType = Instance<typeof referenceType>;
+  assert<Has<instanceType, referenceInstanceType>>(true);
+  assert<Has<referenceInstanceType, instanceType>>(true);
+});
+
+test("instances of a class model reference are assignable to instances of the class model", () => {
+  const instance = TestClassModel.create(TestModelSnapshot);
+  const referenceType = types.reference(TestClassModel);
+
+  type instanceType = typeof instance;
+  type referenceInstanceType = Instance<typeof referenceType>;
+  assert<Has<instanceType, referenceInstanceType>>(true);
+  assert<Has<referenceInstanceType, instanceType>>(true);
+});
+
+test("instances of a class model reference are assignable to readonly instances of the class model", () => {
+  const instance = TestClassModel.createReadOnly(TestModelSnapshot);
+  const referenceType = types.reference(TestClassModel);
+
+  type instanceType = typeof instance;
+  type referenceInstanceType = Instance<typeof referenceType>;
+  assert<Has<instanceType, referenceInstanceType>>(true);
+  assert<Has<referenceInstanceType, instanceType>>(true);
 });

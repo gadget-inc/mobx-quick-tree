@@ -142,23 +142,39 @@ describe("isModelType", () => {
 });
 
 describe("applySnapshot", () => {
-  test("applies successfully to an MST node", () => {
-    const m = TestModel.create(TestModelSnapshot);
+  test("applies successfully to an observable MST node", () => {
+    const instance = TestModel.create(TestModelSnapshot);
     const snap: SnapshotOut<typeof TestModel> = {
-      ...getSnapshot(m),
+      ...getSnapshot(instance),
       optional: "a different value",
     };
 
-    applySnapshot(m, snap);
+    applySnapshot(instance, snap);
 
-    expect(m).toEqual(
+    expect(instance).toEqual(
       expect.objectContaining({
         optional: "a different value",
       })
     );
   });
 
-  test("throws for an MQT node", () => {
+  test("applies successfully to an observable class model node", () => {
+    const instance = TestClassModel.create(TestModelSnapshot);
+    const snap: SnapshotOut<typeof TestClassModel> = {
+      ...getSnapshot(instance),
+      optional: "a different value",
+    };
+
+    applySnapshot(instance, snap);
+
+    expect(instance).toEqual(
+      expect.objectContaining({
+        optional: "a different value",
+      })
+    );
+  });
+
+  test("throws for a readonly MQT node", () => {
     const instance = TestModel.createReadOnly(TestModelSnapshot);
     const snap: SnapshotOut<typeof TestModel> = {
       ...getSnapshot(instance),
@@ -168,9 +184,9 @@ describe("applySnapshot", () => {
     expect(() => applySnapshot(instance, snap)).toThrow();
   });
 
-  test("throws for class model node", () => {
+  test("throws for readonly class model node", () => {
     const instance = TestClassModel.createReadOnly(TestModelSnapshot);
-    const snap: SnapshotOut<typeof TestModel> = {
+    const snap: SnapshotOut<typeof TestClassModel> = {
       ...getSnapshot(instance),
       optional: "a different value",
     };

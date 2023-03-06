@@ -64,8 +64,8 @@ export interface INodeModelType<Props extends ModelProperties, Others>
   ): INodeModelType<Props, Others & A & V & VS>;
 }
 
-// TODO see if we can make this work for `IModelType<any, any>`, or some other way to simplify
 // This isn't quite IModelType<any, any>. In particular, InputType is any, which is key to make a lot of things typecheck
+// TODO see if we can make this work for `IModelType<any, any>`, or some other way to simplify
 export interface IAnyNodeModelType extends IType<any, any, any> {
   readonly properties: any;
 
@@ -247,6 +247,11 @@ export type CreateTypes<T extends IAnyType> = T["InputType"] | T["OutputType"] |
 export type ValidOptionalValue = string | boolean | number | null | undefined;
 
 export type IStateTreeNode<T extends IAnyType = IAnyType> = {
+  /**
+   * The type of this node.
+   * At runtime, the type will return an actual type object that was used to create this node
+   * At typetime however, the type can be the type that would create this node, or a reference to that type. So, we allow this property to be any to allow assignment of instances created by references to and from instances created by the actual type.
+   */
   readonly [$type]?: [T] | [any];
 };
 
