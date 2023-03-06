@@ -123,13 +123,13 @@ export interface IClassModelType<
   is(value: any): value is this["InputType"] | InstanceType<this>;
 
   /**
-   * Create a new instance of this class model.
-   * Use the `new` operator if possible
+   * Create a new observable instance of this class model. Uses MST under the hood.
    */
   create<T extends IAnyType>(this: T, snapshot?: SnapshotIn<T>, env?: any): Instance<T>;
   /**
-   * Create a new instance of this class model.
-   * Use the `new` operator if possible for performance
+   * Create a new read-only instance of this class model.
+   *
+   * Properties and views will work fast on this instance by skipping the observability bits. Actions will throw if called.
    */
   createReadOnly<T extends IAnyType>(this: T, snapshot?: SnapshotIn<T>, env?: any): Instance<T>;
 
