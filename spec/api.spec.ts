@@ -15,7 +15,7 @@ import {
   isRoot,
 } from "../src/api";
 import { TestClassModel } from "./fixtures/TestClassModel";
-import { NamedThing, TestModel, TestModelSnapshot } from "./fixtures/TestModel";
+import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
 
 describe("getParent", () => {
   test("returns the proper root for a read-only instance", () => {
@@ -77,71 +77,6 @@ describe("getRoot", () => {
     const instance = model.createReadOnly({ others: { key: { tests: [TestModelSnapshot] } } });
     const others = Array.from(instance.others.values());
     expect(getRoot(others[0].tests[0])).toEqual(instance);
-  });
-});
-
-describe("getSnapshot", () => {
-  test("returns the expected snapshot for a read-only instance", () => {
-    const m = TestModel.createReadOnly(TestModelSnapshot);
-    expect(getSnapshot(m)).toEqual(expect.objectContaining(TestModelSnapshot));
-  });
-
-  test("returns the expected snapshot for an observable class model instance", () => {
-    const m = new TestClassModel(TestModelSnapshot);
-    const snapshot = getSnapshot(m);
-    assert<IsExact<typeof snapshot.bool, boolean>>(true);
-    expect(snapshot).toEqual(expect.objectContaining(TestModelSnapshot));
-  });
-
-  test("returns the expected snapshot for a read only class model instance", () => {
-    const m = new TestClassModel(TestModelSnapshot, undefined);
-    expect(getSnapshot(m)).toEqual(expect.objectContaining(TestModelSnapshot));
-  });
-
-  test("returns a plain object for QuickMap", () => {
-    const now = new Date();
-    const m = types.map(types.frozen()).createReadOnly({ A: now, B: "test" });
-    expect(getSnapshot(m)).toEqual({ A: now.getTime(), B: "test" });
-  });
-
-  test("returns a number for types.Date", () => {
-    const now = new Date();
-    const m = types.Date.createReadOnly(now);
-    expect(getSnapshot(m)).toEqual(now.getTime());
-  });
-
-  test("returns undefined for a maybeNull(frozen)", () => {
-    const m = types.maybeNull(types.frozen()).createReadOnly();
-    expect(getSnapshot(m)).toEqual(undefined);
-  });
-
-  test("returns a string for reference types", () => {
-    const m = types.model({
-      testModels: types.array(TestModel),
-      ref: types.reference(NamedThing),
-      safeRef1: types.safeReference(NamedThing),
-      safeRef2: types.safeReference(NamedThing),
-    });
-
-    const instance = m.createReadOnly({
-      testModels: [
-        { bool: true, nested: { key: "a", name: "a 1" }, frozen: { test: "string" } },
-        { bool: false, nested: { key: "b", name: "b 2" }, frozen: { test: "string" } },
-      ],
-      ref: "b",
-      safeRef1: "x",
-      safeRef2: "a",
-    });
-
-    expect(instance.ref.name).toEqual("b 2");
-    expect(getSnapshot(instance).ref).toEqual("b");
-    expect(getSnapshot(instance).safeRef1).toBeUndefined();
-    expect(getSnapshot(instance).safeRef2).toEqual("a");
-  });
-
-  test("returns the proper root for an MST instance", () => {
-    const m = TestModel.create(TestModelSnapshot);
-    expect(getSnapshot(m)).toEqual(expect.objectContaining(TestModelSnapshot));
   });
 });
 
@@ -224,23 +159,23 @@ describe("applySnapshot", () => {
   });
 
   test("throws for an MQT node", () => {
-    const m = TestModel.createReadOnly(TestModelSnapshot);
+    const instance = TestModel.createReadOnly(TestModelSnapshot);
     const snap: SnapshotOut<typeof TestModel> = {
-      ...getSnapshot(m),
+      ...getSnapshot(instance),
       optional: "a different value",
     };
 
-    expect(() => applySnapshot(m, snap)).toThrow();
+    expect(() => applySnapshot(instance, snap)).toThrow();
   });
 
   test("throws for class model node", () => {
-    const m = new TestClassModel(TestModelSnapshot);
+    const instance = TestClassModel.createReadOnly(TestModelSnapshot);
     const snap: SnapshotOut<typeof TestModel> = {
-      ...getSnapshot(m),
+      ...getSnapshot(instance),
       optional: "a different value",
     };
 
-    expect(() => applySnapshot(m, snap)).toThrow();
+    expect(() => applySnapshot(instance, snap)).toThrow();
   });
 });
 

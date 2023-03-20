@@ -250,7 +250,8 @@ export type IStateTreeNode<T extends IAnyType = IAnyType> = {
   readonly [$type]?: [T] | [any];
 };
 
-export type StateTreeNode<T, IT extends IAnyType> = T extends object ? T & IStateTreeNode<IT> : T;
+export type StateTreeNode<T, IT extends IAnyType> = T extends { [$type]?: any } ? T : T extends object ? T & IStateTreeNode<IT> : T;
+
 export type IAnyStateTreeNode = StateTreeNode<any, IAnyType>;
 
 /** The incoming properties passed to a types.model() or ClassModel() model factory */

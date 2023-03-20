@@ -1,7 +1,7 @@
 import type { Has, IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
 import type { IAnyType, IClassModelType, ISimpleType, IStateTreeNode, Instance, ModelPropertiesDeclaration, SnapshotIn } from "../src";
-import { flow, getType, isReadOnlyNode, isStateTreeNode, types } from "../src";
+import { flow, getSnapshot, getType, isReadOnlyNode, isStateTreeNode, types } from "../src";
 import { ClassModel, action, register, view, volatile } from "../src/class-model";
 import { $identifier } from "../src/symbols";
 import { NamedThingClass, TestClassModel } from "./fixtures/TestClassModel";
@@ -630,5 +630,25 @@ describe("class models", () => {
       expect(set.has(1)).toBeTruthy();
       expect(set.has(3)).toBeFalsy();
     });
+  });
+
+  test("snapshots of optional class models don't trigger typescript too-deep errors", () => {
+    @register
+    class Child extends ClassModel({}) {}
+
+    const ChildSnapshot: SnapshotIn<typeof Child> = {};
+
+    // export const DefaultNominalServerContract = ServerContract;
+    const DefaultedChild = types.optional(Child, ChildSnapshot);
+
+    @register
+    class Parent extends ClassModel({
+      child: DefaultedChild,
+    }) {}
+
+    const parent = Parent.create();
+
+    const _snapshot = getSnapshot(parent);
+    const _childSnapshot = getSnapshot(parent.child);
   });
 });
