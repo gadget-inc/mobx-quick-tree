@@ -4,14 +4,14 @@ import { BaseType, setParent, setType } from "./base";
 import { ensureRegistered } from "./class-model";
 import { getSnapshot } from "./snapshot";
 import { $readOnly, $type } from "./symbols";
-import type { CreateTypes, IAnyStateTreeNode, IAnyType, IMapType, IMSTMap, Instance, InstantiateContext, SnapshotOut } from "./types";
+import type { CreateTypes, IAnyStateTreeNode, IAnyType, IMSTMap, IMapType, Instance, InstantiateContext, SnapshotOut } from "./types";
 
 export class QuickMap<T extends IAnyType> extends Map<string, Instance<T>> implements IMSTMap<T> {
   static get [Symbol.species]() {
     return Map;
   }
 
-  [$type]?: [this] | [any];
+  [$type]!: this;
 
   get [Symbol.toStringTag]() {
     return "Map" as const;
@@ -38,7 +38,7 @@ export class QuickMap<T extends IAnyType> extends Map<string, Instance<T>> imple
   }
 
   toJSON(): Record<string, SnapshotOut<T>> {
-    return getSnapshot(this);
+    return getSnapshot(this as any);
   }
 
   observe(_listener: (changes: IMapDidChange<string, Instance<T>>) => void, _fireImmediately?: boolean): Lambda {
@@ -97,7 +97,7 @@ class MapType<T extends IAnyType> extends BaseType<
 
     setType(map, this);
 
-    return map as this["InstanceType"];
+    return map as unknown as this["InstanceType"];
   }
 }
 

@@ -9,7 +9,7 @@ export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implement
     return Array;
   }
 
-  [$type]?: [this] | [any];
+  [$type]!: this;
 
   get [Symbol.toStringTag]() {
     return "Array" as const;
@@ -78,7 +78,7 @@ class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]> | und
 
     setType(array, this);
 
-    return array as this["InstanceType"];
+    return array as unknown as this["InstanceType"];
   }
 }
 

@@ -141,7 +141,7 @@ export interface IClassModelType<
   new (attrs?: this["InputType"], env?: any, context?: InstantiateContext): InstanceTypesForModelProps<
     TypesForModelPropsDeclaration<Props>
   > & {
-    readonly [$type]?: [IClassModelType<Props, InputType>] | [any];
+    readonly [$type]: IClassModelType<Props, InputType, OutputType>;
   };
 }
 
@@ -247,7 +247,7 @@ export type CreateTypes<T extends IAnyType> = T["InputType"] | T["OutputType"] |
 export type ValidOptionalValue = string | boolean | number | null | undefined;
 
 export type IStateTreeNode<T extends IAnyType = IAnyType> = {
-  readonly [$type]?: [T] | [any];
+  readonly [$type]?: T;
 };
 
 export type StateTreeNode<T, IT extends IAnyType> = T extends object ? T & IStateTreeNode<IT> : T;

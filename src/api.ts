@@ -1,8 +1,8 @@
 import type {
+  IDisposer,
   IAnyComplexType as MSTAnyComplexType,
   IAnyModelType as MSTAnyModelType,
   IAnyType as MSTAnyType,
-  IDisposer,
   IStateTreeNode as MSTStateTreeNode,
 } from "mobx-state-tree";
 import {
@@ -34,11 +34,12 @@ import type {
   IAnyStateTreeNode,
   IAnyType,
   IArrayType,
+  IClassModelType,
   IMapType,
-  Instance,
   IReferenceType,
   IStateTreeNode,
   IType,
+  Instance,
 } from "./types";
 
 export {
@@ -68,7 +69,7 @@ export {
   typecheck,
   walk,
 } from "mobx-state-tree";
-export { action, ClassModel, register, view } from "./class-model";
+export { ClassModel, action, register, view } from "./class-model";
 export { getSnapshot } from "./snapshot";
 
 export const isType = (value: any): value is IAnyType => {
@@ -207,7 +208,10 @@ export function resolveIdentifier<T extends IAnyModelType>(
   throw new Error("not yet implemented");
 }
 
-export const applySnapshot = <C>(target: IStateTreeNode<IType<C, any, any>>, snapshot: C): void => {
+export const applySnapshot = <C>(
+  target: IStateTreeNode<IType<C, any, any>> | IStateTreeNode<IClassModelType<any, C, any>>,
+  snapshot: C
+): void => {
   if (mstIsStateTreeNode(target)) {
     mstApplySnapshot<C>(target as MSTStateTreeNode, snapshot);
     return;
