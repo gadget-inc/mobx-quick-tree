@@ -1,6 +1,6 @@
 import type { Has } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
-import type { Instance, SnapshotOrInstance } from "../src";
+import type { IAnyClassModelType, IAnyNodeModelType, Instance, SnapshotOrInstance } from "../src";
 import { types } from "../src";
 import { TestClassModel } from "./fixtures/TestClassModel";
 import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
@@ -172,4 +172,20 @@ test("instances of a class model reference are assignable to readonly instances 
   type referenceInstanceType = Instance<typeof referenceType>;
   assert<Has<instanceType, referenceInstanceType>>(true);
   assert<Has<referenceInstanceType, instanceType>>(true);
+});
+
+test("instances of a node model in a generic function can be assigned to a reference type", () => {
+  const test = <T extends IAnyNodeModelType>(type: T) => {
+    const referenceType = types.reference(type);
+    const instance = type.create(null as any);
+    const _refInstance: Instance<typeof referenceType> = instance;
+  };
+});
+
+test("instances of a class model in a generic function can be assigned to a reference type", () => {
+  const test = <T extends IAnyClassModelType>(type: T) => {
+    const referenceType = types.reference(type);
+    const instance = type.create(null as any);
+    const _refInstance: Instance<typeof referenceType> = instance;
+  };
 });

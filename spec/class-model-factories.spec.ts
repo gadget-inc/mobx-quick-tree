@@ -1,6 +1,6 @@
 import type { IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
-import type { IAnyType, IClassModelType, Instance, SnapshotIn, SnapshotOrInstance } from "../src";
+import type { IAnyClassModelType, IAnyType, Instance, SnapshotIn, SnapshotOrInstance } from "../src";
 import { types } from "../src";
 import { ClassModel, action, register } from "../src/class-model";
 import { NamedThingClass } from "./fixtures/TestClassModel";
@@ -104,18 +104,25 @@ describe("class model factories", () => {
   });
 
   describe("with references", () => {
-    const factory = <T extends IClassModelType<any, any, any>>(type: T) => {
+    const factory = <T extends IAnyType>(type: T) => {
       @register
       class ReferenceFactory extends ClassModel({
-        someGenericReference: types.reference(type),
+        someGenericReference: types.reference<T>(type),
+        listOfReferences: types.array(types.reference<T>(type)),
       }) {
         getReference() {
           return this.someGenericReference;
         }
 
         @action
-        setReference(ref: Instance<T>) {
-          this.someGenericReference = ref;
+        setReference(instance: Instance<T>) {
+          this.someGenericReference = instance;
+        }
+
+        @action
+        append(instance: Instance<T>): Instance<T> {
+          const result = this.listOfReferences.push(instance);
+          return result;
         }
       }
 
