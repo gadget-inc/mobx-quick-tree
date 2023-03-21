@@ -4,7 +4,7 @@ import { types } from ".";
 import { BaseType, setParent } from "./base";
 import { ensureRegistered } from "./class-model";
 import { CantRunActionError } from "./errors";
-import { $identifier, $readOnly, $type } from "./symbols";
+import { $identifier, $originalDescriptor, $readOnly, $type } from "./symbols";
 import type {
   IAnyStateTreeNode,
   IAnyType,
@@ -113,10 +113,14 @@ export const instantiateInstanceFromProperties = (
   }
 };
 
-export const defaultThrowAction = (name: string) => {
-  return () => {
+export const defaultThrowAction = (name: string, originalDescriptor?: PropertyDescriptor) => {
+  const overriddenThrowAction = () => {
     throw new CantRunActionError(`Can't run action "${name}" for a readonly instance`);
   };
+
+  (overriddenThrowAction as any)[$originalDescriptor] = originalDescriptor;
+
+  return overriddenThrowAction;
 };
 
 export type ModelInitializer = (self: any) => void;

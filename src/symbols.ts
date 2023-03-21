@@ -16,6 +16,9 @@ export const $type = Symbol.for("MQT_type");
 /** @hidden */
 export const $readOnly = Symbol.for("MQT_readonly");
 
+/** @hidden */
+export const $originalDescriptor = Symbol.for("MQT_originalDescriptor");
+
 /**
  * Set on an type when that type needs to be registered with a decorator before it can be used
  * @hidden

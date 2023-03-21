@@ -88,6 +88,33 @@ const DynamicNameExample = register(
 );
 
 @register
+class ExtendedNameExample extends NameExample {
+  @view
+  get extendedNameLength() {
+    return this.name.length;
+  }
+}
+
+type Constructor = new (...args: any[]) => {};
+
+const classModelMixin = <T extends Constructor>(Klass: T) => {
+  class MixedIn extends Klass {
+    get mixinView() {
+      return "hello";
+    }
+    @action
+    mixinAction(value: string) {
+      // empty
+    }
+  }
+
+  return MixedIn;
+};
+
+@register
+class MixedInNameExample extends classModelMixin(NameExample) {}
+
+@register
 class AutoIdentified extends ClassModel({ key: types.optional(types.identifier, () => "test") }) {
   testKeyIsAlwaysSet() {
     assert<IsExact<typeof this.key, string>>(true);
@@ -116,6 +143,8 @@ describe("class models", () => {
   describe.each([
     ["statically defined class model", NameExample],
     ["dynamically defined class model", DynamicNameExample],
+    ["extended class model", ExtendedNameExample],
+    ["mixin'd class model", MixedInNameExample],
   ])("%s", (_name, NameExample) => {
     describe.each([
       ["read-only", true],
@@ -297,10 +326,16 @@ describe("class models", () => {
           const _instance = create(ClassWithPropSyntax, { key: "1" }, readOnly);
         });
 
-        test("instance type's name should be NameExample", () => {
+        test("instance type's name should be correct", () => {
           const type = getType(record);
           expect(type).toBeTruthy();
-          expect(type.name).toEqual("NameExample");
+          if (NameExample == ExtendedNameExample) {
+            expect(type.name).toEqual("ExtendedNameExample");
+          } else if (NameExample == MixedInNameExample) {
+            expect(type.name).toEqual("MixedInNameExample");
+          } else {
+            expect(type.name).toEqual("NameExample");
+          }
         });
       });
     });
@@ -432,6 +467,17 @@ describe("class models", () => {
 
         // assert type returned from `create` includes not just properties but actions defined on the class
         assert<Has<typeof record, { setName: (name: string) => boolean }>>(true);
+      });
+    });
+
+    describe("class models extending other class models", () => {
+      test("should allow type safe access to the child class and parent class members", () => {
+        const instance = create(ExtendedNameExample, { key: "1", name: "Test" });
+        expect(instance.key).toEqual("1");
+        expect(instance.nameLength).toEqual(4);
+        expect(instance.extendedNameLength).toEqual(4);
+        assert<IsExact<number, typeof instance.nameLength>>(true);
+        assert<IsExact<number, typeof instance.extendedNameLength>>(true);
       });
     });
   });

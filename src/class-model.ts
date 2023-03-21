@@ -3,7 +3,7 @@ import { types as mstTypes } from "mobx-state-tree";
 import "reflect-metadata";
 import { RegistrationError } from "./errors";
 import { defaultThrowAction, instantiateInstanceFromProperties, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
-import { $env, $parent, $readOnly, $registered, $requiresRegistration, $type, $volatileDefiner } from "./symbols";
+import { $env, $originalDescriptor, $parent, $readOnly, $registered, $requiresRegistration, $type, $volatileDefiner } from "./symbols";
 import type {
   IAnyType,
   IClassModelType,
@@ -158,35 +158,49 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
   for (const metadata of metadatas) {
     switch (metadata.type) {
       case "view": {
-        const descriptor = Object.getOwnPropertyDescriptor(klass.prototype, metadata.property);
+        const descriptor = getPropertyDescriptor(klass.prototype, metadata.property);
         if (!descriptor) {
           throw new RegistrationError(`Property ${metadata.property} not found on ${klass} prototype, can't register view for class model`);
         }
         Object.defineProperty(mstViews, metadata.property, {
-          ...Object.getOwnPropertyDescriptor(klass.prototype, metadata.property),
+          ...descriptor,
           enumerable: true,
         });
         break;
       }
       case "action": {
         let target: any;
-        if (metadata.property in klass.prototype) {
+        const canUsePrototype = metadata.property in klass.prototype;
+        if (canUsePrototype) {
           target = klass.prototype;
         } else {
           // hackily instantiate the class to get at the instance level properties defined by the class body (those that aren't on the prototype)
           target = new (klass as any)({}, undefined, undefined, true);
         }
-        const descriptor = Object.getOwnPropertyDescriptor(target, metadata.property);
+        const descriptor = getPropertyDescriptor(target, metadata.property);
 
         if (!descriptor) {
           throw new RegistrationError(
-            `Property ${metadata.property} not found on ${klass} prototype or instance, can't register action for class model`
+            `Property ${metadata.property} not found on ${klass} prototype or instance, can't register action for class model. Using ${
+              canUsePrototype ? "prototype" : "instance"
+            } to inspect.`
+          );
+        }
+
+        let actionFunction = descriptor.value;
+        if (actionFunction[$originalDescriptor]) {
+          actionFunction = actionFunction[$originalDescriptor].value;
+        }
+        if (!actionFunction || !actionFunction.call) {
+          throw new RegistrationError(
+            `Property ${metadata.property} found on ${klass} but can't be registered as an action because it isn't a function. It is ${actionFunction}.`
           );
         }
 
         // add the action to the MST actions we'll add to the MST model type
         Object.defineProperty(mstActions, metadata.property, {
           ...descriptor,
+          value: actionFunction,
           enumerable: true,
         });
 
@@ -194,7 +208,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
         Object.defineProperty(klass.prototype, metadata.property, {
           ...descriptor,
           enumerable: true,
-          value: defaultThrowAction(metadata.property),
+          value: defaultThrowAction(metadata.property, descriptor),
         });
 
         break;
@@ -363,4 +377,19 @@ function allPrototypeFunctionProperties(obj: any): string[] {
   }
 
   return [...properties.keys()].filter((key) => key != "constructor");
+}
+
+/**
+ * Get the property descriptor for a property from anywhere in the prototype chain
+ * Similar to Object.getOwnPropertyDescriptor, but without the own bit
+ */
+function getPropertyDescriptor(obj: any, property: string) {
+  while (obj) {
+    const descriptor = Object.getOwnPropertyDescriptor(obj, property);
+    if (descriptor) {
+      return descriptor;
+    }
+    obj = Object.getPrototypeOf(obj);
+  }
+  return null;
 }
