@@ -10,7 +10,7 @@ jobs:
       - uses: ./.github/actions/setup-test-env
       - name: Test
         shell: bash
-        run: yarn test
+        run: pnpm test
 
   lint:
     runs-on: ubuntu-latest
@@ -19,7 +19,7 @@ jobs:
       - uses: ./.github/actions/setup-test-env
       - name: Lint
         shell: bash
-        run: yarn lint
+        run: pnpm lint
 
   build-js:
     runs-on: ubuntu-latest
@@ -28,4 +28,4 @@ jobs:
       - uses: ./.github/actions/setup-test-env
       - name: Build
         shell: bash
-        run: yarn build
+        run: pnpm build
