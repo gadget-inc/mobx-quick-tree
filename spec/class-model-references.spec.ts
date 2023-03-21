@@ -1,4 +1,5 @@
-import { IAnyClassModelType, Instance, InstanceWithoutSTNTypeForType, IReferenceType, StateTreeNode, types } from "../src";
+import type { IAnyClassModelType, InstanceWithoutSTNTypeForType, IReferenceType, StateTreeNode } from "../src";
+import { Instance, types } from "../src";
 import { action, ClassModel, register } from "../src/class-model";
 import { create } from "./helpers";
 

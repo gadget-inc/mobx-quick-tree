@@ -1,20 +1,8 @@
 import type { Has, IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
-import {
-  flow,
-  getType,
-  IAnyType,
-  IClassModelType,
-  Instance,
-  ISimpleType,
-  isReadOnlyNode,
-  isStateTreeNode,
-  IStateTreeNode,
-  ModelPropertiesDeclaration,
-  SnapshotIn,
-  types,
-} from "../src";
-import { action, ClassModel, register, view, volatile } from "../src/class-model";
+import type { IAnyType, IClassModelType, ISimpleType, IStateTreeNode, Instance, ModelPropertiesDeclaration, SnapshotIn } from "../src";
+import { flow, getType, isReadOnlyNode, isStateTreeNode, types } from "../src";
+import { ClassModel, action, register, view, volatile } from "../src/class-model";
 import { $identifier } from "../src/symbols";
 import { NamedThingClass, TestClassModel } from "./fixtures/TestClassModel";
 import { NamedThing, TestModelSnapshot } from "./fixtures/TestModel";

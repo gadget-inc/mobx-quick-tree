@@ -1,7 +1,7 @@
 {
   "env": {
     "targets": {
-      "node": 16
+      "node": 18
     }
   },
   "jsc": {
@@ -10,6 +10,11 @@
       "tsx": true,
       "decorators": true,
       "dynamicImport": true
+    },
+    "transform": {
+      "legacyDecorator": true,
+      "decoratorMetadata": true,
+      "useDefineForClassFields": false
     },
     "target": "es2020"
   },

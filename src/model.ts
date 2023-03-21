@@ -9,8 +9,8 @@ import type {
   IAnyStateTreeNode,
   IAnyType,
   INodeModelType,
-  InputsForModel,
   InputTypesForModelProps,
+  InputsForModel,
   Instance,
   InstanceTypesForModelProps,
   InstantiateContext,
@@ -135,6 +135,12 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
 
   constructor(readonly properties: Props, readonly initializers: ModelInitializer[], mstType: MSTAnyModelType, prototype?: any) {
     super(mstType);
+    Object.defineProperty(this, "mstType", {
+      value: mstType,
+      enumerable: false,
+      writable: false,
+      configurable: false,
+    });
     this.identifierProp = this.mstType.identifierAttribute;
 
     if (prototype) {

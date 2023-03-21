@@ -4,7 +4,7 @@ import { BaseType, setParent, setType } from "./base";
 import { ensureRegistered } from "./class-model";
 import { getSnapshot } from "./snapshot";
 import { $readOnly, $type } from "./symbols";
-import type { CreateTypes, IAnyStateTreeNode, IAnyType, IMapType, IMSTMap, Instance, InstantiateContext, SnapshotOut } from "./types";
+import type { CreateTypes, IAnyStateTreeNode, IAnyType, IMSTMap, IMapType, Instance, InstantiateContext, SnapshotOut } from "./types";
 
 export class QuickMap<T extends IAnyType> extends Map<string, Instance<T>> implements IMSTMap<T> {
   static get [Symbol.species]() {

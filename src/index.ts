@@ -11,7 +11,7 @@ import { model } from "./model";
 import { optional } from "./optional";
 import { reference, safeReference } from "./reference";
 import { refinement } from "./refinement";
-import { DateType, IntegerType, literal, NullType, SimpleType } from "./simple";
+import { DateType, IntegerType, NullType, SimpleType, literal } from "./simple";
 import { lazyUnion, union } from "./union";
 
 export * from "./api";

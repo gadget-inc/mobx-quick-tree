@@ -7,8 +7,8 @@ import { $env, $parent, $readOnly, $registered, $requiresRegistration, $type, $v
 import type {
   IAnyType,
   IClassModelType,
-  InputsForModel,
   InputTypesForModelProps,
+  InputsForModel,
   InstantiateContext,
   ModelPropertiesDeclaration,
   ModelViews,
