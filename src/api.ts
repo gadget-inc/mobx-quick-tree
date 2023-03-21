@@ -39,6 +39,7 @@ import type {
   IStateTreeNode,
   IType,
   Instance,
+  SnapshotIn,
 } from "./types";
 
 export {
@@ -207,9 +208,9 @@ export function resolveIdentifier<T extends IAnyModelType>(
   throw new Error("not yet implemented");
 }
 
-export const applySnapshot = <C>(target: IStateTreeNode<IType<C, any, any>>, snapshot: C): void => {
+export const applySnapshot = <T extends IAnyType>(target: IStateTreeNode<T>, snapshot: SnapshotIn<T>): void => {
   if (mstIsStateTreeNode(target)) {
-    mstApplySnapshot<C>(target as MSTStateTreeNode, snapshot);
+    mstApplySnapshot(target as MSTStateTreeNode, snapshot);
     return;
   }
 
