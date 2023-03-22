@@ -338,7 +338,7 @@ class Store extends ClassModel({
 }) {
   // define an async action with a generator function, the flow() helper, and the @action decorator
   @action
-  load = flow(function* () {
+  load = flow(function* (this: Store) {
     // use `yield` like you might use `await` to run promises
     this.data = yield getNewDataSomehow();
   });
@@ -353,6 +353,11 @@ await store.load();
 Creating asynchronous actions using generators works as follow:
 
 - The action needs to be marked as generator, by postfixing the function keyword with a \* and a name (which will be used by middleware), and wrapping it with flow
+- The action still needs to be wrapped in the `@action` decorator
+- For type safety, the action needs to explicitly take a `this` argument with the type of the model (this is a typescript limitation with type inference across these instance functions)
+
+Your flow action function can do all the normal things that an `async` function can do, but you call async functions a bit differently.
+
 - The action can be paused by using a yield statement. Yield always needs to return a Promise.
 - If the promise resolves, the resolved value will be returned from the yield statement, and the action will continue to run
 - If the promise rejects, the action continues and the rejection reason will be thrown from the yield statement
@@ -714,7 +719,8 @@ class Store extends ClassModel({
   @volatile(() => false)
   finished: boolean
 
-  load = flow(function *() {
+  @action
+  load = flow(function *(this: Store) {
     this.state = "loading"
     try {
       this.data = yield loadSomeData();
