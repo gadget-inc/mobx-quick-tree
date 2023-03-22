@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
-import type { IsExact } from "conditional-type-checks";
+import type { Has, IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
-import type { SnapshotIn, TypesForModelPropsDeclaration } from "../src";
+import { SnapshotIn, TypesForModelPropsDeclaration, action, register } from "../src";
 import { IMaybeNullType, INodeModelType, IOptionalType, ISimpleType, types } from "../src";
 import { NamedThingClass, TestClassModel } from "./fixtures/TestClassModel";
 import { NamedThing, TestModel } from "./fixtures/TestModel";
@@ -39,6 +39,8 @@ describe("type helper unit type tests", () => {
   });
 });
 
+type Constructor = new (...args: any[]) => {};
+
 describe("SnapshotIn", () => {
   test("computes the type of a node model input snapshot", () => {
     type Actual = SnapshotIn<typeof TestModel>;
@@ -50,5 +52,29 @@ describe("SnapshotIn", () => {
     type Actual = SnapshotIn<typeof TestClassModel>;
     assert<IsExact<Actual["bool"], boolean>>(true);
     assert<IsExact<Actual["optional"], string | undefined>>(true);
+  });
+
+  test("works on class models with mixins", () => {
+    const classModelMixin = <T extends Constructor>(Klass: T) => {
+      class MixedIn extends Klass {
+        get mixinView() {
+          return "hello";
+        }
+        @action
+        mixinAction(value: string) {
+          // empty
+        }
+      }
+
+      return MixedIn;
+    };
+
+    @register
+    class MixedInClass extends classModelMixin(TestClassModel) {}
+
+    type Actual = SnapshotIn<typeof MixedInClass>;
+    assert<IsExact<Actual["bool"], boolean>>(true);
+    assert<IsExact<Actual["optional"], string | undefined>>(true);
+    assert<Has<keyof Actual, "mixinView">>(false);
   });
 });
