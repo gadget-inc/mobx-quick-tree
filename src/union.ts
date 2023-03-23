@@ -16,6 +16,9 @@ class UnionType<Types extends IAnyType[]> extends BaseType<
   instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
     const type = this.types.find((ty) => ty.is(snapshot));
     if (!type) {
+      // try to get MST's nice error formatting by having it create the object from this snapshot
+      this.mstType.create(snapshot);
+      // if that doesn't throw, throw our own error
       throw new Error("couldn't find valid type from union for given snapshot");
     }
     return type.instantiate(snapshot, context);

@@ -11,7 +11,7 @@ class EnumerationType<EnumOptions extends string> extends BaseType<EnumOptions, 
     if (typeof snapshot == "string" && this.options.includes(snapshot)) {
       return snapshot as this["InstanceType"];
     }
-    throw new Error("unknown enum value");
+    throw new Error(`Unknown enum value \`${snapshot}\`. Options are: ${this.options.join(", ")}`);
   }
 
   is(value: IAnyStateTreeNode): value is this["InstanceType"];
