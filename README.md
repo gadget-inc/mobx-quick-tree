@@ -383,19 +383,55 @@ class Loader extends ClassModel({}) {
 
   @action
   reload() {
-    self.state = "loading"
+    this.state = "loading"
     // ... do something else
-    self.state = "ready"
+    this.state = "ready"
   }
 }
 
-const car = Car.create({ make: "Toyota", model: "Prius", year: 2008 });
-car.reload();
+const loader = Loader.create();
+loader.reload();
+loader.state // => "ready"
 ```
 
 Volatile properties are initialized using the initializer function passed to the `@volatile` decorator. The initializer is passed the instance being initialized, and must return a value to be set as the value of the property.
 
-Volatile properties are available on both read-only and observable instances. On read-only instances, volatiles will be initialized to the value returned by the initializer, and can't be changed after as actions are not available..
+Volatile properties are available on both read-only and observable instances. On read-only instances, volatiles will be initialized to the value returned by the initializer, and can't be changed after as actions are not available.
+
+##### Readonly actions with `@volatileAction`
+
+Readonly instances of MQT models don't support running actions -- they are read-only, so invoking any actions will throw. But, sometimes you want some measure of mutable state on a readonly instance that doesn't ever need to be persisted in a snapshot, but does need to change over the lifecycle of an object. Things like timers, references to external handles, DOM nodes, etc all don't belong in the snapshot, but do need to be referenced.
+
+mobx-quick-tree supports a special kind of action which _is_ available on readonly instances. These actions are only allowed to mutate volatile properties.
+
+For example, we can create a stopwatch object that has a `timer` volatile property, and mutate the value of that volatile on both and observable class model instances.
+
+```typescript
+import { ClassModel, register, action, volatileAction } from "@gadgetinc/mobx-quick-tree";
+
+@register
+class Stopwatch extends ClassModel({}) {
+  @volatile(() => null);
+  timer!: NodeJS.Timer | null;
+
+  @volatileAction
+  start(callback) {
+    this.timer = setTimeout(callback, 5000)
+  }
+
+  @volatileAction
+  stop() {
+    clearTimeout(this.timeout)
+    this.timeout = null;
+  }
+}
+
+const watch = Stopwatch.createReadOnly()
+watch.start(() => {}) // will work ok on both observable and readonly instances
+watch.stop();
+```
+
+**Note**: Volatile actions will _not_ trigger observers on readonly instances. Readonly instances are not observable because they are readonly (and for performance), and so volatiles aren't observable, and so volatile actions that change them won't fire observers. This makes volatile actions appropriate for reference tracking and implementation that syncs with external systems, but not for general state management. If you need to be able to observe state, use an observable instance.
 
 #### References to and from class models
 

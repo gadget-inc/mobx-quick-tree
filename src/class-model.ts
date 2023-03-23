@@ -19,6 +19,7 @@ import type {
 type ActionMetadata = {
   type: "action";
   property: string;
+  volatile: boolean;
 };
 
 /** @internal */
@@ -204,12 +205,16 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
           enumerable: true,
         });
 
-        // mark the action as not-runnable on the readonly class
-        Object.defineProperty(klass.prototype, metadata.property, {
-          ...descriptor,
-          enumerable: true,
-          value: defaultThrowAction(metadata.property, descriptor),
-        });
+        if (!metadata.volatile) {
+          // overwrite the action on the readonly class to throw when called (it's readonly!)
+          Object.defineProperty(klass.prototype, metadata.property, {
+            ...descriptor,
+            enumerable: true,
+            value: defaultThrowAction(metadata.property, descriptor),
+          });
+        } else {
+          // for volatile actions, leave the action as-is on the readonly class prototype so that it can still be run
+        }
 
         break;
       }
@@ -251,7 +256,15 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
  * Function decorator for registering MST actions within MQT class models.
  */
 export const action = (target: any, property: string) => {
-  const metadata: ActionMetadata = { type: "action", property };
+  const metadata: ActionMetadata = { type: "action", property, volatile: false };
+  Reflect.defineMetadata(`${actionKeyPrefix}:${property}`, metadata, target);
+};
+
+/**
+ * Function decorator for registering MST actions within MQT class models.
+ */
+export const volatileAction = (target: any, property: string) => {
+  const metadata: ActionMetadata = { type: "action", property, volatile: true };
   Reflect.defineMetadata(`${actionKeyPrefix}:${property}`, metadata, target);
 };
 
@@ -339,6 +352,13 @@ function getExplicitMetadataFromTags(tags: RegistrationTags<any>): PropertyMetad
       return {
         type: "action",
         property,
+        volatile: false,
+      };
+    } else if (tag == volatileAction) {
+      return {
+        type: "action",
+        property,
+        volatile: true,
       };
     } else if ($volatileDefiner in tag) {
       return {
