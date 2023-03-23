@@ -8,3 +8,5 @@ export const create = <T extends IAnyType>(type: T, snapshot?: SnapshotIn<T>, re
     return type.create(snapshot);
   }
 };
+
+export type Constructor<T = {}> = new (...args: any[]) => T;

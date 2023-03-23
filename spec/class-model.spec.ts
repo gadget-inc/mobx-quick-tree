@@ -15,7 +15,7 @@ import { ClassModel, action, register, view, volatile } from "../src/class-model
 import { $identifier } from "../src/symbols";
 import { NamedThingClass, TestClassModel } from "./fixtures/TestClassModel";
 import { NamedThing, TestModelSnapshot } from "./fixtures/TestModel";
-import { create } from "./helpers";
+import { Constructor, create } from "./helpers";
 
 @register
 class NameExample extends ClassModel({ key: types.identifier, name: types.string }) {
@@ -94,8 +94,6 @@ class ExtendedNameExample extends NameExample {
     return this.name.length;
   }
 }
-
-type Constructor = new (...args: any[]) => {};
 
 const classModelMixin = <T extends Constructor>(Klass: T) => {
   class MixedIn extends Klass {
