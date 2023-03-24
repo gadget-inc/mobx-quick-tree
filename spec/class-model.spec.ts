@@ -11,11 +11,12 @@ import type {
   SnapshotIn,
 } from "../src";
 import { flow, getSnapshot, getType, isReadOnlyNode, isStateTreeNode, types } from "../src";
-import { ClassModel, action, register, view, volatile } from "../src/class-model";
+import { ClassModel, action, register, view, volatile, volatileAction } from "../src/class-model";
 import { $identifier } from "../src/symbols";
 import { NamedThingClass, TestClassModel } from "./fixtures/TestClassModel";
 import { NamedThing, TestModelSnapshot } from "./fixtures/TestModel";
-import { Constructor, create } from "./helpers";
+import type { Constructor } from "./helpers";
+import { create } from "./helpers";
 
 @register
 class NameExample extends ClassModel({ key: types.identifier, name: types.string }) {
@@ -48,6 +49,12 @@ class NameExample extends ClassModel({ key: types.identifier, name: types.string
     this.volatileProp = newProp;
     return true;
   }
+
+  @volatileAction
+  setVolatilePropOnReadonly(newProp: string) {
+    this.volatileProp = newProp;
+    return true;
+  }
 }
 
 const DynamicNameExample = register(
@@ -77,12 +84,18 @@ const DynamicNameExample = register(
       this.volatileProp = newProp;
       return true;
     }
+
+    setVolatilePropOnReadonly(newProp: string) {
+      this.volatileProp = newProp;
+      return true;
+    }
   },
   {
     setName: action,
     setNameAsync: action,
     volatileProp: volatile(() => "test"),
     setVolatileProp: action,
+    setVolatilePropOnReadonly: volatileAction,
   },
   "NameExample"
 );
@@ -175,6 +188,13 @@ describe("class models", () => {
         expect(record.volatileProp).toEqual("test");
       });
 
+      it("should allow running volatile actions", () => {
+        expect(record.volatileProp).toEqual("test");
+        const result = record.setVolatilePropOnReadonly("new value");
+        expect(result).toBe(true);
+        expect(record.volatileProp).toEqual("new value");
+      });
+
       it("can create an instance with an optional identifier prop", () => {
         const auto = create(AutoIdentified, undefined, readOnly);
         expect(auto.key).toEqual("test");
@@ -186,6 +206,7 @@ describe("class models", () => {
       test("actions should be present on the instance (but not necessarily callable)", () => {
         expect("setName" in record).toBeTruthy();
         expect("setVolatileProp" in record).toBeTruthy();
+        expect("setVolatilePropOnReadonly" in record).toBeTruthy();
       });
 
       test("async actions should be present on the instance (but not necessarily callable)", () => {
