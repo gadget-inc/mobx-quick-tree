@@ -1,6 +1,7 @@
 import type { Has, IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
 import type {
+  Constructor,
   IAnyClassModelType,
   IAnyType,
   IClassModelType,
@@ -11,51 +12,12 @@ import type {
   SnapshotIn,
 } from "../src";
 import { flow, getSnapshot, getType, isReadOnlyNode, isStateTreeNode, types } from "../src";
-import { ClassModel, action, register, view, volatile, volatileAction } from "../src/class-model";
+import { ClassModel, action, extend, register, view, volatile, volatileAction } from "../src/class-model";
 import { $identifier } from "../src/symbols";
 import { NamedThingClass, TestClassModel } from "./fixtures/TestClassModel";
 import { NamedThing, TestModelSnapshot } from "./fixtures/TestModel";
-import type { Constructor } from "./helpers";
 import { create } from "./helpers";
-
-@register
-class NameExample extends ClassModel({ key: types.identifier, name: types.string }) {
-  @action
-  setName(newName: string) {
-    this.name = newName;
-    return true;
-  }
-
-  slug() {
-    return this.name.toLowerCase().replace(/ /g, "-");
-  }
-
-  @action
-  setNameAsync = flow(function* (this: NameExample, newName: string) {
-    yield Promise.resolve();
-    this.name = newName;
-    return true;
-  });
-
-  get nameLength() {
-    return this.name.length;
-  }
-
-  @volatile(() => "test")
-  volatileProp!: string;
-
-  @action
-  setVolatileProp(newProp: string) {
-    this.volatileProp = newProp;
-    return true;
-  }
-
-  @volatileAction
-  setVolatilePropOnReadonly(newProp: string) {
-    this.volatileProp = newProp;
-    return true;
-  }
-}
+import { NameExample } from "./fixtures/NameExample";
 
 const DynamicNameExample = register(
   class extends ClassModel({ key: types.identifier, name: types.string }) {
@@ -100,21 +62,27 @@ const DynamicNameExample = register(
   "NameExample"
 );
 
+/**
+ * Example class to subclass a parent model class with normal `class x extends y` syntax
+ */
 @register
-class ExtendedNameExample extends NameExample {
+class NameExampleSubclass extends NameExample {
   @view
   get extendedNameLength() {
     return this.name.length;
   }
 }
 
-const classModelMixin = <T extends Constructor>(Klass: T) => {
+/**
+ * Example mixin (class decorator)
+ */
+const classModelMixin = <T extends IAnyClassModelType>(Klass: T) => {
   class MixedIn extends Klass {
     get mixinView() {
       return "hello";
     }
     @action
-    mixinAction(value: string) {
+    mixinAction(_value: string) {
       // empty
     }
   }
@@ -124,6 +92,47 @@ const classModelMixin = <T extends Constructor>(Klass: T) => {
 
 @register
 class MixedInNameExample extends classModelMixin(NameExample) {}
+
+/**
+ * Example class that subclasses a parent model class while adding additional properties
+ */
+@register
+class ExtendedNameExample extends NameExample.extend({ extraProp: types.maybeNull(types.string) }) {
+  get extendedNameLength() {
+    return this.name.length;
+  }
+
+  get extraPropLength() {
+    return this.extraProp?.length;
+  }
+}
+
+/**
+ * Example mixin that adds properties to the incoming class
+ */
+const extendingClassModelMixin = <T extends Constructor<{ name: string }>>(Klass: T) => {
+  class MixedIn extends extend(Klass, { otherProp: types.maybeNull(types.string) }) {
+    get mixinView() {
+      return "hello";
+    }
+    @action
+    mixinAction(_value: string) {
+      // empty
+    }
+    get mixedInNameLength() {
+      return this.name.length;
+    }
+  }
+
+  return MixedIn;
+};
+
+@register
+class ExtendedMixedInNameExample extends extendingClassModelMixin(NameExample) {
+  get subclassView() {
+    return new Date();
+  }
+}
 
 @register
 class AutoIdentified extends ClassModel({ key: types.optional(types.identifier, () => "test") }) {
@@ -154,8 +163,10 @@ describe("class models", () => {
   describe.each([
     ["statically defined class model", NameExample],
     ["dynamically defined class model", DynamicNameExample],
-    ["extended class model", ExtendedNameExample],
+    ["subclassed class model", NameExampleSubclass],
     ["mixin'd class model", MixedInNameExample],
+    ["extended props class model", ExtendedNameExample],
+    ["extended mixin'd props class model", ExtendedMixedInNameExample],
   ])("%s", (_name, NameExample) => {
     describe.each([
       ["read-only", true],
@@ -348,13 +359,7 @@ describe("class models", () => {
         test("instance type's name should be correct", () => {
           const type = getType(record);
           expect(type).toBeTruthy();
-          if (NameExample == ExtendedNameExample) {
-            expect(type.name).toEqual("ExtendedNameExample");
-          } else if (NameExample == MixedInNameExample) {
-            expect(type.name).toEqual("MixedInNameExample");
-          } else {
-            expect(type.name).toEqual("NameExample");
-          }
+          expect(type.name).toEqual(NameExample.name);
         });
       });
     });
@@ -491,7 +496,7 @@ describe("class models", () => {
 
     describe("class models extending other class models", () => {
       test("should allow type safe access to the child class and parent class members", () => {
-        const instance = create(ExtendedNameExample, { key: "1", name: "Test" });
+        const instance = create(NameExampleSubclass, { key: "1", name: "Test" });
         expect(instance.key).toEqual("1");
         expect(instance.nameLength).toEqual(4);
         expect(instance.extendedNameLength).toEqual(4);

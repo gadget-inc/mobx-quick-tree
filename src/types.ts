@@ -3,7 +3,10 @@ import type { IAnyType as MSTAnyType } from "mobx-state-tree";
 import type { VolatileMetadata } from "./class-model";
 import type { $quickType, $registered, $type } from "./symbols";
 
+export type { $quickType, $registered, $type } from "./symbols";
 export type { IJsonPatch, IMiddlewareEvent, IPatchRecorder, ReferenceOptions, UnionOptions } from "mobx-state-tree";
+
+export type Constructor<T = {}> = new (...args: any[]) => T;
 
 export interface IType<InputType, OutputType, InstanceType> {
   readonly [$quickType]: undefined;
@@ -84,6 +87,23 @@ export interface IAnyNodeModelType extends IType<any, any, any> {
 }
 
 /**
+ * Extends a class model type T with new properties SubClassProps.
+ */
+export type ExtendedClassModel<
+  T extends Constructor,
+  SubClassProps extends ModelPropertiesDeclaration,
+  Props extends ModelProperties = TypesForModelPropsDeclaration<SubClassProps>,
+  InputType = InputsForModel<InputTypesForModelProps<Props>>,
+  OutputType = OutputTypesForModelProps<Props>
+> = T & {
+  InputType: InputType;
+  OutputType: OutputType;
+  new (...args: any[]): InstanceTypesForModelProps<Props> & {
+    readonly [$type]?: [IClassModelType<Props, InputType, OutputType>] | [any];
+  };
+};
+
+/**
  * `IClassModelType` represents the type of MQT class models. This is the class-level type, not the instance level type, so it has a typed `new()` and all the static functions/properties of a MQT class model.
  *
  * Note: `IClassModelType` is regrettably *not* an `IType`. `IClassModelType` is an interface that all class model classes implement. It's also the concrete type of the base class models returned by the ClassModel class factory. It'd be great if we could make `IClassModelType` extend `IType`, but, we would need to ensure the `Instance` part of `IType` is updated to reference the final version of the declared class. Crucially, there's no TypeScript way to get the resulting type of a class *after* it has been defined to then start referring to it within an interface that the class implements. Decorators don't let us get a reference to the finished type of a class, nor do they let us return a new type that could reference it, so, we can't mutate the type of a defined class model. Hence, we can't make `IClassModelType` extend `IType` without it capturing a reference to an outdated `Instance` type that doesn't have the methods / properties added after class extension. Sad.
@@ -113,6 +133,14 @@ export interface IClassModelType<
   readonly name: string;
   mstType: MSTAnyType;
 
+  /**
+   * Create a new class model that extends this class model, but with additional props added to the list of observable props.
+   */
+  extend<T extends Constructor, SubClassProps extends ModelPropertiesDeclaration>(
+    this: T,
+    subclassProps: SubClassProps
+  ): ExtendedClassModel<T, SubClassProps>;
+
   /** @hidden */
   volatiles: Record<string, VolatileMetadata>;
 
@@ -138,9 +166,7 @@ export interface IClassModelType<
   /**
    * Construct a new readonly instance of this class model.
    **/
-  new (attrs?: this["InputType"], env?: any, context?: InstantiateContext): InstanceTypesForModelProps<
-    TypesForModelPropsDeclaration<Props>
-  > & {
+  new (...args: any[]): InstanceTypesForModelProps<TypesForModelPropsDeclaration<Props>> & {
     readonly [$type]?: [IClassModelType<Props, InputType>] | [any];
   };
 }
