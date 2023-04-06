@@ -108,7 +108,7 @@ export const ClassModel = <PropsDeclaration extends ModelPropertiesDeclaration>(
       };
 
       this[$env] = env;
-      instantiateInstanceFromProperties(this, attrs, props, klass.mstType.identifierAttribute, context);
+      instantiateInstanceFromProperties(this, attrs, (this.constructor as any).properties, klass.mstType.identifierAttribute, context);
       initializeVolatiles(this, this, klass.volatiles);
 
       if (isRoot) {

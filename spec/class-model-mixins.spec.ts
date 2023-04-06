@@ -26,10 +26,15 @@ class ExtendedNameExample extends NameExample.extend({ extraProp: types.maybeNul
  * Example mixin that adds properties to the incoming class
  */
 const extendingClassModelMixin = <T extends Constructor<{ name: string }>>(Klass: T) => {
-  class MixedIn extends extend(Klass, { otherProp: types.string }) {
+  class MixedIn extends extend(Klass, { otherProp: types.maybeNull(types.string) }) {
     get mixinView() {
       return "hello";
     }
+    @action
+    setOtherProp(value: string) {
+      this.otherProp = value;
+    }
+
     @action
     mixinAction(_value: string) {
       // empty
@@ -165,6 +170,24 @@ describe("class model mixins", () => {
     });
   });
 
+  test("observable extended instances can set properties with actions", () => {
+    const instance = ExtendedMixedInNameExample.create({ key: "1", name: "Test" });
+    expect(instance.otherProp).toBeNull();
+    instance.setOtherProp("foobar");
+    expect(instance.otherProp).toEqual("foobar");
+  });
+
+  test("readonly extended instances can set properties with actions", () => {
+    const instance = ExtendedMixedInNameExample.createReadOnly({ key: "1", name: "Test" });
+    expect(instance.otherProp).toBeNull();
+    expect(() => instance.setOtherProp("foobar")).toThrow();
+  });
+
+  test("readonly extended instances get property values from snapshots", () => {
+    const instance = ExtendedMixedInNameExample.createReadOnly({ key: "1", name: "Test", otherProp: "test 123" });
+    expect(instance.otherProp).toEqual("test 123");
+  });
+
   test("should allow props to be added to child classes safe access to the child class and parent class members", () => {
     const instance = create(ExtendedNameExample, { key: "1", name: "Test", extraProp: "whatever" });
     expect(instance.key).toEqual("1");
@@ -190,7 +213,7 @@ describe("class model mixins", () => {
     expect(instance.otherProp).toEqual("other");
 
     assert<IsExact<string, typeof instance.mixinView>>(true);
-    assert<IsExact<string, typeof instance.otherProp>>(true);
+    assert<IsExact<string | null, typeof instance.otherProp>>(true);
     assert<IsExact<Date, typeof instance.subclassView>>(true);
 
     const snapshot = getSnapshot(instance);
