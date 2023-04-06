@@ -1,5 +1,6 @@
 import type { Has, IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
+import { isType as mstIsType } from "mobx-state-tree";
 import type {
   Constructor,
   IAnyClassModelType,
@@ -11,6 +12,7 @@ import type {
   ModelPropertiesDeclaration,
   SnapshotIn,
 } from "../src";
+import { isType } from "../src";
 import { flow, getSnapshot, getType, isReadOnlyNode, isStateTreeNode, types } from "../src";
 import { ClassModel, action, extend, register, view, volatile, volatileAction } from "../src/class-model";
 import { $identifier } from "../src/symbols";
@@ -168,6 +170,11 @@ describe("class models", () => {
     ["extended props class model", ExtendedNameExample],
     ["extended mixin'd props class model", ExtendedMixedInNameExample],
   ])("%s", (_name, NameExample) => {
+    test("types are identified as quick types", () => {
+      expect(isType(NameExample)).toBe(true);
+      expect(mstIsType(NameExample)).toBe(false);
+    });
+
     describe.each([
       ["read-only", true],
       ["observable", false],

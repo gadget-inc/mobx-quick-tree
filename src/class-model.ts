@@ -3,7 +3,17 @@ import { types as mstTypes } from "mobx-state-tree";
 import "reflect-metadata";
 import { RegistrationError } from "./errors";
 import { defaultThrowAction, instantiateInstanceFromProperties, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
-import { $env, $originalDescriptor, $parent, $readOnly, $registered, $requiresRegistration, $type, $volatileDefiner } from "./symbols";
+import {
+  $env,
+  $originalDescriptor,
+  $parent,
+  $quickType,
+  $readOnly,
+  $registered,
+  $requiresRegistration,
+  $type,
+  $volatileDefiner,
+} from "./symbols";
 import type {
   Constructor,
   ExtendedClassModel,
@@ -78,6 +88,7 @@ export const ClassModel = <PropsDeclaration extends ModelPropertiesDeclaration>(
     static properties = props;
     static mstType: MSTIModelType<any, any>;
     static readonly [$requiresRegistration] = true;
+    static readonly [$quickType] = true;
 
     static extend(props: ModelPropertiesDeclaration) {
       return extend(this, props);

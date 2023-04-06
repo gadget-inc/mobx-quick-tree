@@ -1,6 +1,6 @@
 import type { IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
-import type { Constructor } from "../src";
+import { Constructor, isType } from "../src";
 import { IAnyClassModelType, IAnyStateTreeNode, extend } from "../src";
 import { getSnapshot } from "../src";
 import { ClassModel, action, register, types } from "../src";
@@ -168,6 +168,14 @@ describe("class model mixins", () => {
       instance.mixinSetVolatile("new value");
       expect(instance.mixinVolatile).toBe("new value");
     });
+  });
+
+  test("extended classes are identified as quicktypes", () => {
+    expect(isType(ChainedA)).toBe(true);
+    expect(isType(ChainedB)).toBe(true);
+    expect(isType(ChainedC)).toBe(true);
+    expect(isType(ExtendedNameExample)).toBe(true);
+    expect(isType(ExtendedMixedInNameExample)).toBe(true);
   });
 
   test("observable extended instances can set properties with actions", () => {
