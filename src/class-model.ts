@@ -5,6 +5,9 @@ import { RegistrationError } from "./errors";
 import { defaultThrowAction, instantiateInstanceFromProperties, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
 import { $env, $originalDescriptor, $parent, $readOnly, $registered, $requiresRegistration, $type, $volatileDefiner } from "./symbols";
 import type {
+  Constructor,
+  ExtendedClassModel,
+  IAnyClassModelType,
   IAnyType,
   IClassModelType,
   InputTypesForModelProps,
@@ -75,6 +78,10 @@ export const ClassModel = <PropsDeclaration extends ModelPropertiesDeclaration>(
     static properties = props;
     static mstType: MSTIModelType<any, any>;
     static readonly [$requiresRegistration] = true;
+
+    static extend(props: ModelPropertiesDeclaration) {
+      return extend(this, props);
+    }
 
     /** @hidden */
     readonly [$env]?: any;
@@ -295,6 +302,21 @@ export function volatile(initializer: (instance: any) => any): VolatileDefiner {
       initializer,
     } as const
   );
+}
+
+/**
+ * Create a new class model that extends this class model, but with additional props added to the list of observable props.
+ */
+export function extend<T extends Constructor, SubClassProps extends ModelPropertiesDeclaration>(
+  klass: T,
+  props: SubClassProps
+): ExtendedClassModel<T, SubClassProps> {
+  const subclass = class extends klass {} as any;
+  subclass.properties = {
+    ...(klass as any).properties,
+    ...propsFromModelPropsDeclaration(props),
+  };
+  return subclass;
 }
 
 /**

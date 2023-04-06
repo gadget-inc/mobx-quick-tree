@@ -492,6 +492,73 @@ const Car = types
   }));
 ```
 
+#### Subclassing Class Models
+
+Class Models support subclassing to build class heirarchies in the same way you might with normal ES6 classes. Class Model subclasses inherit properties, views, actions, and volatiles from the parent, and can add new properties, views, actions, and volatiles below. Subclasses are strongly typed and support the same observable/readonly as any other class model.
+
+To subclass a Class Model, you can use the JavaScript builtin `extends` keyword to create a subclass:
+
+```typescript
+@register
+class Person extends ClassModel({
+  name: types.string,
+}) {
+  @action
+  setName(name: string) {
+    this.name = name;
+  }
+}
+
+@register
+class Dancer extends Person {
+  @action
+  dance() {
+    console.log("cool moves");
+  }
+}
+
+const dancer = Dancer.create({ name: "Ni'jah" });
+dancer.name; // #=> Ninjah , the inherited property from the parent class
+dancer.dance();
+```
+
+**Note**: Subclasses of class models must be `@register`'d before use, just like their parents.
+
+##### Adding observable properties in subclasses
+
+To subclass a class model and add an observable property, you have to use a special `.extends` call when subclassing. `extends` accepts the same style of property declaration that the `ClassModel` constructor does, and will merge in the props passed with the original props from the parent.
+
+```typescript
+@register
+class Person extends ClassModel({
+  name: types.string,
+}) {
+  @action
+  setName(name: string) {
+    this.name = name;
+  }
+}
+
+@register
+class Dancer extends Person.extend({ outfit: types.string }) {
+  @action
+  setOutfit(outfit: string) {
+    this.outfit = outfit;
+  }
+  @action
+  dance() {
+    console.log(`cool moves in ${this.outfit}`);
+  }
+}
+
+const dancer = Dancer.create({ name: "Ni'jah", outfit: "glam" });
+dancer.name; // #=> Ninjah , the inherited property from the parent class
+dancer.dance(); // cool moves in glam
+
+dancer.setOutfit("catsuit");
+dancer.dance(); // cool moves in catsuit
+```
+
 #### Dynamically defining Class Models using class expressions
 
 Usually, Class Models are defined using top level ES6 classes exported from from a file. For advanced use-cases, classes can also be built dynamically within functions using ES6 class expressions. Generally, static classes defined with decorators are clearer and more performant, but for fancy class factories and the like you may want to use class expressions which MQT supports with slightly different syntax.
@@ -574,6 +641,34 @@ set.add(2);
 
 set.has(1); // => true
 set.has(3); // => false
+```
+
+#### Dynamically subclassing Class Models
+
+If you have bits of shared data or logic you want to re-use across classes in an MQT project, you can use the mixin pattern. MQT supports mixins by means of subclassing and the `extends` helper for adding new data properties to parent classes.
+
+For example, we could create a `Nameable` mixin we can apply to two different classes to create two different subclasses, each getting some shared data or logic.
+
+```typescript
+const Nameable = <Klass>(klass: Klass) => {
+  class Named extends extend(klass, { name: types.string }) {
+    get firstName() {
+      return this.name.split(" ")[0];
+    }
+  }
+};
+
+class Human extends Nameable(ClassModel({ salutation: types.string })) {
+  sayHello() {
+    return `Hello ${this.firstName}!`;
+  }
+}
+
+class Dog extends Nameable(ClassModel({ breed: types.string })) {
+  pet() {
+    return `Petted ${this.name} who is a very good ${breed}`;
+  }
+}
 ```
 
 #### Class model snapshots

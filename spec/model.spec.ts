@@ -1,5 +1,5 @@
 import { isStateTreeNode } from "mobx-state-tree";
-import { types } from "../src";
+import { IStateTreeNode, types } from "../src";
 import { CantRunActionError } from "../src/errors";
 import { $identifier } from "../src/symbols";
 import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
