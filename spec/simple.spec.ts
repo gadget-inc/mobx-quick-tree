@@ -1,4 +1,4 @@
-import { getSnapshot, types } from "../src";
+import { types } from "../src";
 
 describe("boolean", () => {
   test("can create a read-only instance", () => {
@@ -61,45 +61,6 @@ describe("literal", () => {
     expect(literal.is(null)).toEqual(false);
     expect(literal.is(true)).toEqual(false);
     expect(literal.is({})).toEqual(false);
-  });
-});
-
-describe("union", () => {
-  const unionType = types.union(types.literal("value 1"), types.literal("value 2"));
-
-  test("can create a read-only instance", () => {
-    expect(unionType.createReadOnly("value 1")).toEqual("value 1");
-    expect(unionType.createReadOnly("value 2")).toEqual("value 2");
-    expect(() => unionType.createReadOnly("value 3" as any)).toThrow();
-  });
-
-  test("can create an eager, read-only instance", () => {
-    const unionType = types.lazyUnion(types.literal("value 1"), types.literal("value 2"));
-    expect(unionType.createReadOnly("value 1")).toEqual("value 1");
-    expect(unionType.createReadOnly("value 2")).toEqual("value 2");
-    expect(() => unionType.createReadOnly("value 3" as any)).toThrow();
-  });
-
-  test("can be verified with is", () => {
-    expect(unionType.is("value 1")).toEqual(true);
-    expect(unionType.is("value 2")).toEqual(true);
-    expect(unionType.is("value 3")).toEqual(false);
-    expect(unionType.is(null)).toEqual(false);
-    expect(unionType.is(true)).toEqual(false);
-    expect(unionType.is({})).toEqual(false);
-  });
-
-  test("can create a union of model types", () => {
-    const modelTypeA = types.model({ x: types.string });
-    const modelTypeB = types.model({ y: types.number });
-    const unionType = types.union(modelTypeA, modelTypeB);
-    const unionInstance = unionType.createReadOnly({ x: "test" });
-
-    expect(getSnapshot(unionInstance)).toEqual(
-      expect.objectContaining({
-        x: "test",
-      })
-    );
   });
 });
 

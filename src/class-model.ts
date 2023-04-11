@@ -471,3 +471,7 @@ function getPropertyDescriptor(obj: any, property: string) {
   }
   return null;
 }
+
+export const isClassModel = (type: IAnyType): type is IClassModelType<any, any, any> => {
+  return (type as any).isMQTClassModel;
+};

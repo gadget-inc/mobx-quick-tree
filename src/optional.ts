@@ -13,7 +13,7 @@ import type {
 
 export type DefaultFuncOrValue<T extends IAnyType> = T["InputType"] | T["OutputType"] | (() => CreateTypes<T>);
 
-class OptionalType<T extends IAnyType, OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]> extends BaseType<
+export class OptionalType<T extends IAnyType, OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]> extends BaseType<
   T["InputType"] | OptionalValues[number],
   T["OutputType"],
   InstanceWithoutSTNTypeForType<T>
