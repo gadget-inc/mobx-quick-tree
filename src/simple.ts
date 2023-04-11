@@ -80,7 +80,7 @@ export class NullType extends BaseType<null, null, null> {
   }
 }
 
-class LiteralType<T extends Primitives> extends SimpleType<T> {
+export class LiteralType<T extends Primitives> extends SimpleType<T> {
   constructor(readonly value: T) {
     super(typeof value, types.literal<T>(value));
   }
