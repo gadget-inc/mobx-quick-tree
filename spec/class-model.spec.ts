@@ -774,4 +774,46 @@ describe("class models", () => {
     const _snapshot = getSnapshot(parent);
     const _childSnapshot = getSnapshot(parent.child);
   });
+
+  describe("view memoization", () => {
+    test("class model getter views should be memoized", () => {
+      let callCount = 0;
+      @register
+      class HasGetter extends ClassModel({
+        key: types.string,
+      }) {
+        get upcasedKey() {
+          callCount += 1;
+          return this.key.toUpperCase();
+        }
+      }
+
+      const instance = create(HasGetter, { key: "a" }, true);
+      expect(instance.upcasedKey).toEqual("A");
+      expect(callCount).toEqual(1);
+      expect(instance.upcasedKey).toEqual("A");
+      // getter not called again
+      expect(callCount).toEqual(1);
+    });
+
+    test("class model getter views that return undefined should be memoized", () => {
+      let callCount = 0;
+      @register
+      class HasGetter extends ClassModel({
+        key: types.string,
+      }) {
+        get whatever() {
+          callCount += 1;
+          return undefined;
+        }
+      }
+
+      const instance = create(HasGetter, { key: "a" }, true);
+      expect(instance.whatever).toBeUndefined();
+      expect(callCount).toEqual(1);
+      expect(instance.whatever).toBeUndefined();
+      // getter not called again
+      expect(callCount).toEqual(1);
+    });
+  });
 });

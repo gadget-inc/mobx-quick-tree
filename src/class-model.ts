@@ -55,6 +55,8 @@ const metadataPrefix = "mqt:properties";
 const viewKeyPrefix = `${metadataPrefix}:view`;
 const actionKeyPrefix = `${metadataPrefix}:action`;
 const volatileKeyPrefix = `${metadataPrefix}:volatile`;
+const $memos = Symbol.for("mqt:class-model-memos");
+const $memoizedKeys = Symbol.for("mqt:class-model-memoized-keys");
 
 /**
  * A map of property keys to indicators for how that property should behave on the registered class
@@ -98,6 +100,9 @@ export const ClassModel = <PropsDeclaration extends ModelPropertiesDeclaration>(
     readonly [$env]?: any;
     /** @hidden */
     readonly [$parent] = null;
+    /** @hidden */
+    [$memos] = null;
+    [$memoizedKeys] = null;
 
     constructor(
       attrs?: InputsForModel<InputTypesForModelProps<TypesForModelPropsDeclaration<PropsDeclaration>>>,
@@ -177,16 +182,36 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
   for (const metadata of metadatas) {
     switch (metadata.type) {
       case "view": {
-        const descriptor = getPropertyDescriptor(klass.prototype, metadata.property);
+        const property = metadata.property;
+        const descriptor = getPropertyDescriptor(klass.prototype, property);
         if (!descriptor) {
-          throw new RegistrationError(`Property ${metadata.property} not found on ${klass} prototype, can't register view for class model`);
+          throw new RegistrationError(`Property ${property} not found on ${klass} prototype, can't register view for class model`);
         }
-        Object.defineProperty(mstViews, metadata.property, {
+
+        // memoize getters on readonly instances
+        if (descriptor.get) {
+          Object.defineProperty(klass.prototype, property, {
+            ...descriptor,
+            get() {
+              if (!this[$readOnly]) return descriptor.get!.call(this);
+              if (this[$memoizedKeys]?.[property]) return this[$memos][property];
+              this[$memoizedKeys] ??= {};
+              this[$memos] ??= {};
+              const value: any = descriptor.get!.call(this);
+              this[$memoizedKeys][property] = true;
+              this[$memos][property] = value;
+              return value;
+            },
+          });
+        }
+
+        Object.defineProperty(mstViews, property, {
           ...descriptor,
           enumerable: true,
         });
         break;
       }
+
       case "action": {
         let target: any;
         const canUsePrototype = metadata.property in klass.prototype;
