@@ -108,7 +108,7 @@ describe("isRoot", () => {
   });
 
   test("returns true for root read only class model instances", () => {
-    const m = new TestClassModel(TestModelSnapshot);
+    const m = TestClassModel.createReadOnly(TestModelSnapshot);
     expect(isRoot(m)).toEqual(true);
     expect(isRoot(m.nested)).toEqual(false);
   });

@@ -86,8 +86,7 @@ class BaseClassModel {
 
   constructor(
     attrs: InputsForModel<InputTypesForModelProps<TypesForModelPropsDeclaration<any>>> | undefined,
-    env: any | undefined,
-    context: InstantiateContext | undefined,
+    context: InstantiateContext,
     parent: IStateTreeNode | null,
     /** @hidden */ hackyPreventInitialization = false
   ) {
@@ -97,23 +96,10 @@ class BaseClassModel {
 
     const klass = this.constructor as IClassModelType<any>;
 
-    const isRoot = !context;
-    context ??= {
-      referenceCache: new Map(),
-      referencesToResolve: [],
-      env,
-    };
-
-    this[$env] = env;
+    this[$env] = context.env;
     this[$parent] = parent;
-    instantiateInstanceFromProperties(this, attrs, (this.constructor as any).properties, klass.mstType.identifierAttribute, context);
+    instantiateInstanceFromProperties(this, attrs, klass.properties, klass.mstType.identifierAttribute, context);
     initializeVolatiles(this, this, klass.volatiles);
-
-    if (isRoot) {
-      for (const resolver of context.referencesToResolve) {
-        resolver();
-      }
-    }
   }
 
   get [$readOnly]() {
@@ -226,7 +212,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
           target = klass.prototype;
         } else {
           // hackily instantiate the class to get at the instance level properties defined by the class body (those that aren't on the prototype)
-          target = new (klass as any)({}, undefined, undefined, true);
+          target = new klass({}, undefined, null, true);
         }
         const descriptor = getPropertyDescriptor(target, metadata.property);
 
@@ -281,10 +267,24 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
   klass.volatiles = mstVolatiles;
 
   // conform to the API that the other MQT types expect for creating instances
-  klass.instantiate = (snapshot, context, parent) => new klass(snapshot, context.env, context, parent);
+  klass.instantiate = (snapshot, context, parent) => new klass(snapshot, context, parent);
   (klass as any).is = (value: any) => value instanceof klass || klass.mstType.is(value);
   klass.create = (snapshot, env) => klass.mstType.create(snapshot, env);
-  klass.createReadOnly = (snapshot, env) => new klass(snapshot, env) as any;
+  klass.createReadOnly = (snapshot, env) => {
+    const context: InstantiateContext = {
+      referenceCache: new Map(),
+      referencesToResolve: [],
+      env,
+    };
+
+    const instance = new klass(snapshot, context, null) as any;
+
+    for (const resolver of context.referencesToResolve) {
+      resolver();
+    }
+
+    return instance;
+  };
 
   // create the MST type for not-readonly versions of this using the views and actions extracted from the class
   klass.mstType = mstTypes
