@@ -2,6 +2,7 @@ import type { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
 import type { IAnyType as MSTAnyType } from "mobx-state-tree";
 import type { VolatileMetadata } from "./class-model";
 import type { $quickType, $registered, $type } from "./symbols";
+import { $fastInstantiator, CompiledInstantiator } from "./fast-instantiator";
 
 export type { $quickType, $registered, $type } from "./symbols";
 export type { IJsonPatch, IMiddlewareEvent, IPatchRecorder, ReferenceOptions, UnionOptions } from "mobx-state-tree";
@@ -125,6 +126,7 @@ export interface IClassModelType<
 > {
   readonly [$quickType]: undefined;
   readonly [$registered]: true;
+  [$fastInstantiator]: CompiledInstantiator;
 
   readonly InputType: InputType;
   readonly OutputType: OutputType;

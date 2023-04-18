@@ -2,9 +2,10 @@ import type { IModelType as MSTIModelType, ModelActions } from "mobx-state-tree"
 import { types as mstTypes } from "mobx-state-tree";
 import "reflect-metadata";
 import { RegistrationError } from "./errors";
-import { defaultThrowAction, instantiateInstanceFromProperties, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
+import { defaultThrowAction, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
 import {
   $env,
+  $identifier,
   $originalDescriptor,
   $parent,
   $quickType,
@@ -17,7 +18,6 @@ import {
 import type {
   Constructor,
   ExtendedClassModel,
-  IAnyClassModelType,
   IAnyType,
   IClassModelType,
   IStateTreeNode,
@@ -28,6 +28,7 @@ import type {
   ModelViews,
   TypesForModelPropsDeclaration,
 } from "./types";
+import { $fastInstantiator, buildFastInstantiator } from "./fast-instantiator";
 
 /** @internal */
 type ActionMetadata = {
@@ -85,10 +86,13 @@ class BaseClassModel {
   readonly [$parent]?: IStateTreeNode | null;
   /** @hidden */
   [$memos] = null;
+  /** @hidden */
   [$memoizedKeys] = null;
+  /** @hidden */
+  [$identifier]?: any;
 
   constructor(
-    attrs: InputsForModel<InputTypesForModelProps<TypesForModelPropsDeclaration<any>>> | undefined,
+    snapshot: InputsForModel<InputTypesForModelProps<TypesForModelPropsDeclaration<any>>> | undefined,
     context: InstantiateContext,
     parent: IStateTreeNode | null,
     /** @hidden */ hackyPreventInitialization = false
@@ -97,12 +101,10 @@ class BaseClassModel {
       return;
     }
 
-    const klass = this.constructor as IClassModelType<any>;
-
     this[$env] = context.env;
     this[$parent] = parent;
-    instantiateInstanceFromProperties(this, attrs, klass.properties, klass.mstType.identifierAttribute, context);
-    initializeVolatiles(this, this, klass.volatiles);
+
+    (this.constructor as IClassModelType<any>)[$fastInstantiator](this as any, snapshot, context);
   }
 
   get [$readOnly]() {
@@ -300,6 +302,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
     (klass as any).mstType = (klass as any).mstType.volatile((self: any) => initializeVolatiles({}, self, mstVolatiles));
   }
 
+  klass[$fastInstantiator] = buildFastInstantiator(klass);
   (klass as any)[$registered] = true;
 
   return klass as any;

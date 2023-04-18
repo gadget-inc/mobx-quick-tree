@@ -14,15 +14,14 @@ import type {
 
 export type DefaultFuncOrValue<T extends IAnyType> = T["InputType"] | T["OutputType"] | (() => CreateTypes<T>);
 
-export class OptionalType<T extends IAnyType, OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]> extends BaseType<
-  T["InputType"] | OptionalValues[number],
-  T["OutputType"],
-  InstanceWithoutSTNTypeForType<T>
-> {
+export class OptionalType<
+  T extends IAnyType,
+  OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]] = [undefined]
+> extends BaseType<T["InputType"] | OptionalValues[number], T["OutputType"], InstanceWithoutSTNTypeForType<T>> {
   constructor(
     readonly type: T,
-    private readonly defaultValueOrFunc: DefaultFuncOrValue<T>,
-    private readonly undefinedValues?: OptionalValues
+    readonly defaultValueOrFunc: DefaultFuncOrValue<T>,
+    readonly undefinedValues: OptionalValues = [undefined] as any
   ) {
     super(
       undefinedValues
