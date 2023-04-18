@@ -65,6 +65,63 @@ export type RegistrationTags<T> = {
   [key in keyof T]: typeof action | typeof view | VolatileDefiner;
 };
 
+class BaseClassModel {
+  static isMQTClassModel = true as const;
+  static mstType: MSTIModelType<any, any>;
+  static readonly [$requiresRegistration] = true;
+  static readonly [$quickType] = true;
+
+  static extend(props: ModelPropertiesDeclaration) {
+    return extend(this, props);
+  }
+
+  /** @hidden */
+  readonly [$env]?: any;
+  /** @hidden */
+  readonly [$parent] = null;
+  /** @hidden */
+  [$memos] = null;
+  [$memoizedKeys] = null;
+
+  constructor(
+    attrs?: InputsForModel<InputTypesForModelProps<TypesForModelPropsDeclaration<any>>>,
+    env?: any,
+    context?: InstantiateContext,
+    /** @hidden */ hackyPreventInitialization = false
+  ) {
+    if (hackyPreventInitialization) {
+      return;
+    }
+
+    const klass = this.constructor as IClassModelType<any>;
+
+    const isRoot = !context;
+    context ??= {
+      referenceCache: new Map(),
+      referencesToResolve: [],
+      env,
+    };
+
+    this[$env] = env;
+    instantiateInstanceFromProperties(this, attrs, (this.constructor as any).properties, klass.mstType.identifierAttribute, context);
+    initializeVolatiles(this, this, klass.volatiles);
+
+    if (isRoot) {
+      for (const resolver of context.referencesToResolve) {
+        resolver();
+      }
+    }
+  }
+
+  get [$readOnly]() {
+    return true;
+  }
+
+  get [$type]() {
+    return this.constructor as IClassModelType<TypesForModelPropsDeclaration<any>>;
+  }
+}
+
 /**
  * Create a new base class for a ClassModel to extend. This is a function that you call that returns a class (a class factory).
  *
@@ -85,62 +142,9 @@ export const ClassModel = <PropsDeclaration extends ModelPropertiesDeclaration>(
   propertiesDeclaration: PropsDeclaration
 ): IClassModelType<TypesForModelPropsDeclaration<PropsDeclaration>> => {
   const props = propsFromModelPropsDeclaration(propertiesDeclaration);
-  return class Base {
-    static isMQTClassModel = true as const;
+
+  return class extends BaseClassModel {
     static properties = props;
-    static mstType: MSTIModelType<any, any>;
-    static readonly [$requiresRegistration] = true;
-    static readonly [$quickType] = true;
-
-    static extend(props: ModelPropertiesDeclaration) {
-      return extend(this, props);
-    }
-
-    /** @hidden */
-    readonly [$env]?: any;
-    /** @hidden */
-    readonly [$parent] = null;
-    /** @hidden */
-    [$memos] = null;
-    [$memoizedKeys] = null;
-
-    constructor(
-      attrs?: InputsForModel<InputTypesForModelProps<TypesForModelPropsDeclaration<PropsDeclaration>>>,
-      env?: any,
-      context?: InstantiateContext,
-      /** @hidden */ hackyPreventInitialization = false
-    ) {
-      if (hackyPreventInitialization) {
-        return;
-      }
-
-      const klass = this.constructor as IClassModelType<any>;
-
-      const isRoot = !context;
-      context ??= {
-        referenceCache: new Map(),
-        referencesToResolve: [],
-        env,
-      };
-
-      this[$env] = env;
-      instantiateInstanceFromProperties(this, attrs, (this.constructor as any).properties, klass.mstType.identifierAttribute, context);
-      initializeVolatiles(this, this, klass.volatiles);
-
-      if (isRoot) {
-        for (const resolver of context.referencesToResolve) {
-          resolver();
-        }
-      }
-    }
-
-    get [$readOnly]() {
-      return true;
-    }
-
-    get [$type]() {
-      return this.constructor as IClassModelType<TypesForModelPropsDeclaration<PropsDeclaration>>;
-    }
   } as any;
 };
 
