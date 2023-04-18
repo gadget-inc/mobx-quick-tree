@@ -106,7 +106,7 @@ export const instantiateInstanceFromProperties = (
 
   if (identifierProp) {
     const id = instance[identifierProp];
-    Object.defineProperty(instance, $identifier, { value: id });
+    instance[$identifier] = id;
     context.referenceCache.set(id, instance);
   }
 };
