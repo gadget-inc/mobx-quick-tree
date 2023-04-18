@@ -1,7 +1,7 @@
 import type { ISimpleType as MSTSimpleType } from "mobx-state-tree";
 import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
-import type { InstantiateContext, ISimpleType } from "./types";
+import type { InstantiateContext, ISimpleType, IStateTreeNode } from "./types";
 
 export type Primitives = string | number | boolean | Date | null | undefined;
 
@@ -14,7 +14,7 @@ export class SimpleType<T> extends BaseType<T, T, T> {
     super(mstType);
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext, _parent: IStateTreeNode | null): this["InstanceType"] {
     if (snapshot === undefined) {
       throw new Error(`can't initialize simple type ${this.name} with undefined`);
     }
@@ -28,7 +28,7 @@ export class SimpleType<T> extends BaseType<T, T, T> {
 }
 
 export class DateType extends BaseType<Date | number, number, Date> {
-  instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext, _parent: IStateTreeNode | null): this["InstanceType"] {
     if (snapshot === undefined) {
       throw new Error(`can't initialize simple type ${this.name} with undefined`);
     }
@@ -47,7 +47,7 @@ export class IntegerType extends BaseType<number, number, number> {
     super(types.integer);
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext, _parent: IStateTreeNode | null): this["InstanceType"] {
     if (!Number.isInteger(snapshot)) {
       throw new Error(`can't initialize integer with ${snapshot}`);
     }
@@ -66,7 +66,7 @@ export class NullType extends BaseType<null, null, null> {
     super(types.null);
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext, _parent: IStateTreeNode | null): this["InstanceType"] {
     if (snapshot !== null) {
       throw new Error(`can't initialize null with ${snapshot}`);
     }
@@ -85,7 +85,7 @@ export class LiteralType<T extends Primitives> extends SimpleType<T> {
     super(typeof value, types.literal<T>(value));
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext, _parent: IStateTreeNode | null): this["InstanceType"] {
     if (snapshot !== this.value) {
       throw new Error(`expected literal type to be initialized with ${this.value}`);
     }

@@ -4,7 +4,17 @@ import { BaseType, setParent } from "./base";
 import { ensureRegistered } from "./class-model";
 import { getSnapshot } from "./snapshot";
 import { $readOnly, $type } from "./symbols";
-import type { CreateTypes, IAnyStateTreeNode, IAnyType, IMSTMap, IMapType, Instance, InstantiateContext, SnapshotOut } from "./types";
+import type {
+  CreateTypes,
+  IAnyStateTreeNode,
+  IAnyType,
+  IMSTMap,
+  IMapType,
+  IStateTreeNode,
+  Instance,
+  InstantiateContext,
+  SnapshotOut,
+} from "./types";
 
 export class QuickMap<T extends IAnyType> extends Map<string, Instance<T>> implements IMSTMap<T> {
   static get [Symbol.species]() {
@@ -90,15 +100,16 @@ class MapType<T extends IAnyType> extends BaseType<
     return children.every((child) => this.childrenType.is(child));
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
     const map = new QuickMap<T>(this);
     if (snapshot) {
       for (const key in snapshot) {
-        const item = this.childrenType.instantiate(snapshot[key], context);
-        setParent(item, map);
+        const item = this.childrenType.instantiate(snapshot[key], context, map);
         map.set(key, item);
       }
     }
+
+    setParent(map, parent);
 
     return map as this["InstanceType"];
   }

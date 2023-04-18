@@ -20,6 +20,7 @@ import type {
   ModelViews,
   OutputTypesForModelProps,
   TypesForModelPropsDeclaration,
+  IStateTreeNode,
 } from "./types";
 
 export const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDeclaration>(
@@ -95,15 +96,12 @@ export const instantiateInstanceFromProperties = (
     const propType = properties[propName];
     if (isReferenceType(propType.mstType)) {
       context.referencesToResolve.push(() => {
-        const propValue = propType.instantiate(snapshot?.[propName], context);
-        instance[propName] = propValue;
+        instance[propName] = propType.instantiate(snapshot?.[propName], context, instance);
       });
       continue;
     }
 
-    const propValue = propType.instantiate(snapshot?.[propName], context);
-    setParent(propValue, instance);
-    instance[propName] = propValue;
+    instance[propName] = propType.instantiate(snapshot?.[propName], context, instance);
   }
 
   if (identifierProp) {
@@ -240,13 +238,15 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return true;
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
     const instance: Record<string | symbol, any> = Object.create(this.prototype);
 
     instantiateInstanceFromProperties(instance, snapshot, this.properties, this.identifierProp, context);
     for (const init of this.initializers) {
       init(instance);
     }
+
+    setParent(instance, parent);
 
     return instance as this["InstanceType"];
   }

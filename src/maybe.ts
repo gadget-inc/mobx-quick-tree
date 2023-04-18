@@ -1,7 +1,15 @@
 import { types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
 import { ensureRegistered } from "./class-model";
-import type { IAnyStateTreeNode, IAnyType, IMaybeNullType, IMaybeType, InstanceWithoutSTNTypeForType, InstantiateContext } from "./types";
+import type {
+  IAnyStateTreeNode,
+  IAnyType,
+  IMaybeNullType,
+  IMaybeType,
+  IStateTreeNode,
+  InstanceWithoutSTNTypeForType,
+  InstantiateContext,
+} from "./types";
 
 class MaybeType<Type extends IAnyType> extends BaseType<
   Type["InputType"] | undefined,
@@ -12,11 +20,11 @@ class MaybeType<Type extends IAnyType> extends BaseType<
     super(mstTypes.maybe(type.mstType));
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
     if (snapshot === undefined) {
       return undefined;
     }
-    return this.type.instantiate(snapshot, context);
+    return this.type.instantiate(snapshot, context, parent);
   }
 
   is(value: any): value is this["InputType"] | this["InstanceType"] {
@@ -36,16 +44,16 @@ class MaybeNullType<Type extends IAnyType> extends BaseType<
     super(mstTypes.maybeNull(type.mstType));
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
     if (snapshot === undefined || snapshot === null) {
       // Special case for things like types.frozen, or types.literal(undefined), where MST prefers the subtype over maybeNull
       if (this.type.is(snapshot)) {
-        return this.type.instantiate(snapshot, context);
+        return this.type.instantiate(snapshot, context, parent);
       }
 
       return null;
     }
-    return this.type.instantiate(snapshot, context);
+    return this.type.instantiate(snapshot, context, parent);
   }
 
   is(value: IAnyStateTreeNode): value is this["InstanceType"];

@@ -1,13 +1,13 @@
 import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
-import type { InstantiateContext, ISimpleType } from "./types";
+import type { InstantiateContext, ISimpleType, IStateTreeNode } from "./types";
 
 class FrozenType<T> extends BaseType<T, T, T> {
   constructor() {
     super(types.frozen<T>());
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, _context: InstantiateContext, _parent: IStateTreeNode | null): this["InstanceType"] {
     if (typeof snapshot == "function") {
       throw new Error("frozen types can't be instantiated with functions");
     }

@@ -1,6 +1,6 @@
 import type { IAnyType as MSTAnyType } from "mobx-state-tree";
 import { $env, $parent, $quickType, $type } from "./symbols";
-import type { IAnyStateTreeNode, IAnyType, InstantiateContext, StateTreeNode } from "./types";
+import type { IAnyStateTreeNode, IAnyType, IStateTreeNode, InstantiateContext, StateTreeNode } from "./types";
 
 export abstract class BaseType<InputType, OutputType, InstanceType> {
   readonly [$quickType] = undefined;
@@ -44,7 +44,7 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
       env,
     };
 
-    const instance = this.instantiate(snapshot, context);
+    const instance = this.instantiate(snapshot, context, null);
     for (const resolver of context.referencesToResolve) {
       resolver();
     }
@@ -54,7 +54,11 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
     return instance;
   }
 
-  abstract instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"];
+  abstract instantiate(
+    snapshot: this["InputType"] | undefined,
+    context: InstantiateContext,
+    parent: IStateTreeNode | null
+  ): this["InstanceType"];
 }
 
 /** @hidden */

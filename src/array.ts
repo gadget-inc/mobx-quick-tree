@@ -1,8 +1,8 @@
 import { isStateTreeNode, types } from "mobx-state-tree";
 import { BaseType, setParent } from "./base";
 import { ensureRegistered } from "./class-model";
-import { $readOnly, $type } from "./symbols";
-import type { IAnyStateTreeNode, IAnyType, IArrayType, IMSTArray, Instance, InstantiateContext } from "./types";
+import { $parent, $readOnly, $type } from "./symbols";
+import type { IAnyStateTreeNode, IAnyType, IArrayType, IMSTArray, IStateTreeNode, Instance, InstantiateContext } from "./types";
 
 export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implements IMSTArray<T> {
   static get [Symbol.species]() {
@@ -66,15 +66,15 @@ class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]> | und
     return value.every((child: any) => this.childrenType.is(child));
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
     const array = new QuickArray<T>(snapshot?.length ?? 0);
     if (snapshot) {
       snapshot.forEach((child, index) => {
-        const item = this.childrenType.instantiate(child, context);
-        setParent(item, array);
-        array[index] = item;
+        array[index] = this.childrenType.instantiate(child, context, array);
       });
     }
+
+    setParent(array, parent);
 
     Reflect.defineProperty(array, $type, {
       value: this,

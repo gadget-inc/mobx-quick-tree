@@ -26,7 +26,7 @@ export interface IType<InputType, OutputType, InstanceType> {
   createReadOnly(snapshot?: InputType, env?: any): this["InstanceType"];
 
   /** @hidden */
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"];
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"];
 }
 
 /**
@@ -145,7 +145,7 @@ export interface IClassModelType<
   volatiles: Record<string, VolatileMetadata>;
 
   /** @hidden */
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): InstanceType<this>;
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): InstanceType<this>;
 
   is(value: IAnyStateTreeNode): value is InstanceType<this>;
   is(value: any): value is this["InputType"] | InstanceType<this>;

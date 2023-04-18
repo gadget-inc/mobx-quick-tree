@@ -20,6 +20,7 @@ import type {
   IAnyClassModelType,
   IAnyType,
   IClassModelType,
+  IStateTreeNode,
   InputTypesForModelProps,
   InputsForModel,
   InstantiateContext,
@@ -78,15 +79,16 @@ class BaseClassModel {
   /** @hidden */
   readonly [$env]?: any;
   /** @hidden */
-  readonly [$parent] = null;
+  readonly [$parent]?: IStateTreeNode | null;
   /** @hidden */
   [$memos] = null;
   [$memoizedKeys] = null;
 
   constructor(
-    attrs?: InputsForModel<InputTypesForModelProps<TypesForModelPropsDeclaration<any>>>,
-    env?: any,
-    context?: InstantiateContext,
+    attrs: InputsForModel<InputTypesForModelProps<TypesForModelPropsDeclaration<any>>> | undefined,
+    env: any | undefined,
+    context: InstantiateContext | undefined,
+    parent: IStateTreeNode | null,
     /** @hidden */ hackyPreventInitialization = false
   ) {
     if (hackyPreventInitialization) {
@@ -103,6 +105,7 @@ class BaseClassModel {
     };
 
     this[$env] = env;
+    this[$parent] = parent;
     instantiateInstanceFromProperties(this, attrs, (this.constructor as any).properties, klass.mstType.identifierAttribute, context);
     initializeVolatiles(this, this, klass.volatiles);
 
@@ -278,7 +281,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
   klass.volatiles = mstVolatiles;
 
   // conform to the API that the other MQT types expect for creating instances
-  klass.instantiate = (snapshot, context) => new klass(snapshot, context.env, context);
+  klass.instantiate = (snapshot, context, parent) => new klass(snapshot, context.env, context, parent);
   (klass as any).is = (value: any) => value instanceof klass || klass.mstType.is(value);
   klass.create = (snapshot, env) => klass.mstType.create(snapshot, env);
   klass.createReadOnly = (snapshot, env) => new klass(snapshot, env) as any;
