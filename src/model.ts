@@ -1,7 +1,7 @@
 import type { IAnyModelType as MSTAnyModelType, IAnyType as MSTAnyType } from "mobx-state-tree";
 import { isReferenceType, isStateTreeNode as mstIsStateTreeNode, types as mstTypes } from "mobx-state-tree";
 import { types } from ".";
-import { BaseType, setParent } from "./base";
+import { BaseType, setEnv, setParent } from "./base";
 import { ensureRegistered } from "./class-model";
 import { CantRunActionError } from "./errors";
 import { $identifier, $originalDescriptor, $readOnly, $type } from "./symbols";
@@ -247,6 +247,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     }
 
     setParent(instance, parent);
+    setEnv(instance, context.env);
 
     return instance as this["InstanceType"];
   }

@@ -1,5 +1,5 @@
 import { isStateTreeNode, types } from "mobx-state-tree";
-import { BaseType, setParent } from "./base";
+import { BaseType, setEnv, setParent } from "./base";
 import { ensureRegistered } from "./class-model";
 import { $parent, $readOnly, $type } from "./symbols";
 import type { IAnyStateTreeNode, IAnyType, IArrayType, IMSTArray, IStateTreeNode, Instance, InstantiateContext } from "./types";
@@ -82,6 +82,8 @@ class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]> | und
       enumerable: false,
       writable: false,
     });
+
+    setEnv(array, context.env);
 
     return array as this["InstanceType"];
   }

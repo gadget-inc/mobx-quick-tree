@@ -66,6 +66,9 @@ export type RegistrationTags<T> = {
   [key in keyof T]: typeof action | typeof view | VolatileDefiner;
 };
 
+/**
+ * The base-most parent class of all class models.
+ **/
 class BaseClassModel {
   static isMQTClassModel = true as const;
   static mstType: MSTIModelType<any, any>;
@@ -212,7 +215,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
           target = klass.prototype;
         } else {
           // hackily instantiate the class to get at the instance level properties defined by the class body (those that aren't on the prototype)
-          target = new klass({}, undefined, null, true);
+          target = new klass({}, {}, null, true);
         }
         const descriptor = getPropertyDescriptor(target, metadata.property);
 

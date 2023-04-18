@@ -49,8 +49,6 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
       resolver();
     }
 
-    setEnv(instance, env);
-
     return instance;
   }
 

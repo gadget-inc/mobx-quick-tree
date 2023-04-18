@@ -1,9 +1,9 @@
 import type { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
 import { isStateTreeNode, types } from "mobx-state-tree";
-import { BaseType, setParent } from "./base";
+import { BaseType, setEnv, setParent } from "./base";
 import { ensureRegistered } from "./class-model";
 import { getSnapshot } from "./snapshot";
-import { $readOnly, $type } from "./symbols";
+import { $env, $parent, $readOnly, $type } from "./symbols";
 import type {
   CreateTypes,
   IAnyStateTreeNode,
@@ -17,13 +17,20 @@ import type {
 } from "./types";
 
 export class QuickMap<T extends IAnyType> extends Map<string, Instance<T>> implements IMSTMap<T> {
+  /** @hidden */
+  readonly [$env]?: any;
+  /** @hidden */
+  readonly [$parent]?: IStateTreeNode | null;
+
   static get [Symbol.species]() {
     return Map;
   }
 
-  constructor(type: any) {
+  constructor(type: any, parent: IStateTreeNode | null, env: any) {
     super();
     this[$type] = type;
+    this[$parent] = parent;
+    this[$env] = env;
   }
 
   [$type]?: [this] | [any];
@@ -101,15 +108,13 @@ class MapType<T extends IAnyType> extends BaseType<
   }
 
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
-    const map = new QuickMap<T>(this);
+    const map = new QuickMap<T>(this, parent, context.env);
     if (snapshot) {
       for (const key in snapshot) {
         const item = this.childrenType.instantiate(snapshot[key], context, map);
         map.set(key, item);
       }
     }
-
-    setParent(map, parent);
 
     return map as this["InstanceType"];
   }

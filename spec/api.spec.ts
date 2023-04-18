@@ -46,7 +46,7 @@ describe("getParentOfType", () => {
   });
 
   test("returns the proper root for class model instance", () => {
-    const m = new TestClassModel(TestModelSnapshot);
+    const m = TestClassModel.createReadOnly(TestModelSnapshot);
     expect(() => getParentOfType(m, TestClassModel)).toThrow();
     const parent = getParentOfType(m.nested, TestClassModel);
     expect(parent).toEqual(m);
