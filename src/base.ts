@@ -58,18 +58,6 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
 }
 
 /** @hidden */
-export const setType = (value: unknown, type: IAnyType) => {
-  if (value && typeof value == "object") {
-    Reflect.defineProperty(value, $type, {
-      value: type,
-      configurable: false,
-      enumerable: false,
-      writable: false,
-    });
-  }
-};
-
-/** @hidden */
 export const setParent = (value: unknown, parent: any) => {
   if (value && typeof value == "object") {
     Reflect.defineProperty(value, $parent, {
