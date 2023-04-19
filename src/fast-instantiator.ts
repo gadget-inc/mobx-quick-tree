@@ -1,4 +1,5 @@
 import { OptionalType } from "./optional";
+import { SafeReferenceType, ReferenceType } from "./reference";
 import { isReferenceType } from "./api";
 import { LiteralType } from "./simple";
 import { IntegerType, SimpleType } from "./simple";
@@ -39,17 +40,8 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       `);
       } else if (type instanceof OptionalType) {
         segments.push(this.assignmentExpressionForOptionalType(key, type));
-      } else if (isReferenceType(type.mstType)) {
-        segments.push(`
-        // setup reference for ${key}
-        context.referencesToResolve.push(() => {
-          instance["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
-            snapshot?.["${key}"], 
-            context, 
-            instance
-          );
-        });
-      `);
+      } else if (type instanceof ReferenceType || type instanceof SafeReferenceType) {
+        segments.push(this.assignmentExpressionForReferenceType(key, type));
       } else {
         segments.push(`
           // instantiate fallback for ${key}
@@ -72,36 +64,60 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     if (identifierProp) {
       segments.push(`
       const id = instance["${identifierProp}"];
-      instance[Symbol.for("MQT_identifier")] = id;
+      instance[$identifier] = id;
       context.referenceCache.set(id, instance); 
     `);
     }
 
     const innerFunc = `
-      return function(instance, snapshot, context) {
+      return function Instantiate${this.model.name}(instance, snapshot, context) {
         ${segments.join("\n")}
       }
     `;
 
+    const aliasFuncBody = `
+    const $identifier = Symbol.for("MQT_identifier");
+    ${Array.from(this.aliases.entries())
+      .map(([expression, alias]) => `const ${alias} = ${expression};`)
+      .join("\n")}
+
+    ${innerFunc}
+  `;
+
+    console.log(`function for ${this.model.name}`, "\n\n\n", aliasFuncBody, "\n\n\n");
+
     // build a function that closes over a bunch of aliased expressions
     // evaluate the inner function source code in this closure to return the function
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    const aliasFunc = new Function(
-      "model",
-      "innerFunc",
-      `
-      ${Array.from(this.aliases.entries())
-        .map(([expression, alias]) => `const ${alias} = ${expression};`)
-        .join("\n")}
-
-      ${innerFunc}
-    `
-    );
+    const aliasFunc = new Function("model", "innerFunc", aliasFuncBody);
 
     // evaluate aliases and get created inner function
-    const func = aliasFunc(this.model);
-    // console.log(`function for ${this.model.name}`, "\n\n\n", func.toString(), "\n\n\n");
-    return func;
+    return aliasFunc(this.model);
+  }
+
+  private assignmentExpressionForReferenceType(key: string, type: ReferenceType<IAnyType> | SafeReferenceType<IAnyType>): string {
+    const varName = `identifier${key}`;
+    let notFoundBehavior;
+    if (type instanceof SafeReferenceType) {
+      notFoundBehavior = `// safe reference, no error`;
+    } else {
+      notFoundBehavior = `throw new Error(\`can't resolve reference \${${varName}} for key "${key}"\`);`;
+    }
+
+    return `
+      // setup reference for ${key}
+      const ${varName} = snapshot?.["${key}"];
+      context.referencesToResolve.push(() => {
+        if (${varName}) {
+          const referencedInstance = context.referenceCache.get(${varName});
+          if (referencedInstance) {
+            instance["${key}"] = referencedInstance;
+            return;
+          }
+        }
+        ${notFoundBehavior}
+      });
+    `;
   }
 
   expressionForDirectlyAssignableType(key: string, _type: DirectlyAssignableType) {
