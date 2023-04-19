@@ -1,7 +1,7 @@
 import { OptionalType } from "./optional";
 import { SafeReferenceType, ReferenceType } from "./reference";
 import { isReferenceType } from "./api";
-import { LiteralType } from "./simple";
+import { DateType, LiteralType } from "./simple";
 import { IntegerType, SimpleType } from "./simple";
 import type { IAnyClassModelType, IAnyType, IClassModelType, Instance, InstantiateContext, SnapshotIn, ValidOptionalValue } from "./types";
 
@@ -20,9 +20,9 @@ export const buildFastInstantiator = <T extends IClassModelType<Record<string, I
   return new InstantiatorBuilder(model).build();
 };
 
-type DirectlyAssignableType = SimpleType<any> | IntegerType | LiteralType<any>;
+type DirectlyAssignableType = SimpleType<any> | IntegerType | LiteralType<any> | DateType;
 const isDirectlyAssignableType = (type: IAnyType): type is DirectlyAssignableType =>
-  type instanceof SimpleType || type instanceof IntegerType || type instanceof LiteralType;
+  type instanceof SimpleType || type instanceof IntegerType || type instanceof LiteralType || type instanceof DateType;
 
 class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, any, any>> {
   aliases = new Map<string, string>();
@@ -44,7 +44,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
         segments.push(this.assignmentExpressionForReferenceType(key, type));
       } else {
         segments.push(`
-          // instantiate fallback for ${key}
+          // instantiate fallback for ${key} of type ${type.name}
           instance["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
             snapshot?.["${key}"], 
             context, 
@@ -120,8 +120,12 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     `;
   }
 
-  expressionForDirectlyAssignableType(key: string, _type: DirectlyAssignableType) {
-    return `snapshot?.["${key}"]`;
+  expressionForDirectlyAssignableType(key: string, type: DirectlyAssignableType) {
+    if (type instanceof DateType) {
+      return `new Date(snapshot?.["${key}"])`;
+    } else {
+      return `snapshot?.["${key}"]`;
+    }
   }
 
   assignmentExpressionForOptionalType(key: string, type: OptionalType<IAnyType, [ValidOptionalValue, ...ValidOptionalValue[]]>) {
