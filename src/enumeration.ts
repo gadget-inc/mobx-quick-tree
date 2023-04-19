@@ -1,13 +1,13 @@
 import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
-import type { IAnyStateTreeNode, InstantiateContext, ISimpleType } from "./types";
+import type { IAnyStateTreeNode, InstantiateContext, ISimpleType, IStateTreeNode } from "./types";
 
 class EnumerationType<EnumOptions extends string> extends BaseType<EnumOptions, EnumOptions, EnumOptions> {
   constructor(readonly name: string, readonly options: readonly EnumOptions[]) {
     super(types.enumeration<EnumOptions>([...options]));
   }
 
-  instantiate(snapshot: this["InputType"], _context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"], _context: InstantiateContext, _parent: IStateTreeNode | null): this["InstanceType"] {
     if (typeof snapshot == "string" && this.options.includes(snapshot)) {
       return snapshot as this["InstanceType"];
     }

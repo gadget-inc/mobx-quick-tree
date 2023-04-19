@@ -2,7 +2,7 @@ import type { IType, UnionOptions as MSTUnionOptions } from "mobx-state-tree";
 import { types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
 import { ensureRegistered, isClassModel } from "./class-model";
-import type { IAnyType, InstanceWithoutSTNTypeForType, InstantiateContext, IUnionType } from "./types";
+import type { IAnyType, InstanceWithoutSTNTypeForType, InstantiateContext, IStateTreeNode, IUnionType } from "./types";
 import { OptionalType } from "./optional";
 import { isModelType, isType } from "./api";
 import { LiteralType } from "./simple";
@@ -44,7 +44,7 @@ const buildDiscriminatorTypeMap = (types: IAnyType[], discriminator: string) => 
     } else if (isClassModel(type) || isModelType(type)) {
       setMapValue(type.properties[discriminator], instantiateAsType);
     } else if (type instanceof OptionalType) {
-      const value = type.instantiate(undefined, emptyContext);
+      const value = type.instantiate(undefined, emptyContext, null);
       map[value] = instantiateAsType;
     } else if (type instanceof LiteralType) {
       map[type.value] = instantiateAsType;
@@ -112,7 +112,7 @@ class UnionType<Types extends IAnyType[]> extends BaseType<
     this.dispatcher = dispatcher;
   }
 
-  instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"], context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
     let type: Types[number] | undefined;
     if (this.dispatcher) {
       type = this.dispatcher(snapshot);
@@ -127,7 +127,7 @@ class UnionType<Types extends IAnyType[]> extends BaseType<
       throw new Error("couldn't find valid type from union for given snapshot");
     }
 
-    return type.instantiate(snapshot, context);
+    return type.instantiate(snapshot, context, parent);
   }
 
   is(value: any): value is this["InstanceType"];

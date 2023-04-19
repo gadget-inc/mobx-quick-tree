@@ -1,7 +1,7 @@
 import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import { ensureRegistered } from "./class-model";
-import type { IAnyType, InstanceWithoutSTNTypeForType, InstantiateContext } from "./types";
+import type { IAnyType, IStateTreeNode, InstanceWithoutSTNTypeForType, InstantiateContext } from "./types";
 
 class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputType"], InstanceWithoutSTNTypeForType<T>> {
   private cachedType: T | null | undefined;
@@ -10,8 +10,8 @@ class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputTyp
     super(types.late<T["mstType"]>(`late(${fn.toString()})`, () => this.type?.mstType as T["mstType"]));
   }
 
-  instantiate(snapshot: this["InputType"], context: InstantiateContext): this["InstanceType"] {
-    return this.type.instantiate(snapshot, context);
+  instantiate(snapshot: this["InputType"], context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
+    return this.type.instantiate(snapshot, context, parent);
   }
 
   is(value: any): value is this["InputType"] | this["InstanceType"] {

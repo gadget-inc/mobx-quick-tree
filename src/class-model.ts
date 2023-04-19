@@ -20,6 +20,7 @@ import type {
   IAnyClassModelType,
   IAnyType,
   IClassModelType,
+  IStateTreeNode,
   InputTypesForModelProps,
   InputsForModel,
   InstantiateContext,
@@ -66,6 +67,54 @@ export type RegistrationTags<T> = {
 };
 
 /**
+ * The base-most parent class of all class models.
+ **/
+class BaseClassModel {
+  static isMQTClassModel = true as const;
+  static mstType: MSTIModelType<any, any>;
+  static readonly [$requiresRegistration] = true;
+  static readonly [$quickType] = true;
+
+  static extend(props: ModelPropertiesDeclaration) {
+    return extend(this, props);
+  }
+
+  /** @hidden */
+  readonly [$env]?: any;
+  /** @hidden */
+  readonly [$parent]?: IStateTreeNode | null;
+  /** @hidden */
+  [$memos] = null;
+  [$memoizedKeys] = null;
+
+  constructor(
+    attrs: InputsForModel<InputTypesForModelProps<TypesForModelPropsDeclaration<any>>> | undefined,
+    context: InstantiateContext,
+    parent: IStateTreeNode | null,
+    /** @hidden */ hackyPreventInitialization = false
+  ) {
+    if (hackyPreventInitialization) {
+      return;
+    }
+
+    const klass = this.constructor as IClassModelType<any>;
+
+    this[$env] = context.env;
+    this[$parent] = parent;
+    instantiateInstanceFromProperties(this, attrs, klass.properties, klass.mstType.identifierAttribute, context);
+    initializeVolatiles(this, this, klass.volatiles);
+  }
+
+  get [$readOnly]() {
+    return true;
+  }
+
+  get [$type]() {
+    return this.constructor as IClassModelType<TypesForModelPropsDeclaration<any>>;
+  }
+}
+
+/**
  * Create a new base class for a ClassModel to extend. This is a function that you call that returns a class (a class factory).
  *
  * @example
@@ -85,62 +134,9 @@ export const ClassModel = <PropsDeclaration extends ModelPropertiesDeclaration>(
   propertiesDeclaration: PropsDeclaration
 ): IClassModelType<TypesForModelPropsDeclaration<PropsDeclaration>> => {
   const props = propsFromModelPropsDeclaration(propertiesDeclaration);
-  return class Base {
-    static isMQTClassModel = true as const;
+
+  return class extends BaseClassModel {
     static properties = props;
-    static mstType: MSTIModelType<any, any>;
-    static readonly [$requiresRegistration] = true;
-    static readonly [$quickType] = true;
-
-    static extend(props: ModelPropertiesDeclaration) {
-      return extend(this, props);
-    }
-
-    /** @hidden */
-    readonly [$env]?: any;
-    /** @hidden */
-    readonly [$parent] = null;
-    /** @hidden */
-    [$memos] = null;
-    [$memoizedKeys] = null;
-
-    constructor(
-      attrs?: InputsForModel<InputTypesForModelProps<TypesForModelPropsDeclaration<PropsDeclaration>>>,
-      env?: any,
-      context?: InstantiateContext,
-      /** @hidden */ hackyPreventInitialization = false
-    ) {
-      if (hackyPreventInitialization) {
-        return;
-      }
-
-      const klass = this.constructor as IClassModelType<any>;
-
-      const isRoot = !context;
-      context ??= {
-        referenceCache: new Map(),
-        referencesToResolve: [],
-        env,
-      };
-
-      this[$env] = env;
-      instantiateInstanceFromProperties(this, attrs, (this.constructor as any).properties, klass.mstType.identifierAttribute, context);
-      initializeVolatiles(this, this, klass.volatiles);
-
-      if (isRoot) {
-        for (const resolver of context.referencesToResolve) {
-          resolver();
-        }
-      }
-    }
-
-    get [$readOnly]() {
-      return true;
-    }
-
-    get [$type]() {
-      return this.constructor as IClassModelType<TypesForModelPropsDeclaration<PropsDeclaration>>;
-    }
   } as any;
 };
 
@@ -219,7 +215,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
           target = klass.prototype;
         } else {
           // hackily instantiate the class to get at the instance level properties defined by the class body (those that aren't on the prototype)
-          target = new (klass as any)({}, undefined, undefined, true);
+          target = new klass({}, {}, null, true);
         }
         const descriptor = getPropertyDescriptor(target, metadata.property);
 
@@ -274,10 +270,24 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
   klass.volatiles = mstVolatiles;
 
   // conform to the API that the other MQT types expect for creating instances
-  klass.instantiate = (snapshot, context) => new klass(snapshot, context.env, context);
+  klass.instantiate = (snapshot, context, parent) => new klass(snapshot, context, parent);
   (klass as any).is = (value: any) => value instanceof klass || klass.mstType.is(value);
   klass.create = (snapshot, env) => klass.mstType.create(snapshot, env);
-  klass.createReadOnly = (snapshot, env) => new klass(snapshot, env) as any;
+  klass.createReadOnly = (snapshot, env) => {
+    const context: InstantiateContext = {
+      referenceCache: new Map(),
+      referencesToResolve: [],
+      env,
+    };
+
+    const instance = new klass(snapshot, context, null) as any;
+
+    for (const resolver of context.referencesToResolve) {
+      resolver();
+    }
+
+    return instance;
+  };
 
   // create the MST type for not-readonly versions of this using the views and actions extracted from the class
   klass.mstType = mstTypes

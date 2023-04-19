@@ -3,7 +3,14 @@ import { types } from "mobx-state-tree";
 import type { ReferenceT } from "mobx-state-tree/dist/internal";
 import { BaseType } from "./base";
 import { ensureRegistered } from "./class-model";
-import type { IAnyComplexType, IMaybeType, IReferenceType, InstanceWithoutSTNTypeForType, InstantiateContext } from "./types";
+import type {
+  IAnyComplexType,
+  IMaybeType,
+  IReferenceType,
+  IStateTreeNode,
+  InstanceWithoutSTNTypeForType,
+  InstantiateContext,
+} from "./types";
 
 export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsGetSet<T["mstType"]> | Record<string, unknown>) & {
   acceptsUndefined?: boolean;
@@ -15,7 +22,7 @@ class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<string,
     super(types.reference(targetType.mstType, options));
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, _parent: IStateTreeNode | null): this["InstanceType"] {
     if (!snapshot || !context.referenceCache.has(snapshot)) {
       throw new Error(`can't resolve reference ${snapshot}`);
     }
@@ -37,7 +44,7 @@ class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseType<
     super(types.safeReference(targetType.mstType, options));
   }
 
-  instantiate(snapshot: string | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: string | undefined, context: InstantiateContext, _parent: IStateTreeNode | null): this["InstanceType"] {
     if (!snapshot || !context.referenceCache.has(snapshot)) {
       return undefined as this["InstanceType"];
     }

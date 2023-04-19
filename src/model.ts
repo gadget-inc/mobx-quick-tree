@@ -1,7 +1,7 @@
 import type { IAnyModelType as MSTAnyModelType, IAnyType as MSTAnyType } from "mobx-state-tree";
 import { isReferenceType, isStateTreeNode as mstIsStateTreeNode, types as mstTypes } from "mobx-state-tree";
 import { types } from ".";
-import { BaseType, setParent } from "./base";
+import { BaseType, setEnv, setParent } from "./base";
 import { ensureRegistered } from "./class-model";
 import { CantRunActionError } from "./errors";
 import { $identifier, $originalDescriptor, $readOnly, $type } from "./symbols";
@@ -20,6 +20,7 @@ import type {
   ModelViews,
   OutputTypesForModelProps,
   TypesForModelPropsDeclaration,
+  IStateTreeNode,
 } from "./types";
 
 export const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDeclaration>(
@@ -95,20 +96,17 @@ export const instantiateInstanceFromProperties = (
     const propType = properties[propName];
     if (isReferenceType(propType.mstType)) {
       context.referencesToResolve.push(() => {
-        const propValue = propType.instantiate(snapshot?.[propName], context);
-        instance[propName] = propValue;
+        instance[propName] = propType.instantiate(snapshot?.[propName], context, instance);
       });
       continue;
     }
 
-    const propValue = propType.instantiate(snapshot?.[propName], context);
-    setParent(propValue, instance);
-    instance[propName] = propValue;
+    instance[propName] = propType.instantiate(snapshot?.[propName], context, instance);
   }
 
   if (identifierProp) {
     const id = instance[identifierProp];
-    Object.defineProperty(instance, $identifier, { value: id });
+    instance[$identifier] = id;
     context.referenceCache.set(id, instance);
   }
 };
@@ -240,13 +238,16 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return true;
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
     const instance: Record<string | symbol, any> = Object.create(this.prototype);
 
     instantiateInstanceFromProperties(instance, snapshot, this.properties, this.identifierProp, context);
     for (const init of this.initializers) {
       init(instance);
     }
+
+    setParent(instance, parent);
+    setEnv(instance, context.env);
 
     return instance as this["InstanceType"];
   }
