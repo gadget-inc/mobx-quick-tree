@@ -72,7 +72,7 @@ export class QuickMap<T extends IAnyType> extends Map<string, Instance<T>> imple
   }
 }
 
-class MapType<T extends IAnyType> extends BaseType<
+export class MapType<T extends IAnyType> extends BaseType<
   Record<string, T["InputType"]> | undefined,
   Record<string, T["OutputType"]>,
   IMSTMap<T>

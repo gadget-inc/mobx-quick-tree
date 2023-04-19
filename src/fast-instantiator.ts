@@ -4,6 +4,8 @@ import { isReferenceType } from "./api";
 import { DateType, LiteralType } from "./simple";
 import { IntegerType, SimpleType } from "./simple";
 import type { IAnyClassModelType, IAnyType, IClassModelType, Instance, InstantiateContext, SnapshotIn, ValidOptionalValue } from "./types";
+import { $identifier } from "./symbols";
+import { MapType, QuickMap } from "./map";
 
 export const $fastInstantiator = Symbol.for("mqt:class-model-instantiator");
 
@@ -42,6 +44,8 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
         segments.push(this.assignmentExpressionForOptionalType(key, type));
       } else if (type instanceof ReferenceType || type instanceof SafeReferenceType) {
         segments.push(this.assignmentExpressionForReferenceType(key, type));
+      } else if (type instanceof MapType) {
+        segments.push(this.assignmentExpressionForMapType(key, type));
       } else {
         segments.push(`
           // instantiate fallback for ${key} of type ${type.name}
@@ -76,7 +80,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     `;
 
     const aliasFuncBody = `
-    const $identifier = Symbol.for("MQT_identifier");
+    const { QuickMap, $identifier } = imports;
     ${Array.from(this.aliases.entries())
       .map(([expression, alias]) => `const ${alias} = ${expression};`)
       .join("\n")}
@@ -84,15 +88,15 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     ${innerFunc}
   `;
 
-    console.log(`function for ${this.model.name}`, "\n\n\n", aliasFuncBody, "\n\n\n");
+    // console.log(`function for ${this.model.name}`, "\n\n\n", aliasFuncBody, "\n\n\n");
 
     // build a function that closes over a bunch of aliased expressions
     // evaluate the inner function source code in this closure to return the function
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    const aliasFunc = new Function("model", "innerFunc", aliasFuncBody);
+    const aliasFunc = new Function("model", "imports", aliasFuncBody);
 
     // evaluate aliases and get created inner function
-    return aliasFunc(this.model);
+    return aliasFunc(this.model, { $identifier, QuickMap }) as CompiledInstantiator<T>;
   }
 
   private assignmentExpressionForReferenceType(key: string, type: ReferenceType<IAnyType> | SafeReferenceType<IAnyType>): string {
@@ -120,7 +124,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     `;
   }
 
-  expressionForDirectlyAssignableType(key: string, type: DirectlyAssignableType) {
+  private expressionForDirectlyAssignableType(key: string, type: DirectlyAssignableType) {
     if (type instanceof DateType) {
       return `new Date(snapshot?.["${key}"])`;
     } else {
@@ -128,7 +132,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     }
   }
 
-  assignmentExpressionForOptionalType(key: string, type: OptionalType<IAnyType, [ValidOptionalValue, ...ValidOptionalValue[]]>) {
+  private assignmentExpressionForOptionalType(key: string, type: OptionalType<IAnyType, [ValidOptionalValue, ...ValidOptionalValue[]]>) {
     let defaultValueExpression;
     if (type.defaultValueOrFunc instanceof Function) {
       defaultValueExpression = `model.properties["${key}"].defaultValueOrFunc()`;
@@ -139,7 +143,11 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     const varName = `snapshotValue${key}`;
 
     const comparisonsToUndefinedValues = (type.undefinedValues ?? [undefined]).map((value) => {
-      return `(${varName} === ${JSON.stringify(value)})`;
+      if (typeof value == "undefined") {
+        return `(typeof ${varName} == "undefined")`;
+      } else {
+        return `(${varName} === ${JSON.stringify(value)})`;
+      }
     });
 
     let createExpression;
@@ -165,6 +173,27 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       }
       ${createExpression}
     `;
+  }
+
+  private assignmentExpressionForMapType(key: string, _type: MapType<any>): string {
+    const mapVarName = `map${key}`;
+    const snapshotVarName = `snapshotValue${key}`;
+    return `
+      const ${mapVarName} = new QuickMap(${this.alias(`model.properties["${key}"]`)}, instance, context.env);
+      instance["${key}"] = ${mapVarName};
+      const ${snapshotVarName} = snapshot?.["${key}"];
+      if (${snapshotVarName}) {
+        for (const key in ${snapshotVarName}) {
+          ${mapVarName}.set(
+            key, 
+            ${this.alias(`model.properties["${key}"].childrenType`)}.instantiate(
+              ${snapshotVarName}[key], 
+              context, 
+              ${mapVarName}
+            )
+          );
+        }
+      }`;
   }
 
   alias(expression: string): string {
