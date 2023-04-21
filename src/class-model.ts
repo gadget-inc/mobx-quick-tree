@@ -302,7 +302,14 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
     (klass as any).mstType = (klass as any).mstType.volatile((self: any) => initializeVolatiles({}, self, mstVolatiles));
   }
 
-  klass[$fastInstantiator] = buildFastInstantiator(klass);
+  // define the fast instantiation function on this class
+  // we only actually build the function the first time the class is instantiated in order to support evaluating types.late as late as possible
+  klass[$fastInstantiator] = (instance, snapshot, context) => {
+    const intantiator = buildFastInstantiator(klass);
+    klass[$fastInstantiator] = intantiator;
+    return intantiator(instance, snapshot, context);
+  };
+
   (klass as any)[$registered] = true;
 
   return klass as any;

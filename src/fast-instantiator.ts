@@ -5,6 +5,7 @@ import { IntegerType, SimpleType } from "./simple";
 import type { IAnyClassModelType, IAnyType, IClassModelType, Instance, InstantiateContext, SnapshotIn, ValidOptionalValue } from "./types";
 import { $identifier } from "./symbols";
 import { MapType, QuickMap } from "./map";
+import { LateType } from "./late";
 
 export const $fastInstantiator = Symbol.for("mqt:class-model-instantiator");
 
@@ -33,7 +34,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
   build(): CompiledInstantiator<T> {
     const segments: string[] = [];
 
-    for (const [key, type] of Object.entries(this.model.properties)) {
+    const buildSegment = (key: string, type: IAnyType) => {
       if (isDirectlyAssignableType(type)) {
         segments.push(`
         // simple type for ${key}
@@ -45,9 +46,16 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
         segments.push(this.assignmentExpressionForReferenceType(key, type));
       } else if (type instanceof MapType) {
         segments.push(this.assignmentExpressionForMapType(key, type));
+      } else if (type instanceof LateType) {
+        const wrappedType = type.type;
+        buildSegment(key, wrappedType);
       } else {
         segments.push(this.fallbackAssignmentExpression(key, type));
       }
+    };
+
+    for (const [key, type] of Object.entries(this.model.properties)) {
+      buildSegment(key, type);
     }
 
     for (const [key, _metadata] of Object.entries(this.model.volatiles)) {

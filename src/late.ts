@@ -3,7 +3,7 @@ import { BaseType } from "./base";
 import { ensureRegistered } from "./class-model";
 import type { IAnyType, IStateTreeNode, InstanceWithoutSTNTypeForType, InstantiateContext } from "./types";
 
-class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputType"], InstanceWithoutSTNTypeForType<T>> {
+export class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputType"], InstanceWithoutSTNTypeForType<T>> {
   private cachedType: T | null | undefined;
 
   constructor(private readonly fn: () => T) {
@@ -18,7 +18,7 @@ class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputTyp
     return this.type.is(value);
   }
 
-  private get type() {
+  get type() {
     this.cachedType ??= this.fn();
     ensureRegistered(this.cachedType);
     return this.cachedType;
