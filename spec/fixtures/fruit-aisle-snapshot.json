@@ -1,0 +1,109 @@
+{
+  "type": "FruitAisle",
+  "bins": {
+    "appleBin1": {
+      "type": "FruitBin",
+      "fruit": {
+        "type": "Apple",
+        "color": "red",
+        "ripeness": 7
+      },
+      "count": 50
+    },
+    "appleBin2": {
+      "type": "FruitBin",
+      "fruit": {
+        "type": "Apple",
+        "color": "green",
+        "ripeness": 5
+      },
+      "count": 40
+    },
+    "bananaBunchBin1": {
+      "type": "FruitBin",
+      "fruit": {
+        "type": "BananaBunch",
+        "bananas": [
+          {
+            "type": "Banana",
+            "spots": 3,
+            "ripeness": 6
+          },
+          {
+            "type": "Banana",
+            "spots": 5,
+            "ripeness": 7
+          }
+        ],
+        "origin": "Ecuador"
+      },
+      "count": 35
+    },
+    "pearBin1": {
+      "type": "FruitBin",
+      "fruit": {
+        "type": "Pear",
+        "color": "green",
+        "breed": "Bartlett"
+      },
+      "count": 20
+    },
+    "pearBin2": {
+      "type": "FruitBin",
+      "fruit": {
+        "type": "Pear",
+        "color": "red",
+        "breed": "Anjou"
+      },
+      "count": 30
+    },
+    "kiwiBin1": {
+      "type": "FruitBin",
+      "fruit": {
+        "type": "Kiwi",
+        "seedCount": 100
+      },
+      "count": 25
+    },
+    "orangeBin1": {
+      "type": "FruitBin",
+      "fruit": {
+        "type": "Orange",
+        "size": "small"
+      },
+      "count": 45
+    },
+    "orangeBin2": {
+      "type": "FruitBin",
+      "fruit": {
+        "type": "Orange",
+        "size": "medium"
+      },
+      "count": 50
+    },
+    "orangeBin3": {
+      "type": "FruitBin",
+      "fruit": {
+        "type": "Orange",
+        "size": "large"
+      },
+      "count": 30
+    },
+    "passionfruitBin1": {
+      "type": "FruitBin",
+      "fruit": {
+        "type": "Passionfruit",
+        "color": "yellow"
+      },
+      "count": 15
+    },
+    "passionfruitBin2": {
+      "type": "FruitBin",
+      "fruit": {
+        "type": "Passionfruit",
+        "color": "purple"
+      },
+      "count": 20
+    }
+  }
+}
