@@ -58,7 +58,7 @@ export const Fruit = types.union({ discriminator: "type" }, Apple, Banana, Banan
 @register
 export class FruitBin extends ClassModel({
   type: nodeTypeType("FruitBin"),
-  fruit: Fruit,
+  fruit: types.late(() => Fruit),
   count: types.integer,
 }) {}
 
