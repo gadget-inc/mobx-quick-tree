@@ -8,7 +8,7 @@ import { TestModelSnapshot } from "../spec/fixtures/TestModel";
 
 const root = findRoot(__dirname);
 const largeRoot = JSON.parse(fs.readFileSync(root + "/spec/fixtures/large-root-snapshot.json", "utf8"));
-const fruitBasket = JSON.parse(fs.readFileSync(root + "/spec/fixtures/fruit-basket-snapshot.json", "utf8"));
+const fruitAisle = JSON.parse(fs.readFileSync(root + "/spec/fixtures/fruit-aisle-snapshot.json", "utf8"));
 const suite = new Suite("instantiating model classes");
 
 suite
@@ -19,7 +19,7 @@ suite
     LargeRoot.createReadOnly(largeRoot);
   })
   .add("instantiating a large union", function () {
-    FruitAisle.createReadOnly(fruitBasket);
+    FruitAisle.createReadOnly(fruitAisle);
   })
   .on("start", function () {
     console.profile();
