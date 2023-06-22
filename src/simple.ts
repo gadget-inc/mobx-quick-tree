@@ -25,6 +25,10 @@ export class SimpleType<T> extends BaseType<T, T, T> {
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     return typeof value == this.expectedType;
   }
+
+  async schemaHash() {
+    return `simple:${this.expectedType}`;
+  }
 }
 
 export class DateType extends BaseType<Date | number, number, Date> {
@@ -39,6 +43,10 @@ export class DateType extends BaseType<Date | number, number, Date> {
   is(value: any): value is this["InstanceType"];
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     return typeof value == "number" || value instanceof Date;
+  }
+
+  async schemaHash() {
+    return `date`;
   }
 }
 
@@ -59,6 +67,10 @@ export class IntegerType extends BaseType<number, number, number> {
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     return Number.isInteger(value);
   }
+
+  async schemaHash() {
+    return `integer`;
+  }
 }
 
 export class NullType extends BaseType<null, null, null> {
@@ -77,6 +89,10 @@ export class NullType extends BaseType<null, null, null> {
   is(value: any): value is this["InstanceType"];
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     return value === null;
+  }
+
+  async schemaHash() {
+    return `null`;
   }
 }
 

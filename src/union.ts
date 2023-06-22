@@ -1,3 +1,4 @@
+import memoize from "lodash.memoize";
 import type { IType, UnionOptions as MSTUnionOptions } from "mobx-state-tree";
 import { types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
@@ -7,6 +8,7 @@ import { OptionalType } from "./optional";
 import { isModelType, isType } from "./api";
 import { LiteralType } from "./simple";
 import { InvalidDiscriminatorError } from "./errors";
+import { sha1 } from "./utils";
 
 export type ITypeDispatcher = (snapshot: any) => IAnyType;
 
@@ -134,6 +136,10 @@ class UnionType<Types extends IAnyType[]> extends BaseType<
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     return this.types.some((type) => type.is(value));
   }
+
+  schemaHash = memoize(async () => {
+    return await sha1(`union:${(await Promise.all(this.types.map((type) => type.schemaHash()))).join("|")}`);
+  });
 }
 
 export function union<Types extends [IAnyType, ...IAnyType[]]>(...types: Types): IUnionType<Types>;

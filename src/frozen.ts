@@ -19,6 +19,10 @@ class FrozenType<T> extends BaseType<T, T, T> {
     // Valid values for frozen types have to be serializable
     return typeof value !== "function";
   }
+
+  async schemaHash() {
+    return "frozen";
+  }
 }
 
 export const frozen = <T = any>(): ISimpleType<T> => {

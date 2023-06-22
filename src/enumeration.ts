@@ -1,6 +1,7 @@
 import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import type { IAnyStateTreeNode, InstantiateContext, ISimpleType, IStateTreeNode } from "./types";
+import memoize from "lodash.memoize";
 
 class EnumerationType<EnumOptions extends string> extends BaseType<EnumOptions, EnumOptions, EnumOptions> {
   constructor(readonly name: string, readonly options: readonly EnumOptions[]) {
@@ -18,6 +19,10 @@ class EnumerationType<EnumOptions extends string> extends BaseType<EnumOptions, 
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     return this.options.includes(value);
   }
+
+  schemaHash: () => Promise<string> = memoize(async () => {
+    return `enum:${this.options.join("|")}`;
+  });
 }
 
 type EnumerationFactory = {

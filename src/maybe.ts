@@ -33,6 +33,10 @@ class MaybeType<Type extends IAnyType> extends BaseType<
     }
     return this.type.is(value);
   }
+
+  async schemaHash() {
+    return `maybe:${await this.type.schemaHash()}`;
+  }
 }
 
 class MaybeNullType<Type extends IAnyType> extends BaseType<
@@ -62,6 +66,10 @@ class MaybeNullType<Type extends IAnyType> extends BaseType<
       return true;
     }
     return this.type.is(value);
+  }
+
+  async schemaHash() {
+    return `maybeNull:${await this.type.schemaHash()}`;
   }
 }
 

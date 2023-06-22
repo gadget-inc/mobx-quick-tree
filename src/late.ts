@@ -18,6 +18,10 @@ class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputTyp
     return this.type.is(value);
   }
 
+  async schemaHash() {
+    return await this.type.schemaHash();
+  }
+
   private get type() {
     this.cachedType ??= this.fn();
     ensureRegistered(this.cachedType);

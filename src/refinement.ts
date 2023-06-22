@@ -20,6 +20,10 @@ class RefinementType<T extends IAnyType> extends BaseType<T["InputType"], T["Out
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     return this.type.is(value) && this.predicate(value);
   }
+
+  async schemaHash() {
+    return `refinement:${await this.type.schemaHash()}`;
+  }
 }
 
 export const refinement = <T extends IAnyType>(

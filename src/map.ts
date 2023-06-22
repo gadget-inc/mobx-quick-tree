@@ -118,6 +118,10 @@ export class MapType<T extends IAnyType> extends BaseType<
 
     return map as this["InstanceType"];
   }
+
+  async schemaHash() {
+    return `map:${await this.childrenType.schemaHash()}`;
+  }
 }
 
 export const map = <T extends IAnyType>(childrenType: T): IMapType<T> => {
