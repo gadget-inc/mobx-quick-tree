@@ -21,6 +21,10 @@ class CustomType<InputType, OutputType> extends BaseType<InputType, OutputType, 
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     return this.mstType.is(value);
   }
+
+  async schemaHash() {
+    return `custom:${this.options.name}`;
+  }
 }
 
 export const custom = <InputType, OutputType>(

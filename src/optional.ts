@@ -55,6 +55,10 @@ export class OptionalType<
     return this.type.is(value);
   }
 
+  async schemaHash() {
+    return `optional:${await this.type.schemaHash()}`;
+  }
+
   private get defaultValue(): T["InputType"] {
     return this.defaultValueOrFunc instanceof Function ? this.defaultValueOrFunc() : this.defaultValueOrFunc;
   }

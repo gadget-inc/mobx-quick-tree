@@ -5,6 +5,7 @@ module.exports = {
     project: ["tsconfig.json"],
   },
   rules: {
+    "lodash/import-scope": "off",
     "@typescript-eslint/no-unsafe-argument": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/ban-types": [

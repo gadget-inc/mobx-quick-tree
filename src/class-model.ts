@@ -29,6 +29,8 @@ import type {
   TypesForModelPropsDeclaration,
 } from "./types";
 import { $fastInstantiator, buildFastInstantiator } from "./fast-instantiator";
+import memoize from "lodash.memoize";
+import { sha1 } from "./utils";
 
 /** @internal */
 type ActionMetadata = {
@@ -290,6 +292,12 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
 
     return instance;
   };
+
+  klass.schemaHash = memoize(async () => {
+    const props = Object.entries(klass.properties as Record<string, IAnyType>).sort(([key1], [key2]) => key1.localeCompare(key2));
+    const propHashes = await Promise.all(props.map(async ([key, prop]) => `${key}:${await prop.schemaHash()}`));
+    return `model:${klass.name}:${await sha1(propHashes.join("|"))}`;
+  });
 
   // create the MST type for not-readonly versions of this using the views and actions extracted from the class
   klass.mstType = mstTypes

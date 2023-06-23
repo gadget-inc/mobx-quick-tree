@@ -28,6 +28,9 @@ export interface IType<InputType, OutputType, InstanceType> {
 
   /** @hidden */
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"];
+
+  /** Get a string hash for the schema of this type */
+  schemaHash(): Promise<string>;
 }
 
 /**
@@ -162,6 +165,9 @@ export interface IClassModelType<
    * Properties and views will work fast on this instance by skipping the observability bits. Actions will throw if called.
    */
   createReadOnly<T extends IAnyType>(this: T, snapshot?: SnapshotIn<T>, env?: any): Instance<T>;
+
+  /** Get a string hash for the schema of this class model */
+  schemaHash(): Promise<string>;
 
   isMQTClassModel: true;
 

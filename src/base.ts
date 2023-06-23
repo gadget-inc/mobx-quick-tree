@@ -1,4 +1,4 @@
-import type { IAnyType as MSTAnyType } from "mobx-state-tree";
+import type { IAnyComplexType, IAnyType as MSTAnyType } from "mobx-state-tree";
 import { $env, $parent, $quickType, $type } from "./symbols";
 import type { IAnyStateTreeNode, IAnyType, IStateTreeNode, InstantiateContext, StateTreeNode } from "./types";
 
@@ -57,6 +57,8 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
     context: InstantiateContext,
     parent: IStateTreeNode | null
   ): this["InstanceType"];
+
+  abstract schemaHash(): Promise<string>;
 }
 
 /** @hidden */

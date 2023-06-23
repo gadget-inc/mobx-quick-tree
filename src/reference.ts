@@ -5,16 +5,22 @@ import { BaseType } from "./base";
 import { ensureRegistered } from "./class-model";
 import type {
   IAnyComplexType,
+  IAnyType,
   IMaybeType,
   IReferenceType,
   IStateTreeNode,
   InstanceWithoutSTNTypeForType,
   InstantiateContext,
 } from "./types";
+import memoize from "lodash.memoize";
 
 export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsGetSet<T["mstType"]> | Record<string, unknown>) & {
   acceptsUndefined?: boolean;
   onInvalidated?: OnReferenceInvalidated<ReferenceT<T["mstType"]>>;
+};
+
+const referenceSchemaHash = async (type: string, targetType: IAnyType) => {
+  return `${type}:${await targetType.schemaHash()}`;
 };
 
 export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<string, string, InstanceWithoutSTNTypeForType<TargetType>> {
@@ -33,6 +39,10 @@ export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     return typeof value == "string";
   }
+
+  schemaHash: () => Promise<string> = memoize(async () => {
+    return await referenceSchemaHash("reference", this.targetType);
+  });
 }
 
 export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseType<
@@ -55,6 +65,10 @@ export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseT
   is(value: any): value is this["InputType"] | this["InstanceType"] {
     return typeof value == "string";
   }
+
+  schemaHash: () => Promise<string> = memoize(async () => {
+    return await referenceSchemaHash("safe-reference", this.targetType);
+  });
 }
 
 export const reference = <TargetType extends IAnyComplexType>(

@@ -87,6 +87,10 @@ class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]> | und
 
     return array as this["InstanceType"];
   }
+
+  async schemaHash() {
+    return `array:${await this.childrenType.schemaHash()}`;
+  }
 }
 
 export const array = <T extends IAnyType>(childrenType: T): IArrayType<T> => {
