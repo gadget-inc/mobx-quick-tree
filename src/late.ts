@@ -19,7 +19,7 @@ class LateType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputTyp
   }
 
   async schemaHash() {
-    return await this.type.schemaHash();
+    return `late:${this.type.mstType.name}`;
   }
 
   private get type() {

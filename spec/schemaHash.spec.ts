@@ -6,8 +6,9 @@ describe("schemaHash", () => {
     expect(await types.number.schemaHash()).not.toEqual(await types.string.schemaHash());
   });
 
-  test("is the same for late types of types", async () => {
-    expect(await types.number.schemaHash()).toEqual(await types.late(() => types.number).schemaHash());
+  test("is not the same for late types of types", async () => {
+    expect(await types.late(() => types.number).schemaHash()).toEqual(await types.late(() => types.number).schemaHash());
+    expect(await types.number.schemaHash()).not.toEqual(await types.late(() => types.number).schemaHash());
     expect(await types.string.schemaHash()).not.toEqual(await types.late(() => types.number).schemaHash());
   });
 
@@ -331,5 +332,31 @@ describe("schemaHash", () => {
       }) {}
       expect(await ModelA.schemaHash()).not.toEqual(await ModelB.schemaHash());
     });
+  });
+
+  test("can hash models with circular references", async () => {
+    @register
+    class ModelA extends ClassModel({
+      foo: types.string,
+      bar: types.late((): any => ModelA),
+    }) {}
+
+    expect(await ModelA.schemaHash()).toEqual(await ModelA.schemaHash());
+  });
+
+  test("can hash models with mutually recursive references", async () => {
+    @register
+    class State extends ClassModel({
+      transitions: types.array(types.late((): any => Transition)),
+    }) {}
+
+    @register
+    class Transition extends ClassModel({
+      toState: types.reference(State),
+    }) {}
+
+    expect(await State.schemaHash()).toEqual(await State.schemaHash());
+    expect(await Transition.schemaHash()).toEqual(await Transition.schemaHash());
+    expect(await State.schemaHash()).not.toEqual(await Transition.schemaHash());
   });
 });
