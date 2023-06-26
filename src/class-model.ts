@@ -30,7 +30,7 @@ import type {
 } from "./types";
 import { $fastInstantiator, buildFastInstantiator } from "./fast-instantiator";
 import memoize from "lodash.memoize";
-import { sha1 } from "./utils";
+import { cyrb53 } from "./utils";
 
 /** @internal */
 type ActionMetadata = {
@@ -296,7 +296,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
   klass.schemaHash = memoize(async () => {
     const props = Object.entries(klass.properties as Record<string, IAnyType>).sort(([key1], [key2]) => key1.localeCompare(key2));
     const propHashes = await Promise.all(props.map(async ([key, prop]) => `${key}:${await prop.schemaHash()}`));
-    return `model:${klass.name}:${await sha1(propHashes.join("|"))}`;
+    return `model:${klass.name}:${cyrb53(propHashes.join("|"))}`;
   });
 
   // create the MST type for not-readonly versions of this using the views and actions extracted from the class

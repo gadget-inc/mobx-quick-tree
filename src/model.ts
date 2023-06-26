@@ -23,7 +23,7 @@ import type {
   IStateTreeNode,
 } from "./types";
 import memoize from "lodash.memoize";
-import { sha1 } from "./utils";
+import { cyrb53 } from "./utils";
 
 export const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDeclaration>(
   propsDecl: Props
@@ -257,7 +257,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   schemaHash: () => Promise<string> = memoize(async () => {
     const props = Object.entries(this.properties).sort(([key1], [key2]) => key1.localeCompare(key2));
     const propHashes = await Promise.all(props.map(async ([key, prop]) => `${key}:${await prop.schemaHash()}`));
-    return `model:${this.name}:${await sha1(propHashes.join("|"))}`;
+    return `model:${this.name}:${cyrb53(propHashes.join("|"))}`;
   });
 }
 

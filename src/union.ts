@@ -1,5 +1,5 @@
 import memoize from "lodash.memoize";
-import type { IType, UnionOptions as MSTUnionOptions } from "mobx-state-tree";
+import type { UnionOptions as MSTUnionOptions } from "mobx-state-tree";
 import { types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
 import { ensureRegistered, isClassModel } from "./class-model";
@@ -8,7 +8,7 @@ import { OptionalType } from "./optional";
 import { isModelType, isType } from "./api";
 import { LiteralType } from "./simple";
 import { InvalidDiscriminatorError } from "./errors";
-import { sha1 } from "./utils";
+import { cyrb53 } from "./utils";
 
 export type ITypeDispatcher = (snapshot: any) => IAnyType;
 
@@ -138,7 +138,7 @@ class UnionType<Types extends IAnyType[]> extends BaseType<
   }
 
   schemaHash = memoize(async () => {
-    return await sha1(`union:${(await Promise.all(this.types.map((type) => type.schemaHash()))).join("|")}`);
+    return cyrb53(`union:${(await Promise.all(this.types.map((type) => type.schemaHash()))).join("|")}`).toString();
   });
 }
 
