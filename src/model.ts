@@ -1,3 +1,4 @@
+import memoize from "lodash.memoize";
 import type { IAnyModelType as MSTAnyModelType, IAnyType as MSTAnyType } from "mobx-state-tree";
 import { isReferenceType, isStateTreeNode as mstIsStateTreeNode, types as mstTypes } from "mobx-state-tree";
 import { types } from ".";
@@ -9,6 +10,7 @@ import type {
   IAnyStateTreeNode,
   IAnyType,
   INodeModelType,
+  IStateTreeNode,
   InputTypesForModelProps,
   InputsForModel,
   Instance,
@@ -20,9 +22,7 @@ import type {
   ModelViews,
   OutputTypesForModelProps,
   TypesForModelPropsDeclaration,
-  IStateTreeNode,
 } from "./types";
-import memoize from "lodash.memoize";
 import { cyrb53 } from "./utils";
 
 export const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDeclaration>(
@@ -244,8 +244,8 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     const instance: Record<string | symbol, any> = Object.create(this.prototype);
 
     instantiateInstanceFromProperties(instance, snapshot, this.properties, this.identifierProp, context);
-    for (const init of this.initializers) {
-      init(instance);
+    for (let index = 0; index < this.initializers.length; index++) {
+      this.initializers[index](instance);
     }
 
     setParent(instance, parent);

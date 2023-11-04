@@ -1,7 +1,7 @@
 import { isStateTreeNode, types } from "mobx-state-tree";
 import { BaseType, setEnv, setParent } from "./base";
 import { ensureRegistered } from "./class-model";
-import { $parent, $readOnly, $type } from "./symbols";
+import { $readOnly, $type } from "./symbols";
 import type { IAnyStateTreeNode, IAnyType, IArrayType, IMSTArray, IStateTreeNode, Instance, InstantiateContext } from "./types";
 
 export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implements IMSTArray<T> {
@@ -69,9 +69,9 @@ class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]> | und
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
     const array = new QuickArray<T>(snapshot?.length ?? 0);
     if (snapshot) {
-      snapshot.forEach((child, index) => {
-        array[index] = this.childrenType.instantiate(child, context, array);
-      });
+      for (let index = 0; index < array.length; ++index) {
+        array[index] = this.childrenType.instantiate(snapshot[index], context, array);
+      }
     }
 
     setParent(array, parent);
