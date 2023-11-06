@@ -1,3 +1,4 @@
+import { QuickArray } from "./array";
 import { FrozenType } from "./frozen";
 import { MapType, QuickMap } from "./map";
 import { OptionalType } from "./optional";
@@ -83,7 +84,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     `;
 
     const aliasFuncBody = `
-    const { QuickMap, $identifier } = imports;
+    const { QuickMap, QuickArray, $identifier } = imports;
     ${Array.from(this.aliases.entries())
       .map(([expression, alias]) => `const ${alias} = ${expression};`)
       .join("\n")}
@@ -99,7 +100,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     const aliasFunc = new Function("model", "imports", aliasFuncBody);
 
     // evaluate aliases and get created inner function
-    return aliasFunc(this.model, { $identifier, QuickMap }) as CompiledInstantiator<T>;
+    return aliasFunc(this.model, { $identifier, QuickMap, QuickArray }) as CompiledInstantiator<T>;
   }
 
   private assignmentExpressionForReferenceType(key: string, type: ReferenceType<IAnyType> | SafeReferenceType<IAnyType>): string {
@@ -176,6 +177,26 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       }
       ${createExpression}
     `;
+  }
+
+  private assignmentExpressionForArrayType(key: string, _type: MapType<any>): string {
+    const mapVarName = `map${key}`;
+    const snapshotVarName = `snapshotValue${key}`;
+    return `
+      const ${mapVarName} = new QuickArray(${this.alias(`model.properties["${key}"]`)}, instance, context.env);
+      instance["${key}"] = ${mapVarName};
+      const ${snapshotVarName} = snapshot?.["${key}"];
+      if (${snapshotVarName}) {
+        for (let index = 0; index < ${snapshotVarName}.length; ++index) {
+          ${mapVarName}.push(
+            ${this.alias(`model.properties["${key}"].childrenType`)}.instantiate(
+              ${snapshotVarName}[index],
+              context,
+              ${mapVarName}
+            )
+          );
+        }
+      }`;
   }
 
   private assignmentExpressionForMapType(key: string, _type: MapType<any>): string {

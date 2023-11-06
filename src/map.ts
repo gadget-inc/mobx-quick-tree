@@ -1,6 +1,6 @@
 import type { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
 import { isStateTreeNode, types } from "mobx-state-tree";
-import { BaseType, setEnv, setParent } from "./base";
+import { BaseType } from "./base";
 import { ensureRegistered } from "./class-model";
 import { getSnapshot } from "./snapshot";
 import { $env, $parent, $readOnly, $type } from "./symbols";
@@ -17,14 +17,16 @@ import type {
 } from "./types";
 
 export class QuickMap<T extends IAnyType> extends Map<string, Instance<T>> implements IMSTMap<T> {
+  static get [Symbol.species]() {
+    return Map;
+  }
+
   /** @hidden */
   readonly [$env]?: any;
   /** @hidden */
   readonly [$parent]?: IStateTreeNode | null;
-
-  static get [Symbol.species]() {
-    return Map;
-  }
+  /** @hidden */
+  readonly [$type]?: [this] | [any];
 
   constructor(type: any, parent: IStateTreeNode | null, env: any) {
     super();
@@ -32,8 +34,6 @@ export class QuickMap<T extends IAnyType> extends Map<string, Instance<T>> imple
     this[$parent] = parent;
     this[$env] = env;
   }
-
-  [$type]?: [this] | [any];
 
   get [Symbol.toStringTag]() {
     return "Map" as const;

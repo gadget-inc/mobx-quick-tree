@@ -1,6 +1,6 @@
-import type { IAnyComplexType, IAnyType as MSTAnyType } from "mobx-state-tree";
-import { $env, $parent, $quickType, $type } from "./symbols";
-import type { IAnyStateTreeNode, IAnyType, IStateTreeNode, InstantiateContext, StateTreeNode } from "./types";
+import type { IAnyType as MSTAnyType } from "mobx-state-tree";
+import { $quickType } from "./symbols";
+import type { IAnyStateTreeNode, IStateTreeNode, InstantiateContext, StateTreeNode } from "./types";
 
 export abstract class BaseType<InputType, OutputType, InstanceType> {
   readonly [$quickType] = undefined;
@@ -60,27 +60,3 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
 
   abstract schemaHash(): Promise<string>;
 }
-
-/** @hidden */
-export const setParent = (value: unknown, parent: any) => {
-  if (value && typeof value == "object") {
-    Reflect.defineProperty(value, $parent, {
-      value: parent,
-      configurable: false,
-      enumerable: false,
-      writable: false,
-    });
-  }
-};
-
-/** @hidden */
-export const setEnv = (instance: unknown, env: any) => {
-  if (typeof instance === "object" && instance !== null) {
-    Reflect.defineProperty(instance, $env, {
-      value: env,
-      configurable: false,
-      enumerable: false,
-      writable: false,
-    });
-  }
-};
