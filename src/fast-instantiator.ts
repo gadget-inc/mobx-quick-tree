@@ -1,11 +1,10 @@
-import { OptionalType } from "./optional";
-import { SafeReferenceType, ReferenceType } from "./reference";
-import { isReferenceType } from "./api";
-import { DateType, LiteralType } from "./simple";
-import { IntegerType, SimpleType } from "./simple";
-import type { IAnyClassModelType, IAnyType, IClassModelType, Instance, InstantiateContext, SnapshotIn, ValidOptionalValue } from "./types";
-import { $identifier } from "./symbols";
+import { FrozenType } from "./frozen";
 import { MapType, QuickMap } from "./map";
+import { OptionalType } from "./optional";
+import { ReferenceType, SafeReferenceType } from "./reference";
+import { DateType, IntegerType, LiteralType, SimpleType } from "./simple";
+import { $identifier } from "./symbols";
+import type { IAnyClassModelType, IAnyType, IClassModelType, Instance, InstantiateContext, SnapshotIn, ValidOptionalValue } from "./types";
 
 export const $fastInstantiator = Symbol.for("mqt:class-model-instantiator");
 
@@ -24,7 +23,11 @@ export const buildFastInstantiator = <T extends IClassModelType<Record<string, I
 
 type DirectlyAssignableType = SimpleType<any> | IntegerType | LiteralType<any> | DateType;
 const isDirectlyAssignableType = (type: IAnyType): type is DirectlyAssignableType =>
-  type instanceof SimpleType || type instanceof IntegerType || type instanceof LiteralType || type instanceof DateType;
+  type instanceof SimpleType ||
+  type instanceof IntegerType ||
+  type instanceof LiteralType ||
+  type instanceof DateType ||
+  type instanceof FrozenType;
 
 class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, any, any>> {
   aliases = new Map<string, string>();
@@ -50,8 +53,8 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
         segments.push(`
           // instantiate fallback for ${key} of type ${type.name}
           instance["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
-            snapshot?.["${key}"], 
-            context, 
+            snapshot?.["${key}"],
+            context,
             instance
           );
         `);
@@ -69,7 +72,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       segments.push(`
       const id = instance["${identifierProp}"];
       instance[$identifier] = id;
-      context.referenceCache.set(id, instance); 
+      context.referenceCache.set(id, instance);
     `);
     }
 
@@ -158,8 +161,8 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     } else {
       createExpression = `
       instance["${key}"] = ${this.alias(`model.properties["${key}"].type`)}.instantiate(
-        ${varName}, 
-        context, 
+        ${varName},
+        context,
         instance
       );
       `;
@@ -185,10 +188,10 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       if (${snapshotVarName}) {
         for (const key in ${snapshotVarName}) {
           ${mapVarName}.set(
-            key, 
+            key,
             ${this.alias(`model.properties["${key}"].childrenType`)}.instantiate(
-              ${snapshotVarName}[key], 
-              context, 
+              ${snapshotVarName}[key],
+              context,
               ${mapVarName}
             )
           );

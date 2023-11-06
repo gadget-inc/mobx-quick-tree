@@ -2,7 +2,7 @@ import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import type { InstantiateContext, ISimpleType, IStateTreeNode } from "./types";
 
-class FrozenType<T> extends BaseType<T, T, T> {
+export class FrozenType<T> extends BaseType<T, T, T> {
   constructor() {
     super(types.frozen<T>());
   }
