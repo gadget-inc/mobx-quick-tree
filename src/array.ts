@@ -9,8 +9,11 @@ export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implement
     return Array;
   }
 
+  /** @hidden */
   readonly [$env]: any;
+  /** @hidden */
   readonly [$parent]: IStateTreeNode | null;
+  /** @hidden */
   readonly [$type]: [this] | [any];
 
   constructor(type: any, parent: IStateTreeNode | null, env: any) {
@@ -49,7 +52,7 @@ export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implement
   }
 }
 
-class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]> | undefined, T["OutputType"][], IMSTArray<T>> {
+export class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]> | undefined, T["OutputType"][], IMSTArray<T>> {
   constructor(readonly childrenType: T) {
     super(types.array(childrenType.mstType));
   }
