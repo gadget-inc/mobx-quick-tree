@@ -518,8 +518,8 @@ describe("class models", () => {
   describe("class models with array/map/complex properties", () => {
     test("should default to empty arrays/maps when createReadOnly with undefined values", () => {
       const instance = NestedComplex.createReadOnly({});
-      expect(Array.from(instance.stringArray)).toEqual([]);
-      expect(Object.fromEntries(Object.entries(instance.numberMap))).toEqual({});
+      expect(instance.stringArray.toJSON()).toEqual([]);
+      expect(instance.numberMap.toJSON()).toEqual({});
     });
   });
 

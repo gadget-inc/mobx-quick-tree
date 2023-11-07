@@ -2,8 +2,8 @@ import { types } from "../src";
 
 test("can create an array of simple types", () => {
   const arrayType = types.array(types.string);
-  expect(Array.from(arrayType.createReadOnly())).toEqual([]);
-  expect(Array.from(arrayType.createReadOnly(["a", "b"]))).toEqual(["a", "b"]);
+  expect(arrayType.createReadOnly().toJSON()).toEqual([]);
+  expect(arrayType.createReadOnly(["a", "b"]).toJSON()).toEqual(["a", "b"]);
 });
 
 test("can create an array of complex types", () => {
@@ -14,8 +14,8 @@ test("can create an array of complex types", () => {
 
   const arrayType = types.array(inventoryType);
 
-  expect(Array.from(arrayType.createReadOnly())).toEqual([]);
-  expect(Array.from(arrayType.createReadOnly([{ itemName: "A", amount: 10 }, { itemName: "B" }]))).toEqual([
+  expect(arrayType.createReadOnly().toJSON()).toEqual([]);
+  expect(arrayType.createReadOnly([{ itemName: "A", amount: 10 }, { itemName: "B" }]).toJSON()).toEqual([
     expect.objectContaining({ itemName: "A", amount: 10 }),
     expect.objectContaining({ itemName: "B", amount: 0 }),
   ]);

@@ -16,7 +16,7 @@ export function getSnapshot<T extends IAnyType>(value: IStateTreeNode<T>): Snaps
 
 const snapshot = (value: any): unknown => {
   if (value instanceof QuickArray) {
-    return value.map((v) => snapshot(v));
+    return Array.from(value.map((v) => snapshot(v)));
   }
 
   if (value instanceof QuickMap) {

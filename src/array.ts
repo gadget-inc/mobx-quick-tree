@@ -1,6 +1,7 @@
 import { isStateTreeNode, types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import { ensureRegistered } from "./class-model";
+import { getSnapshot } from "./snapshot";
 import { $env, $parent, $readOnly, $type } from "./symbols";
 import type { IAnyStateTreeNode, IAnyType, IArrayType, IMSTArray, IStateTreeNode, Instance, InstantiateContext } from "./types";
 
@@ -48,7 +49,7 @@ export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implement
   }
 
   toJSON(): Instance<T>[] {
-    return this;
+    return getSnapshot(this);
   }
 }
 
