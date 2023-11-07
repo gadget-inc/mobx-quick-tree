@@ -16,8 +16,8 @@ export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implement
   /** @hidden */
   readonly [$type]: [this] | [any];
 
-  constructor(type: any, parent: IStateTreeNode | null, env: any) {
-    super();
+  constructor(type: any, parent: IStateTreeNode | null, env: any, ...items: Instance<T>[]) {
+    super(...items);
     this[$type] = type;
     this[$parent] = parent;
     this[$env] = env;

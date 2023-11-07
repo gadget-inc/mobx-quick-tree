@@ -29,7 +29,6 @@ const isDirectlyAssignableType = (type: IAnyType): type is DirectlyAssignableTyp
     type instanceof LiteralType ||
     type instanceof DateType ||
     type instanceof FrozenType ||
-    (type instanceof ArrayType && isDirectlyAssignableType(type.childrenType) && !(type.childrenType instanceof DateType)) ||
     type instanceof IntegerType
   );
 };
@@ -52,6 +51,8 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
         segments.push(this.assignmentExpressionForOptionalType(key, type));
       } else if (type instanceof ReferenceType || type instanceof SafeReferenceType) {
         segments.push(this.assignmentExpressionForReferenceType(key, type));
+      } else if (type instanceof ArrayType) {
+        segments.push(this.assignmentExpressionForArrayType(key, type));
       } else if (type instanceof MapType) {
         segments.push(this.assignmentExpressionForMapType(key, type));
       } else {
@@ -183,24 +184,28 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     `;
   }
 
-  private assignmentExpressionForArrayType(key: string, _type: MapType<any>): string {
-    const mapVarName = `map${key}`;
-    const snapshotVarName = `snapshotValue${key}`;
+  private assignmentExpressionForArrayType(key: string, type: ArrayType<any>): string {
+    if (!isDirectlyAssignableType(type.childrenType) || type.childrenType instanceof DateType) {
+      return `
+        // instantiate fallback for ${key} of type ${type.name}
+        instance["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
+          snapshot?.["${key}"],
+          context,
+          instance
+        );
+      `;
+    }
+
+    // Directly assignable types are primitives so we don't need to worry about setting parent/env/etc. Hence, we just
+    // pass the snapshot straight through to the constructor.
     return `
-      const ${mapVarName} = new QuickArray(${this.alias(`model.properties["${key}"]`)}, instance, context.env);
-      instance["${key}"] = ${mapVarName};
-      const ${snapshotVarName} = snapshot?.["${key}"];
-      if (${snapshotVarName}) {
-        for (let index = 0; index < ${snapshotVarName}.length; ++index) {
-          ${mapVarName}.push(
-            ${this.alias(`model.properties["${key}"].childrenType`)}.instantiate(
-              ${snapshotVarName}[index],
-              context,
-              ${mapVarName}
-            )
-          );
-        }
-      }`;
+      instance["${key}"] = new QuickArray(
+        ${this.alias(`model.properties["${key}"]`)},
+        instance,
+        context.env,
+        ...(snapshot?.["${key}"] ?? [])
+      );
+    `;
   }
 
   private assignmentExpressionForMapType(key: string, _type: MapType<any>): string {
