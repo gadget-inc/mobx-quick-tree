@@ -1,11 +1,11 @@
-import { OptionalType } from "./optional";
-import { SafeReferenceType, ReferenceType } from "./reference";
-import { isReferenceType } from "./api";
-import { DateType, LiteralType } from "./simple";
-import { IntegerType, SimpleType } from "./simple";
-import type { IAnyClassModelType, IAnyType, IClassModelType, Instance, InstantiateContext, SnapshotIn, ValidOptionalValue } from "./types";
-import { $identifier } from "./symbols";
+import { ArrayType, QuickArray } from "./array";
+import { FrozenType } from "./frozen";
 import { MapType, QuickMap } from "./map";
+import { OptionalType } from "./optional";
+import { ReferenceType, SafeReferenceType } from "./reference";
+import { DateType, IntegerType, LiteralType, SimpleType } from "./simple";
+import { $identifier } from "./symbols";
+import type { IAnyClassModelType, IAnyType, IClassModelType, Instance, InstantiateContext, SnapshotIn, ValidOptionalValue } from "./types";
 
 export const $fastInstantiator = Symbol.for("mqt:class-model-instantiator");
 
@@ -23,8 +23,15 @@ export const buildFastInstantiator = <T extends IClassModelType<Record<string, I
 };
 
 type DirectlyAssignableType = SimpleType<any> | IntegerType | LiteralType<any> | DateType;
-const isDirectlyAssignableType = (type: IAnyType): type is DirectlyAssignableType =>
-  type instanceof SimpleType || type instanceof IntegerType || type instanceof LiteralType || type instanceof DateType;
+const isDirectlyAssignableType = (type: IAnyType): type is DirectlyAssignableType => {
+  return (
+    type instanceof SimpleType ||
+    type instanceof LiteralType ||
+    type instanceof DateType ||
+    type instanceof FrozenType ||
+    type instanceof IntegerType
+  );
+};
 
 class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, any, any>> {
   aliases = new Map<string, string>();
@@ -37,21 +44,23 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     for (const [key, type] of Object.entries(this.model.properties)) {
       if (isDirectlyAssignableType(type)) {
         segments.push(`
-        // simple type for ${key}
-        instance["${key}"] = ${this.expressionForDirectlyAssignableType(key, type)};
-      `);
+          // simple type for ${key}
+          instance["${key}"] = ${this.expressionForDirectlyAssignableType(key, type)};
+       `);
       } else if (type instanceof OptionalType) {
         segments.push(this.assignmentExpressionForOptionalType(key, type));
       } else if (type instanceof ReferenceType || type instanceof SafeReferenceType) {
         segments.push(this.assignmentExpressionForReferenceType(key, type));
+      } else if (type instanceof ArrayType) {
+        segments.push(this.assignmentExpressionForArrayType(key, type));
       } else if (type instanceof MapType) {
         segments.push(this.assignmentExpressionForMapType(key, type));
       } else {
         segments.push(`
           // instantiate fallback for ${key} of type ${type.name}
           instance["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
-            snapshot?.["${key}"], 
-            context, 
+            snapshot?.["${key}"],
+            context,
             instance
           );
         `);
@@ -69,7 +78,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       segments.push(`
       const id = instance["${identifierProp}"];
       instance[$identifier] = id;
-      context.referenceCache.set(id, instance); 
+      context.referenceCache.set(id, instance);
     `);
     }
 
@@ -80,7 +89,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     `;
 
     const aliasFuncBody = `
-    const { QuickMap, $identifier } = imports;
+    const { QuickMap, QuickArray, $identifier } = imports;
     ${Array.from(this.aliases.entries())
       .map(([expression, alias]) => `const ${alias} = ${expression};`)
       .join("\n")}
@@ -96,7 +105,15 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     const aliasFunc = new Function("model", "imports", aliasFuncBody);
 
     // evaluate aliases and get created inner function
-    return aliasFunc(this.model, { $identifier, QuickMap }) as CompiledInstantiator<T>;
+    return aliasFunc(this.model, { $identifier, QuickMap, QuickArray }) as CompiledInstantiator<T>;
+  }
+
+  private expressionForDirectlyAssignableType(key: string, type: DirectlyAssignableType) {
+    if (type instanceof DateType) {
+      return `new Date(snapshot?.["${key}"])`;
+    } else {
+      return `snapshot?.["${key}"]`;
+    }
   }
 
   private assignmentExpressionForReferenceType(key: string, type: ReferenceType<IAnyType> | SafeReferenceType<IAnyType>): string {
@@ -122,14 +139,6 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
         ${notFoundBehavior}
       });
     `;
-  }
-
-  private expressionForDirectlyAssignableType(key: string, type: DirectlyAssignableType) {
-    if (type instanceof DateType) {
-      return `new Date(snapshot?.["${key}"])`;
-    } else {
-      return `snapshot?.["${key}"]`;
-    }
   }
 
   private assignmentExpressionForOptionalType(key: string, type: OptionalType<IAnyType, [ValidOptionalValue, ...ValidOptionalValue[]]>) {
@@ -158,8 +167,8 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     } else {
       createExpression = `
       instance["${key}"] = ${this.alias(`model.properties["${key}"].type`)}.instantiate(
-        ${varName}, 
-        context, 
+        ${varName},
+        context,
         instance
       );
       `;
@@ -175,6 +184,30 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     `;
   }
 
+  private assignmentExpressionForArrayType(key: string, type: ArrayType<any>): string {
+    if (!isDirectlyAssignableType(type.childrenType) || type.childrenType instanceof DateType) {
+      return `
+        // instantiate fallback for ${key} of type ${type.name}
+        instance["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
+          snapshot?.["${key}"],
+          context,
+          instance
+        );
+      `;
+    }
+
+    // Directly assignable types are primitives so we don't need to worry about setting parent/env/etc. Hence, we just
+    // pass the snapshot straight through to the constructor.
+    return `
+      instance["${key}"] = new QuickArray(
+        ${this.alias(`model.properties["${key}"]`)},
+        instance,
+        context.env,
+        ...(snapshot?.["${key}"] ?? [])
+      );
+    `;
+  }
+
   private assignmentExpressionForMapType(key: string, _type: MapType<any>): string {
     const mapVarName = `map${key}`;
     const snapshotVarName = `snapshotValue${key}`;
@@ -185,10 +218,10 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       if (${snapshotVarName}) {
         for (const key in ${snapshotVarName}) {
           ${mapVarName}.set(
-            key, 
+            key,
             ${this.alias(`model.properties["${key}"].childrenType`)}.instantiate(
-              ${snapshotVarName}[key], 
-              context, 
+              ${snapshotVarName}[key],
+              context,
               ${mapVarName}
             )
           );

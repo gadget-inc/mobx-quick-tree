@@ -1,14 +1,16 @@
+import memoize from "lodash.memoize";
 import type { IAnyModelType as MSTAnyModelType, IAnyType as MSTAnyType } from "mobx-state-tree";
 import { isReferenceType, isStateTreeNode as mstIsStateTreeNode, types as mstTypes } from "mobx-state-tree";
 import { types } from ".";
-import { BaseType, setEnv, setParent } from "./base";
+import { BaseType } from "./base";
 import { ensureRegistered } from "./class-model";
 import { CantRunActionError } from "./errors";
-import { $identifier, $originalDescriptor, $readOnly, $type } from "./symbols";
+import { $env, $identifier, $originalDescriptor, $parent, $readOnly, $type } from "./symbols";
 import type {
   IAnyStateTreeNode,
   IAnyType,
   INodeModelType,
+  IStateTreeNode,
   InputTypesForModelProps,
   InputsForModel,
   Instance,
@@ -20,9 +22,7 @@ import type {
   ModelViews,
   OutputTypesForModelProps,
   TypesForModelPropsDeclaration,
-  IStateTreeNode,
 } from "./types";
-import memoize from "lodash.memoize";
 import { cyrb53 } from "./utils";
 
 export const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDeclaration>(
@@ -125,6 +125,8 @@ export const defaultThrowAction = (name: string, originalDescriptor?: PropertyDe
 
 export type ModelInitializer = (self: any) => void;
 
+const DEFAULT_PROTOTYPE = {};
+
 export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   InputsForModel<InputTypesForModelProps<Props>>,
   OutputTypesForModelProps<Props>,
@@ -146,14 +148,32 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
       configurable: false,
     });
     this.identifierProp = this.mstType.identifierAttribute;
-
-    if (prototype) {
-      this.prototype = Object.create(prototype);
-    } else {
-      this.prototype = {} as this["InstanceType"];
-    }
-    (this.prototype as any)[$type] = this;
-    (this.prototype as any)[$readOnly] = true;
+    this.prototype = Object.create(prototype ?? null, {
+      [$type]: {
+        value: this,
+        configurable: false,
+        enumerable: false,
+        writable: false,
+      },
+      [$parent]: {
+        value: null,
+        configurable: false,
+        enumerable: false,
+        writable: true,
+      },
+      [$env]: {
+        value: null,
+        configurable: false,
+        enumerable: false,
+        writable: true,
+      },
+      [$readOnly]: {
+        value: true,
+        configurable: false,
+        enumerable: false,
+        writable: false,
+      },
+    });
   }
 
   views<Views extends ModelViews>(fn: (self: Instance<this>) => Views): ModelType<Props, Others & Views> {
@@ -241,15 +261,25 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   }
 
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
-    const instance: Record<string | symbol, any> = Object.create(this.prototype);
+    const instance: Record<string | symbol, any> = Object.create(this.prototype, {
+      [$parent]: {
+        value: parent,
+        enumerable: false,
+        configurable: false,
+        writable: false,
+      },
+      [$env]: {
+        value: context.env,
+        enumerable: false,
+        configurable: false,
+        writable: false,
+      },
+    });
 
     instantiateInstanceFromProperties(instance, snapshot, this.properties, this.identifierProp, context);
-    for (const init of this.initializers) {
-      init(instance);
+    for (let index = 0; index < this.initializers.length; index++) {
+      this.initializers[index](instance);
     }
-
-    setParent(instance, parent);
-    setEnv(instance, context.env);
 
     return instance as this["InstanceType"];
   }

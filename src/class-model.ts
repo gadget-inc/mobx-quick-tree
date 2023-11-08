@@ -1,7 +1,9 @@
+import memoize from "lodash.memoize";
 import type { IModelType as MSTIModelType, ModelActions } from "mobx-state-tree";
 import { types as mstTypes } from "mobx-state-tree";
 import "reflect-metadata";
 import { RegistrationError } from "./errors";
+import { $fastInstantiator, buildFastInstantiator } from "./fast-instantiator";
 import { defaultThrowAction, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
 import {
   $env,
@@ -28,8 +30,6 @@ import type {
   ModelViews,
   TypesForModelPropsDeclaration,
 } from "./types";
-import { $fastInstantiator, buildFastInstantiator } from "./fast-instantiator";
-import memoize from "lodash.memoize";
 import { cyrb53 } from "./utils";
 
 /** @internal */
@@ -397,15 +397,17 @@ export const ensureRegistered = (type: IAnyType) => {
 };
 
 function initializeVolatiles(result: Record<string, any>, node: Record<string, any>, volatiles: Record<string, VolatileMetadata>) {
-  for (const [key, metadata] of Object.entries(volatiles)) {
-    result[key] = metadata.initializer(node);
+  for (const key in volatiles) {
+    result[key] = volatiles[key].initializer(node);
   }
   return result;
 }
 
 function bindToSelf<T extends Record<string, any>>(self: object, inputs: T): T {
   const outputs = {} as T;
-  for (const [key, property] of Object.entries(Object.getOwnPropertyDescriptors(inputs))) {
+  const descriptors = Object.getOwnPropertyDescriptors(inputs);
+  for (const key in descriptors) {
+    const property = descriptors[key];
     if (typeof property.value === "function") {
       property.value = property.value.bind(self);
     }

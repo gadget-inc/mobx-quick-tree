@@ -1,20 +1,18 @@
 import type { CustomTypeOptions } from "mobx-state-tree";
 import { types } from "mobx-state-tree";
-import { BaseType, setParent } from "./base";
-import type { InstantiateContext, IStateTreeNode, IType } from "./types";
+import { BaseType } from "./base";
+import type { IStateTreeNode, IType, InstantiateContext } from "./types";
 
-class CustomType<InputType, OutputType> extends BaseType<InputType, OutputType, OutputType> {
+export class CustomType<InputType, OutputType> extends BaseType<InputType, OutputType, OutputType> {
   constructor(readonly options: CustomTypeOptions<InputType, OutputType>) {
     super(types.custom<InputType, OutputType>(options));
   }
 
-  instantiate(snapshot: InputType, _context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
+  instantiate(snapshot: InputType, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
     if (snapshot === undefined) {
       throw new Error("can't initialize custom type with undefined");
     }
-    const object = this.options.fromSnapshot(snapshot) as this["InstanceType"];
-    setParent(object, parent);
-    return object;
+    return this.options.fromSnapshot(snapshot) as this["InstanceType"];
   }
 
   is(value: any): value is this["InstanceType"];

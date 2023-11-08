@@ -12,14 +12,13 @@ import type {
   ModelPropertiesDeclaration,
   SnapshotIn,
 } from "../src";
-import { isType } from "../src";
-import { flow, getSnapshot, getType, isReadOnlyNode, isStateTreeNode, types } from "../src";
+import { flow, getSnapshot, getType, isReadOnlyNode, isStateTreeNode, isType, types } from "../src";
 import { ClassModel, action, extend, register, view, volatile, volatileAction } from "../src/class-model";
 import { $identifier } from "../src/symbols";
+import { NameExample } from "./fixtures/NameExample";
 import { NamedThingClass, TestClassModel } from "./fixtures/TestClassModel";
 import { NamedThing, TestModelSnapshot } from "./fixtures/TestModel";
 import { create } from "./helpers";
-import { NameExample } from "./fixtures/NameExample";
 
 const DynamicNameExample = register(
   class extends ClassModel({ key: types.identifier, name: types.string }) {
@@ -145,6 +144,9 @@ class AutoIdentified extends ClassModel({ key: types.optional(types.identifier, 
 
 @register
 class ParentOfMQT extends ClassModel({ key: types.identifier, thing: NamedThing }) {}
+
+@register
+class NestedComplex extends ClassModel({ stringArray: types.array(types.string), numberMap: types.map(types.number) }) {}
 
 const ParentOfModelClass = types.model("ParentOfModelClass", {
   key: types.identifier,
@@ -510,6 +512,14 @@ describe("class models", () => {
         assert<IsExact<number, typeof instance.nameLength>>(true);
         assert<IsExact<number, typeof instance.extendedNameLength>>(true);
       });
+    });
+  });
+
+  describe("class models with array/map/complex properties", () => {
+    test("should default to empty arrays/maps when createReadOnly with undefined values", () => {
+      const instance = NestedComplex.createReadOnly({});
+      expect(instance.stringArray.toJSON()).toEqual([]);
+      expect(instance.numberMap.toJSON()).toEqual({});
     });
   });
 

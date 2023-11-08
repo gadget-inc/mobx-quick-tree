@@ -1,7 +1,8 @@
 import { isStateTreeNode, types } from "mobx-state-tree";
-import { BaseType, setEnv, setParent } from "./base";
+import { BaseType } from "./base";
 import { ensureRegistered } from "./class-model";
-import { $parent, $readOnly, $type } from "./symbols";
+import { getSnapshot } from "./snapshot";
+import { $env, $parent, $readOnly, $type } from "./symbols";
 import type { IAnyStateTreeNode, IAnyType, IArrayType, IMSTArray, IStateTreeNode, Instance, InstantiateContext } from "./types";
 
 export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implements IMSTArray<T> {
@@ -9,7 +10,19 @@ export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implement
     return Array;
   }
 
-  [$type]?: [this] | [any];
+  /** @hidden */
+  readonly [$env]: any;
+  /** @hidden */
+  readonly [$parent]: IStateTreeNode | null;
+  /** @hidden */
+  readonly [$type]: [this] | [any];
+
+  constructor(type: any, parent: IStateTreeNode | null, env: any, ...items: Instance<T>[]) {
+    super(...items);
+    this[$type] = type;
+    this[$parent] = parent;
+    this[$env] = env;
+  }
 
   get [Symbol.toStringTag]() {
     return "Array" as const;
@@ -36,11 +49,11 @@ export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implement
   }
 
   toJSON(): Instance<T>[] {
-    return this;
+    return getSnapshot(this);
   }
 }
 
-class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]> | undefined, T["OutputType"][], IMSTArray<T>> {
+export class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]> | undefined, T["OutputType"][], IMSTArray<T>> {
   constructor(readonly childrenType: T) {
     super(types.array(childrenType.mstType));
   }
@@ -67,24 +80,12 @@ class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]> | und
   }
 
   instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
-    const array = new QuickArray<T>(snapshot?.length ?? 0);
+    const array = new QuickArray<T>(this, parent, context.env);
     if (snapshot) {
-      snapshot.forEach((child, index) => {
-        array[index] = this.childrenType.instantiate(child, context, array);
-      });
+      for (let index = 0; index < snapshot?.length; ++index) {
+        array.push(this.childrenType.instantiate(snapshot[index], context, array));
+      }
     }
-
-    setParent(array, parent);
-
-    Reflect.defineProperty(array, $type, {
-      value: this,
-      configurable: false,
-      enumerable: false,
-      writable: false,
-    });
-
-    setEnv(array, context.env);
-
     return array as this["InstanceType"];
   }
 
