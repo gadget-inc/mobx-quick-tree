@@ -79,7 +79,7 @@ describe("getSnapshot", () => {
     assert<IsExact<typeof snapshot.map.test_key, SnapshotOut<typeof NamedThing>>>(true);
   });
 
-  test("snapshots an readonly node model instance", () => {
+  test("snapshots a readonly node model instance", () => {
     const instance = TestModel.createReadOnly(TestModelSnapshot);
     const snapshot = getSnapshot(instance);
     verifySnapshot(snapshot);
@@ -93,7 +93,7 @@ describe("getSnapshot", () => {
     assert<IsExact<typeof snapshot.map.test_key, SnapshotOut<typeof NamedThing>>>(true);
   });
 
-  test("snapshots an readonly class model instance", () => {
+  test("snapshots a readonly class model instance", () => {
     const instance = TestClassModel.createReadOnly(TestModelSnapshot);
     const snapshot = getSnapshot(instance);
     verifySnapshot(snapshot);

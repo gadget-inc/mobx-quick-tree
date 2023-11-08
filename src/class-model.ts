@@ -1,10 +1,10 @@
 import "reflect-metadata";
 
 import memoize from "lodash.memoize";
-import type { IModelType as MSTIModelType, ModelActions } from "mobx-state-tree";
+import type { Instance, IModelType as MSTIModelType, ModelActions } from "mobx-state-tree";
 import { types as mstTypes } from "mobx-state-tree";
 import { RegistrationError } from "./errors";
-import { buildFastInstantiator } from "./fast-instantiator";
+import { InstantiatorBuilder } from "./fast-instantiator";
 import { FastGetBuilder } from "./fast-getter";
 import { defaultThrowAction, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
 import {
@@ -22,6 +22,7 @@ import {
 import type {
   Constructor,
   ExtendedClassModel,
+  IAnyClassModelType,
   IAnyType,
   IClassModelType,
   IStateTreeNode,
@@ -30,6 +31,7 @@ import type {
   TypesForModelPropsDeclaration,
 } from "./types";
 import { cyrb53 } from "./utils";
+import { storeViewOnSnapshot } from "./snapshot";
 
 /** @internal */
 type ActionMetadata = {
@@ -38,10 +40,25 @@ type ActionMetadata = {
   volatile: boolean;
 };
 
+/** Options that configure a snapshotted view */
+export interface SnapshottedViewOptions<V, T extends IAnyClassModelType> {
+  /** A function for snapshotting a view's value to JSON for storage in a snapshot */
+  getSnapshot?: (value: V, snapshot: T["InputType"], node: Instance<T>) => any;
+  /** A function for converting a stored value in the snapshot back to the rich type for the view to return */
+  createReadOnly?: (value: V | undefined, snapshot: T["InputType"], node: Instance<T>) => V | undefined;
+}
+
 /** @internal */
 export type ViewMetadata = {
   type: "view";
   property: string;
+};
+
+/** @internal */
+export type SnapshottedViewMetadata = {
+  type: "snapshotted-view";
+  property: string;
+  options: SnapshottedViewOptions<any, any>;
 };
 
 /** @internal */
@@ -53,7 +70,7 @@ export type VolatileMetadata = {
 
 type VolatileInitializer<T> = (instance: T) => Record<string, any>;
 /** @internal */
-export type PropertyMetadata = ActionMetadata | ViewMetadata | VolatileMetadata;
+export type PropertyMetadata = ActionMetadata | ViewMetadata | SnapshottedViewMetadata | VolatileMetadata;
 
 const metadataPrefix = "mqt:properties";
 const viewKeyPrefix = `${metadataPrefix}:view`;
@@ -158,11 +175,18 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
 
   for (const metadata of metadatas) {
     switch (metadata.type) {
+      case "snapshotted-view":
       case "view": {
         const property = metadata.property;
         const descriptor = getPropertyDescriptor(klass.prototype, property);
         if (!descriptor) {
           throw new RegistrationError(`Property ${property} not found on ${klass} prototype, can't register view for class model`);
+        }
+
+        if ("cache" in metadata && !descriptor.get) {
+          throw new RegistrationError(
+            `Snapshotted view property ${property} on ${klass} must be a getter -- can't use snapshotted views with views that are functions or take arguments`,
+          );
         }
 
         // memoize getters on readonly instances
@@ -177,6 +201,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
           ...descriptor,
           enumerable: true,
         });
+
         break;
       }
 
@@ -251,23 +276,29 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
   });
 
   // create the MST type for not-readonly versions of this using the views and actions extracted from the class
-  klass.mstType = mstTypes
+  let mstType = mstTypes
     .model(klass.name, mstPropsFromQuickProps(klass.properties))
     .views((self) => bindToSelf(self, mstViews))
     .actions((self) => bindToSelf(self, mstActions));
 
   if (Object.keys(mstVolatiles).length > 0) {
     // define the volatile properties in one shot by running any passed initializers
-    (klass as any).mstType = (klass as any).mstType.volatile((self: any) => initializeVolatiles({}, self, mstVolatiles));
+    mstType = mstType.volatile((self: any) => initializeVolatiles({}, self, mstVolatiles));
   }
 
+  klass.snapshottedViews = metadatas.filter((metadata) => metadata.type == "snapshotted-view") as SnapshottedViewMetadata[];
+  if (klass.snapshottedViews.length > 0) {
+    mstType = buildSnapshottedViewProcessor(klass.snapshottedViews, mstType);
+  }
+
+  klass.mstType = mstType;
   (klass as any)[$registered] = true;
 
   // define the class constructor and the following hot path functions dynamically
   //   - .createReadOnly
   //   - .is
   //   - .instantiate
-  return buildFastInstantiator(klass, fastGetters) as any;
+  return new InstantiatorBuilder(klass, fastGetters).build() as any;
 }
 
 /**
@@ -293,6 +324,36 @@ export const view = (target: any, property: string, _descriptor: PropertyDescrip
   const metadata: ViewMetadata = { type: "view", property };
   Reflect.defineMetadata(`${viewKeyPrefix}:${property}`, metadata, target);
 };
+
+/**
+ * Function decorator for registering MQT snapshotted views within MQT class models. Stores the view's value into the snapshot when an instance is snapshotted, and uses that stored value for readonly instances created from snapshots.
+ *
+ * Can be passed an `options` object with a `preProcess` and/or `postProcess` function for transforming the cached value stored in the snapshot to and from the snapshot state.
+ *
+ * @example
+ * class Example extends ClassModel({ name: types.string }) {
+ *   @snapshottedView
+ *   get slug() {
+ *     return this.name.toLowerCase().replace(/ /g, "-");
+ *   }
+ * }
+ *
+ * @example
+ * class Example extends ClassModel({ timestamp: types.string }) {
+ *   @snapshottedView({ preProcess: (value) => new Date(value), postProcess: (value) => value.toISOString() })
+ *   get date() {
+ *     return new Date(timestamp).setTime(0);
+ *   }
+ * }
+ */
+export function snapshottedView<V, T extends IAnyClassModelType = IAnyClassModelType>(
+  options: SnapshottedViewOptions<V, T> = {},
+): (target: any, property: string, _descriptor: PropertyDescriptor) => void {
+  return (target: any, property: string, _descriptor: PropertyDescriptor) => {
+    const metadata: SnapshottedViewMetadata = { type: "snapshotted-view", property, options };
+    Reflect.defineMetadata(`${viewKeyPrefix}:${property}`, metadata, target);
+  };
+}
 
 /**
  * A function for defining a volatile
@@ -451,4 +512,16 @@ export function getPropertyDescriptor(obj: any, property: string) {
 
 export const isClassModel = (type: IAnyType): type is IClassModelType<any, any, any> => {
   return (type as any).isMQTClassModel;
+};
+
+const buildSnapshottedViewProcessor = (snapshottedViews: SnapshottedViewMetadata[], mstType: MSTIModelType<any, any>) => {
+  return mstTypes.snapshotProcessor(mstType, {
+    postProcessor(snapshot, node) {
+      if (!node) return snapshot; // FIXME -- undesirable to ever run without a node because we are thusly not putting a snapshot of the view in the snapshot
+      for (const snapshottedView of snapshottedViews) {
+        storeViewOnSnapshot(node, snapshottedView, snapshot);
+      }
+      return snapshot;
+    },
+  }) as any;
 };

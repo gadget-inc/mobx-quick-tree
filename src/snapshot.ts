@@ -7,6 +7,7 @@ import type { MapType } from "./map";
 import { QuickMap } from "./map";
 import { $identifier } from "./symbols";
 import type { IAnyType, IStateTreeNode, SnapshotOut } from "./types";
+import type { SnapshottedViewMetadata } from "./class-model";
 
 export function getSnapshot<T extends IAnyType>(value: IStateTreeNode<T>): SnapshotOut<T> {
   if (mstIsStateTreeNode(value)) {
@@ -52,9 +53,24 @@ const snapshot = (value: any): unknown => {
           modelSnapshot[name] = snapshot((value as any)[name]);
         }
       }
+      if ("snapshottedViews" in type) {
+        for (const view of type.snapshottedViews) {
+          storeViewOnSnapshot(value, view, modelSnapshot);
+        }
+      }
+
       return modelSnapshot;
     }
   }
 
   return value;
+};
+
+/** @internal */
+export const storeViewOnSnapshot = (node: Record<string, any>, view: SnapshottedViewMetadata, snapshot: any) => {
+  let value = node[view.property];
+  if (view.options.getSnapshot) {
+    value = view.options.getSnapshot(value, snapshot, node);
+  }
+  snapshot[view.property] = value;
 };
