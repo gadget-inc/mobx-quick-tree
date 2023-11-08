@@ -71,7 +71,7 @@ export {
   unescapeJsonPath,
   walk,
 } from "mobx-state-tree";
-export { ClassModel, action, extend, register, view, volatile, volatileAction } from "./class-model";
+export { ClassModel, action, extend, register, view, cachedView, volatile, volatileAction } from "./class-model";
 export { getSnapshot } from "./snapshot";
 
 export const isType = (value: any): value is IAnyType => {

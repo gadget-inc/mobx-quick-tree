@@ -1,4 +1,5 @@
 import { ArrayType, QuickArray } from "./array";
+import type { CachedViewMetadata } from "./class-model";
 import { FrozenType } from "./frozen";
 import { MapType, QuickMap } from "./map";
 import { OptionalType } from "./optional";
@@ -6,13 +7,6 @@ import { ReferenceType, SafeReferenceType } from "./reference";
 import { DateType, IntegerType, LiteralType, SimpleType } from "./simple";
 import { $env, $identifier, $memoizedKeys, $memos, $parent, $readOnly, $type } from "./symbols";
 import type { IAnyType, IClassModelType, ValidOptionalValue } from "./types";
-
-/**
- * Compiles a fast function for taking snapshots and turning them into instances of a class model.
- **/
-export const buildFastInstantiator = <T extends IClassModelType<Record<string, IAnyType>, any, any>>(model: T): T => {
-  return new InstantiatorBuilder(model).build();
-};
 
 type DirectlyAssignableType = SimpleType<any> | IntegerType | LiteralType<any> | DateType;
 const isDirectlyAssignableType = (type: IAnyType): type is DirectlyAssignableType => {
@@ -25,10 +19,13 @@ const isDirectlyAssignableType = (type: IAnyType): type is DirectlyAssignableTyp
   );
 };
 
-class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, any, any>> {
+/**
+ * Compiles a fast class constructor that takes snapshots and turns them into instances of a class model.
+ **/
+export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, any, any>> {
   aliases = new Map<string, string>();
 
-  constructor(readonly model: T) {}
+  constructor(readonly model: T, readonly cachedViews: CachedViewMetadata[]) {}
 
   build(): T {
     const segments: string[] = [];
@@ -72,6 +69,10 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       this[$identifier] = id;
       context.referenceCache.set(id, this);
     `);
+    }
+
+    for (const [index, cachedView] of this.cachedViews.entries()) {
+      segments.push(this.assignCachedViewExpression(cachedView, index));
     }
 
     let className = this.model.name;
@@ -137,7 +138,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     `;
 
     const aliasFuncBody = `
-    const { QuickMap, QuickArray, $identifier, $env, $parent, $memos, $memoizedKeys, $readOnly, $type } = imports;
+    const { QuickMap, QuickArray, $identifier, $env, $parent, $memos, $memoizedKeys, $readOnly, $type, cachedViews } = imports;
 
     ${Array.from(this.aliases.entries())
       .map(([expression, alias]) => `const ${alias} = ${expression};`)
@@ -162,7 +163,18 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       `);
 
       // evaluate aliases and get created inner function
-      return aliasFunc(this.model, { $identifier, $env, $parent, $memos, $memoizedKeys, $readOnly, $type, QuickMap, QuickArray }) as T;
+      return aliasFunc(this.model, {
+        $identifier,
+        $env,
+        $parent,
+        $memos,
+        $memoizedKeys,
+        $readOnly,
+        $type,
+        QuickMap,
+        QuickArray,
+        cachedViews: this.cachedViews,
+      }) as T;
     } catch (e) {
       console.warn("failed to build fast instantiator for", this.model.name);
       console.warn("dynamic source code:", aliasFuncBody);
@@ -289,6 +301,27 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
           );
         }
       }`;
+  }
+
+  private assignCachedViewExpression(cachedView: CachedViewMetadata, index: number) {
+    const varName = `view${cachedView.property}`;
+
+    let valueExpression = `snapshot?.["${cachedView.property}"]`;
+    if (cachedView.cache.createReadOnly) {
+      const alias = this.alias(`cachedViews[${index}].cache.createReadOnly`);
+      valueExpression = `${alias}(${valueExpression}, snapshot, this)`;
+    }
+
+    return `
+      // setup cached view for ${cachedView.property}
+      const ${varName} = ${valueExpression};
+      if (typeof ${varName} != "undefined") {
+        this[$memoizedKeys] ??= {};
+        this[$memos] ??= {};
+        this[$memoizedKeys]["${cachedView.property}"] = true;
+        this[$memos]["${cachedView.property}"] = ${varName};
+      }
+    `;
   }
 
   alias(expression: string): string {
