@@ -35,7 +35,7 @@ node --prof-process isolate-*.log
 You can postprocess the generated `isolate-0x<something>.log` file into the data `flamegraph` expects, and then feed it to `flamegraph` to see a visual breakdown of performance. You can do that in one command like so:
 
 ```shell
-node --prof-process --preprocess -j isolate-*.log | p flamebearer
+node --prof-process --preprocess -j isolate-*.log | pnpm flamebearer
 ```
 
 #### CPU profiling with VSCode

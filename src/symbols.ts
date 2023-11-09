@@ -37,3 +37,15 @@ export const $registered = Symbol.for("MQT_registered");
  * @hidden
  **/
 export const $volatileDefiner = Symbol.for("MQT_volatileDefiner");
+
+/**
+ * The values of memoized properties on an MQT instance
+ * @hidden
+ **/
+export const $memos = Symbol.for("mqt:class-model-memos");
+
+/**
+ * The list of properties which have been memoized
+ * @hidden
+ **/
+export const $memoizedKeys = Symbol.for("mqt:class-model-memoized-keys");
