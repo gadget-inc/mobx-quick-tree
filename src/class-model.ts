@@ -3,11 +3,13 @@ import type { IModelType as MSTIModelType, ModelActions } from "mobx-state-tree"
 import { types as mstTypes } from "mobx-state-tree";
 import "reflect-metadata";
 import { RegistrationError } from "./errors";
-import { $fastInstantiator, buildFastInstantiator } from "./fast-instantiator";
+import { buildFastInstantiator } from "./fast-instantiator";
 import { defaultThrowAction, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
 import {
   $env,
   $identifier,
+  $memoizedKeys,
+  $memos,
   $originalDescriptor,
   $parent,
   $quickType,
@@ -23,8 +25,6 @@ import type {
   IAnyType,
   IClassModelType,
   IStateTreeNode,
-  InputTypesForModelProps,
-  InputsForModel,
   InstantiateContext,
   ModelPropertiesDeclaration,
   ModelViews,
@@ -59,8 +59,6 @@ const metadataPrefix = "mqt:properties";
 const viewKeyPrefix = `${metadataPrefix}:view`;
 const actionKeyPrefix = `${metadataPrefix}:action`;
 const volatileKeyPrefix = `${metadataPrefix}:volatile`;
-const $memos = Symbol.for("mqt:class-model-memos");
-const $memoizedKeys = Symbol.for("mqt:class-model-memoized-keys");
 
 /**
  * A map of property keys to indicators for how that property should behave on the registered class
@@ -82,40 +80,19 @@ class BaseClassModel {
     return extend(this, props);
   }
 
+  /** Properties set in the fast instantiator compiled constructor, included here for type information */
+  [$readOnly]!: true;
+  [$type]!: IClassModelType<TypesForModelPropsDeclaration<any>>;
   /** @hidden */
   readonly [$env]?: any;
   /** @hidden */
   readonly [$parent]?: IStateTreeNode | null;
   /** @hidden */
-  [$memos] = null;
-  /** @hidden */
-  [$memoizedKeys] = null;
-  /** @hidden */
   [$identifier]?: any;
-
-  constructor(
-    snapshot: InputsForModel<InputTypesForModelProps<TypesForModelPropsDeclaration<any>>> | undefined,
-    context: InstantiateContext,
-    parent: IStateTreeNode | null,
-    /** @hidden */ hackyPreventInitialization = false
-  ) {
-    if (hackyPreventInitialization) {
-      return;
-    }
-
-    this[$env] = context.env;
-    this[$parent] = parent;
-
-    (this.constructor as IClassModelType<any>)[$fastInstantiator](this as any, snapshot, context);
-  }
-
-  get [$readOnly]() {
-    return true;
-  }
-
-  get [$type]() {
-    return this.constructor as IClassModelType<TypesForModelPropsDeclaration<any>>;
-  }
+  /** @hidden */
+  [$memos]!: Record<string, any> | null;
+  /** @hidden */
+  [$memoizedKeys]!: Record<string, boolean> | null;
 }
 
 /**
@@ -162,7 +139,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
   tags?: RegistrationTags<Instance>,
   name?: string
 ) {
-  const klass = object as any as IClassModelType<any>;
+  let klass = object as any as IClassModelType<any>;
   const mstActions: ModelActions = {};
   const mstViews: ModelViews = {};
   const mstVolatiles: Record<string, VolatileMetadata> = {};
@@ -263,6 +240,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
       }
       case "volatile": {
         mstVolatiles[metadata.property] = metadata;
+        break;
       }
     }
   }
@@ -310,7 +288,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
     (klass as any).mstType = (klass as any).mstType.volatile((self: any) => initializeVolatiles({}, self, mstVolatiles));
   }
 
-  klass[$fastInstantiator] = buildFastInstantiator(klass);
+  klass = buildFastInstantiator(klass);
   (klass as any)[$registered] = true;
 
   return klass as any;
