@@ -5,7 +5,7 @@ import memoize from "lodash.memoize";
 
 class EnumerationType<EnumOptions extends string> extends BaseType<EnumOptions, EnumOptions, EnumOptions> {
   constructor(readonly name: string, readonly options: readonly EnumOptions[]) {
-    super(types.enumeration<EnumOptions>([...options]));
+    super(types.enumeration<EnumOptions>(name, [...options]));
   }
 
   instantiate(snapshot: this["InputType"], _context: InstantiateContext, _parent: IStateTreeNode | null): this["InstanceType"] {
