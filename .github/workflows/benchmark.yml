@@ -12,5 +12,5 @@ jobs:
       - name: Run benchmarks
         uses: CodSpeedHQ/action@v1
         with:
-          run: pnpm x bench/all.ts
+          run: node --version && pnpm x bench/all.ts
           token: ${{ secrets.CODSPEED_TOKEN }}
