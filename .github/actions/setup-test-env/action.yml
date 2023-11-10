@@ -5,32 +5,49 @@ outputs: {}
 runs:
   using: "composite"
   steps:
-      - name: Install Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 21
+    - uses: cachix/install-nix-action@v18
+      with:
+        install_url: https://releases.nixos.org/nix/nix-2.11.1/install
+    - run: |
+        source <(nix print-dev-env --show-trace) 
+        output_file="nix-env.txt"
 
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        id: pnpm-install
-        with:
-          version: 8
-          run_install: false
+        # Clear the output file
+        > $output_file
 
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        # Loop over each variable in the environment
+        while IFS='=' read -r -d '' name value; do
+            # Skip if the variable is a function or read-only or non-alphanumeric
+            [[ "$(declare -p $name)" =~ "declare -[a-z]*r[a-z]* " ]] && continue
+            [[ ! $name =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] && continue
 
-      - uses: actions/cache@v3
-        name: Setup pnpm cache
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+            # Check if the variable value contains a newline
+            if [[ "$value" != *$'\n'* ]]; then
+                # It doesn't, so write the variable and its value (stripping quotes) to the file
+                echo "${name}=${value//\"/}" >> $output_file
+            fi
+        done < <(env -0)
 
-      - name: Install dependencies
-        shell: bash
-        run: pnpm install
+        # useful for debugging what env is exported
+        # cat nix-env.txt
+      shell: bash
+    - run: cat nix-env.txt >> "$GITHUB_ENV"
+      shell: bash
+
+    - name: Get pnpm store directory
+      id: pnpm-cache
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - uses: actions/cache@v3
+      name: Setup pnpm cache
+      with:
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install
