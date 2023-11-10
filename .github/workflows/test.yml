@@ -21,15 +21,6 @@ jobs:
         shell: bash
         run: pnpm lint
 
-  bench:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2.3.4
-      - uses: ./.github/actions/setup-test-env
-      - name: Run benchmarks
-        shell: bash
-        run: pnpm x bench/all.ts
-
   build-js:
     runs-on: ubuntu-latest
     steps:
