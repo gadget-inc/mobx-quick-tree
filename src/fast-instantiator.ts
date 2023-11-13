@@ -74,10 +74,39 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     `);
     }
 
+    let className = this.model.name;
+    if (!className || className.trim().length == 0) {
+      className = "AnonymousModel";
+    }
+
     const defineClassStatement = `
-      return class ${this.model.name} extends model {
+      return class ${className} extends model {
         [$memos] = null;
         [$memoizedKeys] = null;
+
+        static createReadOnly = (snapshot, env) => {
+          const context = {
+            referenceCache: new Map(),
+            referencesToResolve: [],
+            env,
+          };
+      
+          const instance = new ${className}(snapshot, context, null);
+      
+          for (const resolver of context.referencesToResolve) {
+            resolver();
+          }
+      
+          return instance;
+        };
+
+        static instantiate(snapshot, context, parent) { 
+          return new ${className}(snapshot, context, parent);
+        };
+        
+        static is(value) {
+          return (value instanceof ${className}) || ${className}.mstType.is(value);
+        };
 
         constructor(
           snapshot,
@@ -119,13 +148,19 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
 
     // console.log(`function for ${this.model.name}`, "\n\n\n", aliasFuncBody, "\n\n\n");
 
-    // build a function that closes over a bunch of aliased expressions
-    // evaluate the inner function source code in this closure to return the function
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    const aliasFunc = new Function("model", "imports", aliasFuncBody);
+    try {
+      // build a function that closes over a bunch of aliased expressions
+      // evaluate the inner function source code in this closure to return the function
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+      const aliasFunc = new Function("model", "imports", aliasFuncBody);
 
-    // evaluate aliases and get created inner function
-    return aliasFunc(this.model, { $identifier, $env, $parent, $memos, $memoizedKeys, $readOnly, $type, QuickMap, QuickArray }) as T;
+      // evaluate aliases and get created inner function
+      return aliasFunc(this.model, { $identifier, $env, $parent, $memos, $memoizedKeys, $readOnly, $type, QuickMap, QuickArray }) as T;
+    } catch (e) {
+      console.warn("failed to build fast instantiator for", this.model.name);
+      console.warn("dynamic source code:", aliasFuncBody);
+      throw e;
+    }
   }
 
   private expressionForDirectlyAssignableType(key: string, type: DirectlyAssignableType) {

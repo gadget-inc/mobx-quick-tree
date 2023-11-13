@@ -252,25 +252,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
   klass.volatiles = mstVolatiles;
 
   // conform to the API that the other MQT types expect for creating instances
-  klass.instantiate = (snapshot, context, parent) => new klass(snapshot, context, parent);
-  (klass as any).is = (value: any) => value instanceof klass || klass.mstType.is(value);
   klass.create = (snapshot, env) => klass.mstType.create(snapshot, env);
-  klass.createReadOnly = (snapshot, env) => {
-    const context: InstantiateContext = {
-      referenceCache: new Map(),
-      referencesToResolve: [],
-      env,
-    };
-
-    const instance = new klass(snapshot, context, null) as any;
-
-    for (const resolver of context.referencesToResolve) {
-      resolver();
-    }
-
-    return instance;
-  };
-
   klass.schemaHash = memoize(async () => {
     const props = Object.entries(klass.properties as Record<string, IAnyType>).sort(([key1], [key2]) => key1.localeCompare(key2));
     const propHashes = await Promise.all(props.map(async ([key, prop]) => `${key}:${await prop.schemaHash()}`));
@@ -288,7 +270,12 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
     (klass as any).mstType = (klass as any).mstType.volatile((self: any) => initializeVolatiles({}, self, mstVolatiles));
   }
 
+  // define the class constructor and the following hot path functions dynamically
+  // .createReadOnly
+  // .is
+  // .instantiate
   klass = buildFastInstantiator(klass);
+
   (klass as any)[$registered] = true;
 
   return klass as any;
