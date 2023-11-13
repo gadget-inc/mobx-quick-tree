@@ -70,6 +70,9 @@ devDependencies:
   deoptigate:
     specifier: ^0.7.1
     version: 0.7.1
+  dexnode:
+    specifier: ^1.2.2
+    version: 1.2.2
   eslint:
     specifier: ^8.53.0
     version: 8.53.0
@@ -1968,6 +1971,14 @@ packages:
   /detect-newline@3.1.0:
     resolution: {integrity: sha512-TLz+x/vEXm/Y7P7wn1EJFNLxYpUD4TgMosxY6fAVJUnJMbupHBOncxyWUG9OpTaH9EBD7uFI5LfEgmMOc54DsA==}
     engines: {node: '>=8'}
+    dev: true
+
+  /dexnode@1.2.2:
+    resolution: {integrity: sha512-L+rnDz6kO/taBvaRfkKei8X66wEAtfbqNp6l8VOWH67CYQbds3Oq+Z0xdBckkwREis1qcBp9cKA6JrHNeJ3DZQ==}
+    hasBin: true
+    dependencies:
+      semver: 7.5.4
+      winreg: 1.2.5
     dev: true
 
   /diff-sequences@29.4.3:
@@ -4704,6 +4715,10 @@ packages:
     hasBin: true
     dependencies:
       isexe: 2.0.0
+    dev: true
+
+  /winreg@1.2.5:
+    resolution: {integrity: sha512-uf7tHf+tw0B1y+x+mKTLHkykBgK2KMs3g+KlzmyMbLvICSHQyB/xOFjTT8qZ3oeTFyU7Bbj4FzXitGG6jvKhYw==}
     dev: true
 
   /wrap-ansi@7.0.0:

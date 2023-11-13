@@ -49,6 +49,7 @@
     "conditional-type-checks": "^1.0.6",
     "deep-freeze-es6": "^1.4.1",
     "deoptigate": "^0.7.1",
+    "dexnode": "^1.2.2",
     "eslint": "^8.53.0",
     "eslint-plugin-jest": "^27.6.0",
     "find-root": "^1.1.0",
