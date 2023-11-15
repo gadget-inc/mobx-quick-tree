@@ -152,7 +152,14 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       // build a function that closes over a bunch of aliased expressions
       // evaluate the inner function source code in this closure to return the function
       // eslint-disable-next-line @typescript-eslint/no-implied-eval
-      const aliasFunc = new Function("model", "imports", aliasFuncBody);
+      const aliasFunc = eval(`
+        (
+          function buildFastInstantiator(model, imports) {
+            ${aliasFuncBody}
+          }
+        )
+        //# sourceURL=mqt-eval/dynamic/${className}.js
+      `);
 
       // evaluate aliases and get created inner function
       return aliasFunc(this.model, { $identifier, $env, $parent, $memos, $memoizedKeys, $readOnly, $type, QuickMap, QuickArray }) as T;
