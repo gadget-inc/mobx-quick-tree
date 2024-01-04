@@ -90,20 +90,20 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
             referencesToResolve: [],
             env,
           };
-      
+
           const instance = new ${className}(snapshot, context, null);
-      
+
           for (const resolver of context.referencesToResolve) {
             resolver();
           }
-      
+
           return instance;
         };
 
-        static instantiate(snapshot, context, parent) { 
+        static instantiate(snapshot, context, parent) {
           return new ${className}(snapshot, context, parent);
         };
-        
+
         static is(value) {
           return (value instanceof ${className}) || ${className}.mstType.is(value);
         };
@@ -119,17 +119,17 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
           if (hackyPreventInitialization) {
             return;
           }
-        
+
           this[$env] = context.env;
           this[$parent] = parent;
-        
+
           ${segments.join("\n")}
         }
 
         get [$readOnly]() {
           return true;
         }
-      
+
         get [$type]() {
           return this.constructor;
         }
@@ -170,12 +170,8 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     }
   }
 
-  private expressionForDirectlyAssignableType(key: string, type: DirectlyAssignableType) {
-    if (type instanceof DateType) {
-      return `new Date(snapshot?.["${key}"])`;
-    } else {
-      return `snapshot?.["${key}"]`;
-    }
+  private expressionForDirectlyAssignableType(key: string, type: DirectlyAssignableType, valueExpression = `snapshot?.["${key}"]`) {
+    return type instanceof DateType ? `new Date(${valueExpression})` : valueExpression;
   }
 
   private assignmentExpressionForReferenceType(key: string, type: ReferenceType<IAnyType> | SafeReferenceType<IAnyType>): string {
@@ -213,18 +209,10 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
 
     const varName = `snapshotValue${key}`;
 
-    const comparisonsToUndefinedValues = (type.undefinedValues ?? [undefined]).map((value) => {
-      if (typeof value == "undefined") {
-        return `(typeof ${varName} == "undefined")`;
-      } else {
-        return `(${varName} === ${JSON.stringify(value)})`;
-      }
-    });
-
     let createExpression;
     if (isDirectlyAssignableType(type.type)) {
       createExpression = `
-      this["${key}"] = ${varName}
+      this["${key}"] = ${this.expressionForDirectlyAssignableType(key, type.type, varName)};
       `;
     } else {
       createExpression = `
@@ -235,6 +223,14 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       );
       `;
     }
+
+    const comparisonsToUndefinedValues = (type.undefinedValues ?? [undefined]).map((value) => {
+      if (typeof value == "undefined") {
+        return `(typeof ${varName} == "undefined")`;
+      } else {
+        return `(${varName} === ${JSON.stringify(value)})`;
+      }
+    });
 
     return `
       // optional type for ${key}

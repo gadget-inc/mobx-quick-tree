@@ -146,7 +146,16 @@ class AutoIdentified extends ClassModel({ key: types.optional(types.identifier, 
 class ParentOfMQT extends ClassModel({ key: types.identifier, thing: NamedThing }) {}
 
 @register
-class NestedComplex extends ClassModel({ stringArray: types.array(types.string), numberMap: types.map(types.number) }) {}
+class NestedComplex extends ClassModel({
+  stringArray: types.array(types.string),
+  numberMap: types.map(types.number),
+}) {}
+
+@register
+class MaybeDates extends ClassModel({
+  createdDate: types.optional(types.Date, () => new Date()),
+  maybeDate: types.maybeNull(types.Date),
+}) {}
 
 const ParentOfModelClass = types.model("ParentOfModelClass", {
   key: types.identifier,
@@ -512,6 +521,40 @@ describe("class models", () => {
         assert<IsExact<number, typeof instance.nameLength>>(true);
         assert<IsExact<number, typeof instance.extendedNameLength>>(true);
       });
+    });
+  });
+
+  describe("with optional date properties", () => {
+    test("should be able to create read-only instances with numbers", () => {
+      const createdDate = new Date();
+      const v = MaybeDates.createReadOnly({ createdDate: createdDate.getTime() });
+      expect(v.createdDate).toBeInstanceOf(Date);
+      expect(v.createdDate).toEqual(createdDate);
+    });
+
+    test("should be able to create read-only instances with date instances", () => {
+      const createdDate = new Date();
+      const v = MaybeDates.createReadOnly({ createdDate });
+      expect(v.createdDate).toBeInstanceOf(Date);
+      expect(v.createdDate).toEqual(createdDate);
+    });
+
+    test("should be able to create read-only instances with undefined value", () => {
+      const v = MaybeDates.createReadOnly({});
+      expect(v.createdDate).toBeInstanceOf(Date);
+    });
+  });
+
+  describe("with maybeNull date properties", () => {
+    test("should be able to create read-only instances with date instances", () => {
+      const maybeDate = new Date();
+      const v = MaybeDates.createReadOnly({ maybeDate });
+      expect(v.maybeDate).toEqual(maybeDate);
+    });
+
+    test("should be able to create read-only instances with null", () => {
+      const v = MaybeDates.createReadOnly({ maybeDate: null });
+      expect(v.maybeDate).toBeNull();
     });
   });
 
