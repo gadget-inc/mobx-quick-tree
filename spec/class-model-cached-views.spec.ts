@@ -25,11 +25,18 @@ describe("class model cached views", () => {
   });
 
   test("an observable instance updates the saved view when the observed view value changes", () => {
-    const instance = ViewExample.create({ key: "1", name: "Test" });
+    const instance = ViewExample.create({ key: "1", name: "Test"} as any);
+
     instance.setName("New Name");
     expect(instance.slug).toEqual("new-name");
     const snapshot = getSnapshot(instance);
     expect(snapshot).toEqual({ key: "1", name: "New Name", slug: "new-name" });
+  });
+
+  test("an observable instance updates the saved view when the observed view value doesn't change", () => {
+    const instance = ViewExample.create({ key: "1", name: "Test"} as any);
+    const snapshot = getSnapshot(instance);
+    expect(snapshot).toEqual({ key: "1", name: "Test" });
   });
 
   test("an observable instance ignores the input snapshot value as the logic may have changed", () => {
@@ -40,6 +47,8 @@ describe("class model cached views", () => {
   test("an readonly instance returns the view value from the snapshot if present", () => {
     const instance = ViewExample.createReadOnly({ key: "1", name: "Test", slug: "test" } as any);
     expect(instance.slug).toEqual("test");
+    const snapshot = getSnapshot(instance);
+    expect(snapshot).toEqual({ key: "1", name: "Test", slug: "test" });
   });
 
   test("an readonly instance doesn't recompute the view value from the snapshot", () => {
@@ -60,10 +69,11 @@ describe("class model cached views", () => {
 
     const instance = Spy.createReadOnly({ name: "Test", slug: "whatever" } as any);
     expect(instance.slug).toEqual("whatever");
+    getSnapshot(instance);
     expect(fn).not.toHaveBeenCalled();
   });
 
-  test("an observable instance doesn't call the computed function until snapshotted", () => {
+  test("an observable instance doesn't call the computed function if the cache is in the snapshot", () => {
     const fn = jest.fn();
     @register
     class Spy extends ClassModel({ name: types.string }) {
@@ -80,11 +90,37 @@ describe("class model cached views", () => {
 
     const instance = Spy.create({ name: "Test", slug: "whatever" } as any);
     expect(fn).not.toHaveBeenCalled();
-    getSnapshot(instance);
+    const beforeSnapshot = getSnapshot(instance); 
+    expect(beforeSnapshot).toEqual({ name: "Test", slug: "whatever" });
     expect(fn).not.toHaveBeenCalled();
 
     instance.setName("New Name");
     expect(fn).toHaveBeenCalled();
+  });
+
+  test("an observable instance doesn't call the computed function if the cache isn't in the snapshot until it changes", () => {
+    const fn = jest.fn();
+    @register
+    class Spy extends ClassModel({ name: types.string }) {
+      @cachedView()
+      get slug() {
+        fn();
+        return this.name.toLowerCase().replace(/ /g, "-");
+      }
+      @action
+      setName(name: string) {
+        this.name = name;
+      }
+    }
+
+    const instance = Spy.create({ name: "Test" } as any);
+    expect(fn).not.toHaveBeenCalled();
+    const beforeSnapshot =getSnapshot(instance); 
+    expect(beforeSnapshot).toEqual({ name: "Test" });
+    expect(fn).not.toHaveBeenCalled();
+
+    instance.setName("New Name");
+    expect(fn).toHaveBeenCalledTimes(1);
   });
 
   test("an readonly instance doesn't require the snapshot to include the cache", () => {

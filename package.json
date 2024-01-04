@@ -28,10 +28,11 @@
   "dependencies": {
     "lodash.memoize": "^4.1.2",
     "mobx": "^6.5.0",
-    "mobx-state-tree": "https://codeload.github.com/airhorns/mobx-state-tree/tar.gz/mobx-state-tree-v5.3.1-gitpkg-4b79173e",
+    "mobx-state-tree": "^5.4.0",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
+    "gitpkg": "1.0.0-beta.4",
     "@codspeed/benchmark.js-plugin": "^2.2.0",
     "@faker-js/faker": "^7.6.0",
     "@gadgetinc/eslint-config": "^0.6.1",

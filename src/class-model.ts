@@ -292,6 +292,8 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
   }
 
   const cachedViews = metadatas.filter((metadata) => metadata.type == "cached-view") as CachedViewMetadata[];
+  klass.cachedViews = cachedViews;
+
   if (cachedViews.length > 0) {
     mstType = mstTypes.snapshotProcessor(mstType, {
       postProcessor(snapshot, node) {
@@ -303,6 +305,10 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
               value = cachedView.cache.getSnapshot(value, snapshot, node);
             }
             snapshot[cachedView.property] = value;
+          }
+        } else if (stn.state === 0 /** NodeLifeCycle.INITIALIZING */) {
+          for (const cachedView of cachedViews) {
+            snapshot[cachedView.property] = stn._initialSnapshot[cachedView.property];
           }
         }
         return snapshot;

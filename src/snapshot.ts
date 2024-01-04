@@ -40,6 +40,12 @@ const snapshot = (value: any): unknown => {
           modelSnapshot[name] = snapshot((value as any)[name]);
         }
       }
+
+      if ("cachedViews" in type) {
+        for (const metadata of type.cachedViews) {
+          modelSnapshot[metadata.property] = snapshot((value as any)[metadata.property]);
+        }
+      }
       return modelSnapshot;
     }
   }
