@@ -8,7 +8,7 @@ import type {
   IMaybeType,
   IStateTreeNode,
   InstanceWithoutSTNTypeForType,
-  InstantiateContext,
+  TreeContext,
 } from "./types";
 
 class MaybeType<Type extends IAnyType> extends BaseType<
@@ -20,7 +20,7 @@ class MaybeType<Type extends IAnyType> extends BaseType<
     super(mstTypes.maybe(type.mstType));
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, parent: IStateTreeNode | null): this["InstanceType"] {
     if (snapshot === undefined) {
       return undefined;
     }
@@ -48,7 +48,7 @@ class MaybeNullType<Type extends IAnyType> extends BaseType<
     super(mstTypes.maybeNull(type.mstType));
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, parent: IStateTreeNode | null): this["InstanceType"] {
     if (snapshot === undefined || snapshot === null) {
       // Special case for things like types.frozen, or types.literal(undefined), where MST prefers the subtype over maybeNull
       if (this.type.is(snapshot)) {

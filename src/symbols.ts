@@ -2,7 +2,7 @@
 export const $quickType = Symbol.for("MQT_quickType");
 
 /** @hidden */
-export const $env = Symbol.for("MQT_env");
+export const $context = Symbol.for("MQT_context");
 
 /** @hidden */
 export const $parent = Symbol.for("MQT_parent");

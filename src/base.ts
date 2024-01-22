@@ -1,6 +1,6 @@
 import type { IAnyType as MSTAnyType } from "mobx-state-tree";
 import { $quickType } from "./symbols";
-import type { IAnyStateTreeNode, IStateTreeNode, InstantiateContext, StateTreeNode } from "./types";
+import type { IAnyStateTreeNode, IStateTreeNode, TreeContext, StateTreeNode } from "./types";
 
 export abstract class BaseType<InputType, OutputType, InstanceType> {
   readonly [$quickType] = undefined;
@@ -38,7 +38,7 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
    * Create a new instance of this class model in readonly mode. Properties and views are accessible on readonly instances but actions will throw if run.
    */
   createReadOnly(snapshot?: InputType, env?: any): this["InstanceType"] {
-    const context: InstantiateContext = {
+    const context: TreeContext = {
       referenceCache: new Map(),
       referencesToResolve: [],
       env,
@@ -52,11 +52,7 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
     return instance;
   }
 
-  abstract instantiate(
-    snapshot: this["InputType"] | undefined,
-    context: InstantiateContext,
-    parent: IStateTreeNode | null
-  ): this["InstanceType"];
+  abstract instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, parent: IStateTreeNode | null): this["InstanceType"];
 
   abstract schemaHash(): Promise<string>;
 }

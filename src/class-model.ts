@@ -6,7 +6,7 @@ import { RegistrationError } from "./errors";
 import { buildFastInstantiator } from "./fast-instantiator";
 import { defaultThrowAction, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
 import {
-  $env,
+  $context,
   $identifier,
   $memoizedKeys,
   $memos,
@@ -25,7 +25,7 @@ import type {
   IAnyType,
   IClassModelType,
   IStateTreeNode,
-  InstantiateContext,
+  TreeContext,
   ModelPropertiesDeclaration,
   ModelViews,
   TypesForModelPropsDeclaration,
@@ -84,7 +84,7 @@ class BaseClassModel {
   [$readOnly]!: true;
   [$type]!: IClassModelType<TypesForModelPropsDeclaration<any>>;
   /** @hidden */
-  readonly [$env]?: any;
+  readonly [$context]?: any;
   /** @hidden */
   readonly [$parent]?: IStateTreeNode | null;
   /** @hidden */

@@ -4,7 +4,7 @@ import { MapType, QuickMap } from "./map";
 import { OptionalType } from "./optional";
 import { ReferenceType, SafeReferenceType } from "./reference";
 import { DateType, IntegerType, LiteralType, SimpleType } from "./simple";
-import { $env, $identifier, $memoizedKeys, $memos, $parent, $readOnly, $type } from "./symbols";
+import { $context, $identifier, $memoizedKeys, $memos, $parent, $readOnly, $type } from "./symbols";
 import type { IAnyType, IClassModelType, ValidOptionalValue } from "./types";
 
 /**
@@ -120,7 +120,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
             return;
           }
 
-          this[$env] = context.env;
+          this[$context] = context;
           this[$parent] = parent;
 
           ${segments.join("\n")}
@@ -137,7 +137,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     `;
 
     const aliasFuncBody = `
-    const { QuickMap, QuickArray, $identifier, $env, $parent, $memos, $memoizedKeys, $readOnly, $type } = imports;
+    const { QuickMap, QuickArray, $identifier, $context, $parent, $memos, $memoizedKeys, $readOnly, $type } = imports;
 
     ${Array.from(this.aliases.entries())
       .map(([expression, alias]) => `const ${alias} = ${expression};`)
@@ -162,7 +162,17 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       `);
 
       // evaluate aliases and get created inner function
-      return aliasFunc(this.model, { $identifier, $env, $parent, $memos, $memoizedKeys, $readOnly, $type, QuickMap, QuickArray }) as T;
+      return aliasFunc(this.model, {
+        $identifier,
+        $context,
+        $parent,
+        $memos,
+        $memoizedKeys,
+        $readOnly,
+        $type,
+        QuickMap,
+        QuickArray,
+      }) as T;
     } catch (e) {
       console.warn("failed to build fast instantiator for", this.model.name);
       console.warn("dynamic source code:", aliasFuncBody);
@@ -260,7 +270,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       this["${key}"] = new QuickArray(
         ${this.alias(`model.properties["${key}"]`)},
         this,
-        context.env,
+        context,
         ...(snapshot?.["${key}"] ?? [])
       );
     `;
@@ -270,7 +280,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     const mapVarName = `map${key}`;
     const snapshotVarName = `snapshotValue${key}`;
     return `
-      const ${mapVarName} = new QuickMap(${this.alias(`model.properties["${key}"]`)}, this, context.env);
+      const ${mapVarName} = new QuickMap(${this.alias(`model.properties["${key}"]`)}, this, context);
       this["${key}"] = ${mapVarName};
       const ${snapshotVarName} = snapshot?.["${key}"];
       if (${snapshotVarName}) {

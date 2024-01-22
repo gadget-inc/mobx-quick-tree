@@ -26,7 +26,7 @@ import {
 } from "mobx-state-tree";
 import type { FlowReturn } from "mobx-state-tree/dist/internal";
 import { CantRunActionError } from "./errors";
-import { $env, $parent, $quickType, $readOnly, $type } from "./symbols";
+import { $context, $parent, $quickType, $readOnly, $type } from "./symbols";
 import type {
   CreateTypes,
   IAnyComplexType,
@@ -40,6 +40,7 @@ import type {
   IStateTreeNode,
   IType,
   Instance,
+  TreeContext,
   SnapshotIn,
 } from "./types";
 
@@ -150,23 +151,32 @@ export function getType(value: IAnyStateTreeNode): MSTAnyComplexType | IAnyCompl
   return value[$type];
 }
 
-export function getEnv<Env = any>(value: IAnyStateTreeNode): Env {
+/** @hidden */
+export function getContext(value: IAnyStateTreeNode): TreeContext | null {
   if (mstIsStateTreeNode(value)) {
-    return mstGetEnv(value);
+    throw new Error("can't get the context of an observable node, this function is only for use on readonly nodes");
   }
 
   // Assumes no cycles, otherwise this is an infinite loop
   let currentNode: IStateTreeNode = value;
   while (currentNode) {
-    const env = (currentNode as any)[$env];
-    if (env !== undefined) {
-      return env;
+    const context = (currentNode as any)[$context];
+    if (context !== undefined) {
+      return context;
     }
 
     currentNode = (currentNode as any)[$parent];
   }
 
-  return {} as Env;
+  return null;
+}
+
+export function getEnv<Env = any>(value: IAnyStateTreeNode): Env {
+  if (mstIsStateTreeNode(value)) {
+    return mstGetEnv(value);
+  }
+
+  return (getContext(value)?.env ?? {}) as Env;
 }
 
 export const getRoot = <T extends IAnyType>(value: IAnyStateTreeNode): Instance<T> => {
@@ -207,7 +217,11 @@ export function resolveIdentifier<T extends IAnyModelType>(
     }
   }
 
-  throw new Error("not yet implemented");
+  const context = getContext(target);
+  if (!context) {
+    throw new Error("can't resolve references in a readonly tree with no context");
+  }
+  return context.referenceCache.get(identifier) as Instance<T> | undefined;
 }
 
 export const applySnapshot = <T extends IAnyType>(target: IStateTreeNode<T>, snapshot: SnapshotIn<T>): void => {

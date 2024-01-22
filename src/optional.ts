@@ -6,7 +6,7 @@ import type {
   IAnyStateTreeNode,
   IAnyType,
   InstanceWithoutSTNTypeForType,
-  InstantiateContext,
+  TreeContext,
   IOptionalType,
   IStateTreeNode,
   ValidOptionalValue,
@@ -30,7 +30,7 @@ export class OptionalType<
     );
   }
 
-  instantiate(snapshot: this["InputType"], context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"], context: TreeContext, parent: IStateTreeNode | null): this["InstanceType"] {
     if (this.undefinedValues) {
       if (this.undefinedValues.includes(snapshot)) {
         snapshot = this.defaultValue;

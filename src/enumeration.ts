@@ -1,6 +1,6 @@
 import { types } from "mobx-state-tree";
 import { BaseType } from "./base";
-import type { IAnyStateTreeNode, InstantiateContext, ISimpleType, IStateTreeNode } from "./types";
+import type { IAnyStateTreeNode, TreeContext, ISimpleType, IStateTreeNode } from "./types";
 import memoize from "lodash.memoize";
 
 class EnumerationType<EnumOptions extends string> extends BaseType<EnumOptions, EnumOptions, EnumOptions> {
@@ -8,7 +8,7 @@ class EnumerationType<EnumOptions extends string> extends BaseType<EnumOptions, 
     super(types.enumeration<EnumOptions>(name, [...options]));
   }
 
-  instantiate(snapshot: this["InputType"], _context: InstantiateContext, _parent: IStateTreeNode | null): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"], _context: TreeContext, _parent: IStateTreeNode | null): this["InstanceType"] {
     if (typeof snapshot == "string" && this.options.includes(snapshot)) {
       return snapshot as this["InstanceType"];
     }
