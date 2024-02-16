@@ -1,6 +1,8 @@
 import { Suite } from "benchmark";
 import { TestClassModel } from "../spec/fixtures/TestClassModel";
 import { TestModel } from "../spec/fixtures/TestModel";
+import { TestPlainModel } from "./reference/plain-class";
+import { ObservablePlainModel } from "./reference/mobx";
 
 const suite = new Suite("instantiating same object with different paradigms");
 
@@ -30,6 +32,12 @@ suite
   })
   .add("mobx-quick-tree ClassModel", function () {
     TestClassModel.createReadOnly(TestModelSnapshot);
+  })
+  .add("plain mobx", function () {
+    new ObservablePlainModel(TestModelSnapshot);
+  })
+  .add("plain es6", function () {
+    new TestPlainModel(TestModelSnapshot);
   })
   .on("cycle", function (event: any) {
     console.log(String(event.target));
