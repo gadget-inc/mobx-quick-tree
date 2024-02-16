@@ -3,7 +3,7 @@ import { isStateTreeNode, types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import { ensureRegistered } from "./class-model";
 import { getSnapshot } from "./snapshot";
-import { $env, $parent, $readOnly, $type } from "./symbols";
+import { $context, $parent, $readOnly, $type } from "./symbols";
 import type {
   CreateTypes,
   IAnyStateTreeNode,
@@ -12,7 +12,7 @@ import type {
   IMapType,
   IStateTreeNode,
   Instance,
-  InstantiateContext,
+  TreeContext,
   SnapshotOut,
 } from "./types";
 
@@ -22,17 +22,17 @@ export class QuickMap<T extends IAnyType> extends Map<string, Instance<T>> imple
   }
 
   /** @hidden */
-  readonly [$env]?: any;
+  readonly [$context]?: any;
   /** @hidden */
   readonly [$parent]?: IStateTreeNode | null;
   /** @hidden */
   readonly [$type]?: [this] | [any];
 
-  constructor(type: any, parent: IStateTreeNode | null, env: any) {
+  constructor(type: any, parent: IStateTreeNode | null, context: TreeContext) {
     super();
     this[$type] = type;
     this[$parent] = parent;
-    this[$env] = env;
+    this[$context] = context;
   }
 
   get [Symbol.toStringTag]() {
@@ -107,8 +107,8 @@ export class MapType<T extends IAnyType> extends BaseType<
     return children.every((child) => this.childrenType.is(child));
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
-    const map = new QuickMap<T>(this, parent, context.env);
+  instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, parent: IStateTreeNode | null): this["InstanceType"] {
+    const map = new QuickMap<T>(this, parent, context);
     if (snapshot) {
       for (const key in snapshot) {
         const item = this.childrenType.instantiate(snapshot[key], context, map);

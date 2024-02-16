@@ -10,7 +10,7 @@ import type {
   IReferenceType,
   IStateTreeNode,
   InstanceWithoutSTNTypeForType,
-  InstantiateContext,
+  TreeContext,
 } from "./types";
 import memoize from "lodash.memoize";
 
@@ -28,7 +28,7 @@ export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
     super(types.reference(targetType.mstType, options));
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, _parent: IStateTreeNode | null): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, _parent: IStateTreeNode | null): this["InstanceType"] {
     if (!snapshot || !context.referenceCache.has(snapshot)) {
       throw new Error(`can't resolve reference ${snapshot}`);
     }
@@ -54,7 +54,7 @@ export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseT
     super(types.safeReference(targetType.mstType, options));
   }
 
-  instantiate(snapshot: string | undefined, context: InstantiateContext, _parent: IStateTreeNode | null): this["InstanceType"] {
+  instantiate(snapshot: string | undefined, context: TreeContext, _parent: IStateTreeNode | null): this["InstanceType"] {
     if (!snapshot || !context.referenceCache.has(snapshot)) {
       return undefined as this["InstanceType"];
     }

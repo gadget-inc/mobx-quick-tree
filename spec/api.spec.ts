@@ -1,7 +1,7 @@
 import type { IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
 import type { SnapshotOut } from "../src";
-import { isReadOnlyNode, types } from "../src";
+import { isReadOnlyNode, resolveIdentifier, types } from "../src";
 import {
   applySnapshot,
   getEnv,
@@ -14,8 +14,8 @@ import {
   isModelType,
   isRoot,
 } from "../src/api";
-import { TestClassModel } from "./fixtures/TestClassModel";
-import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
+import { NamedThingClass, TestClassModel } from "./fixtures/TestClassModel";
+import { NamedThing, TestModel, TestModelSnapshot } from "./fixtures/TestModel";
 
 describe("getParent", () => {
   test("returns the proper root for a read-only instance", () => {
@@ -214,5 +214,33 @@ describe("isReadOnlyNode", () => {
   test("reports on map instance", () => {
     expect(isReadOnlyNode(types.map(types.string).create({ foo: "bar" }))).toEqual(false);
     expect(isReadOnlyNode(types.map(types.string).createReadOnly({ foo: "bar" }))).toEqual(true);
+  });
+});
+
+describe("resolveIdentifier", () => {
+  describe.each([
+    ["readonly", true],
+    ["mutable", false],
+  ])("on %s nodes", (_name, readonly) => {
+    let instance: TestClassModel;
+    beforeEach(() => {
+      instance = readonly ? TestClassModel.createReadOnly(TestModelSnapshot) : TestClassModel.create(TestModelSnapshot);
+    });
+
+    test("resolves an identifier from the root of the tree", () => {
+      expect(resolveIdentifier(NamedThingClass, instance, "mixed_up")).toBe(instance.nested);
+
+      expect(resolveIdentifier(NamedThingClass, instance, "mixed_up")?.key).toEqual("mixed_up");
+      expect(resolveIdentifier(NamedThingClass, instance, "test_key")?.key).toEqual("test_key");
+    });
+
+    test("resolves an identifier from within the tree", () => {
+      expect(resolveIdentifier(NamedThingClass, instance.array[0], "mixed_up")?.key).toEqual("mixed_up");
+      expect(resolveIdentifier(NamedThingClass, instance.map.get("test_key")!, "test_key")?.key).toEqual("test_key");
+    });
+
+    test("returns undefined when the identifier doesn't resolve", () => {
+      expect(resolveIdentifier(NamedThingClass, instance, "not-gonna-be-found")).toBeUndefined();
+    });
   });
 });

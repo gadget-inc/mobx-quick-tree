@@ -3,7 +3,7 @@ import type { UnionOptions as MSTUnionOptions } from "mobx-state-tree";
 import { types as mstTypes } from "mobx-state-tree";
 import { BaseType } from "./base";
 import { ensureRegistered, isClassModel } from "./class-model";
-import type { IAnyType, InstanceWithoutSTNTypeForType, InstantiateContext, IStateTreeNode, IUnionType } from "./types";
+import type { IAnyType, InstanceWithoutSTNTypeForType, TreeContext, IStateTreeNode, IUnionType } from "./types";
 import { OptionalType } from "./optional";
 import { isModelType, isType } from "./api";
 import { LiteralType } from "./simple";
@@ -24,7 +24,7 @@ export interface UnionOptions extends Omit<MSTUnionOptions, "dispatcher"> {
   dispatcher?: ITypeDispatcher;
 }
 
-const emptyContext: InstantiateContext = {
+const emptyContext: TreeContext = {
   referenceCache: new Map(),
   referencesToResolve: [],
 };
@@ -114,7 +114,7 @@ class UnionType<Types extends IAnyType[]> extends BaseType<
     this.dispatcher = dispatcher;
   }
 
-  instantiate(snapshot: this["InputType"], context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"], context: TreeContext, parent: IStateTreeNode | null): this["InstanceType"] {
     let type: Types[number] | undefined;
     if (this.dispatcher) {
       type = this.dispatcher(snapshot);

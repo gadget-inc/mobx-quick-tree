@@ -26,7 +26,7 @@ export interface IType<InputType, OutputType, InstanceType> {
   createReadOnly(snapshot?: InputType, env?: any): this["InstanceType"];
 
   /** @hidden */
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"];
+  instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, parent: IStateTreeNode | null): this["InstanceType"];
 
   /** Get a string hash for the schema of this type */
   schemaHash(): Promise<string>;
@@ -148,7 +148,7 @@ export interface IClassModelType<
   volatiles: Record<string, VolatileMetadata>;
 
   /** @hidden */
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): InstanceType<this>;
+  instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, parent: IStateTreeNode | null): InstanceType<this>;
 
   is(value: IAnyStateTreeNode): value is InstanceType<this>;
   is(value: any): value is this["InputType"] | InstanceType<this>;
@@ -251,7 +251,7 @@ export interface IMSTMap<T extends IAnyType> {
 }
 
 /** @hidden */
-export interface InstantiateContext {
+export interface TreeContext {
   referenceCache: Map<string, Instance<IAnyNodeModelType>>;
   referencesToResolve: (() => void)[];
   env?: unknown;

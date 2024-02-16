@@ -2,8 +2,8 @@ import { isStateTreeNode, types } from "mobx-state-tree";
 import { BaseType } from "./base";
 import { ensureRegistered } from "./class-model";
 import { getSnapshot } from "./snapshot";
-import { $env, $parent, $readOnly, $type } from "./symbols";
-import type { IAnyStateTreeNode, IAnyType, IArrayType, IMSTArray, IStateTreeNode, Instance, InstantiateContext } from "./types";
+import { $context, $parent, $readOnly, $type } from "./symbols";
+import type { IAnyStateTreeNode, IAnyType, IArrayType, IMSTArray, IStateTreeNode, Instance, TreeContext } from "./types";
 
 export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implements IMSTArray<T> {
   static get [Symbol.species]() {
@@ -11,17 +11,17 @@ export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implement
   }
 
   /** @hidden */
-  readonly [$env]: any;
+  readonly [$context]: any;
   /** @hidden */
   readonly [$parent]: IStateTreeNode | null;
   /** @hidden */
   readonly [$type]: [this] | [any];
 
-  constructor(type: any, parent: IStateTreeNode | null, env: any, ...items: Instance<T>[]) {
+  constructor(type: any, parent: IStateTreeNode | null, context: TreeContext, ...items: Instance<T>[]) {
     super(...items);
     this[$type] = type;
     this[$parent] = parent;
-    this[$env] = env;
+    this[$context] = context;
   }
 
   get [Symbol.toStringTag]() {
@@ -79,8 +79,8 @@ export class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]
     return value.every((child: any) => this.childrenType.is(child));
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
-    const array = new QuickArray<T>(this, parent, context.env);
+  instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, parent: IStateTreeNode | null): this["InstanceType"] {
+    const array = new QuickArray<T>(this, parent, context);
     if (snapshot) {
       for (let index = 0; index < snapshot?.length; ++index) {
         array.push(this.childrenType.instantiate(snapshot[index], context, array));

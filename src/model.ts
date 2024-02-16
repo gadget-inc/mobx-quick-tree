@@ -5,7 +5,7 @@ import { types } from ".";
 import { BaseType } from "./base";
 import { ensureRegistered } from "./class-model";
 import { CantRunActionError } from "./errors";
-import { $env, $identifier, $originalDescriptor, $parent, $readOnly, $type } from "./symbols";
+import { $context, $identifier, $originalDescriptor, $parent, $readOnly, $type } from "./symbols";
 import type {
   IAnyStateTreeNode,
   IAnyType,
@@ -15,7 +15,7 @@ import type {
   InputsForModel,
   Instance,
   InstanceTypesForModelProps,
-  InstantiateContext,
+  TreeContext,
   ModelActions,
   ModelProperties,
   ModelPropertiesDeclaration,
@@ -92,7 +92,7 @@ export const instantiateInstanceFromProperties = (
   snapshot: Record<string, any> | undefined,
   properties: ModelProperties,
   identifierProp: string | undefined,
-  context: InstantiateContext
+  context: TreeContext
 ) => {
   for (const propName in properties) {
     const propType = properties[propName];
@@ -161,7 +161,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
         enumerable: false,
         writable: true,
       },
-      [$env]: {
+      [$context]: {
         value: null,
         configurable: false,
         enumerable: false,
@@ -260,7 +260,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return true;
   }
 
-  instantiate(snapshot: this["InputType"] | undefined, context: InstantiateContext, parent: IStateTreeNode | null): this["InstanceType"] {
+  instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, parent: IStateTreeNode | null): this["InstanceType"] {
     const instance: Record<string | symbol, any> = Object.create(this.prototype, {
       [$parent]: {
         value: parent,
@@ -268,8 +268,8 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
         configurable: false,
         writable: false,
       },
-      [$env]: {
-        value: context.env,
+      [$context]: {
+        value: context,
         enumerable: false,
         configurable: false,
         writable: false,
