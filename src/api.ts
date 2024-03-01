@@ -50,6 +50,7 @@ export {
   applyPatch,
   clone,
   createActionTrackingMiddleware2,
+  getRunningActionContext,
   destroy,
   detach,
   escapeJsonPath,
@@ -72,6 +73,7 @@ export {
   unescapeJsonPath,
   walk,
 } from "mobx-state-tree";
+
 export { ClassModel, action, extend, register, view, volatile, volatileAction } from "./class-model";
 export { getSnapshot } from "./snapshot";
 
