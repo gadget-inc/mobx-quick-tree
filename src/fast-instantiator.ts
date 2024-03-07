@@ -1,17 +1,21 @@
 import { ArrayType, QuickArray } from "./array";
+import type { FastGetBuilder } from "./fast-getter";
 import { FrozenType } from "./frozen";
 import { MapType, QuickMap } from "./map";
 import { OptionalType } from "./optional";
 import { ReferenceType, SafeReferenceType } from "./reference";
 import { DateType, IntegerType, LiteralType, SimpleType } from "./simple";
-import { $context, $identifier, $memoizedKeys, $memos, $parent, $readOnly, $type } from "./symbols";
+import { $context, $identifier, $notYetMemoized, $parent, $readOnly, $type } from "./symbols";
 import type { IAnyType, IClassModelType, ValidOptionalValue } from "./types";
 
 /**
  * Compiles a fast function for taking snapshots and turning them into instances of a class model.
  **/
-export const buildFastInstantiator = <T extends IClassModelType<Record<string, IAnyType>, any, any>>(model: T): T => {
-  return new InstantiatorBuilder(model).build();
+export const buildFastInstantiator = <T extends IClassModelType<Record<string, IAnyType>, any, any>>(
+  model: T,
+  fastGetters: FastGetBuilder,
+): T => {
+  return new InstantiatorBuilder(model, fastGetters).build();
 };
 
 type DirectlyAssignableType = SimpleType<any> | IntegerType | LiteralType<any> | DateType;
@@ -28,7 +32,10 @@ const isDirectlyAssignableType = (type: IAnyType): type is DirectlyAssignableTyp
 class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, any, any>> {
   aliases = new Map<string, string>();
 
-  constructor(readonly model: T) {}
+  constructor(
+    readonly model: T,
+    readonly getters: FastGetBuilder,
+  ) {}
 
   build(): T {
     const segments: string[] = [];
@@ -80,10 +87,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     }
 
     const defineClassStatement = `
-      return class ${className} extends model {
-        [$memos] = null;
-        [$memoizedKeys] = null;
-
+      class ${className} extends model {
         static createReadOnly = (snapshot, env) => {
           const context = {
             referenceCache: new Map(),
@@ -123,6 +127,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
           this[$context] = context;
           this[$parent] = parent;
 
+          ${this.getters.constructorStatements()}
           ${segments.join("\n")}
         }
 
@@ -137,13 +142,17 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     `;
 
     const aliasFuncBody = `
-    const { QuickMap, QuickArray, $identifier, $context, $parent, $memos, $memoizedKeys, $readOnly, $type } = imports;
+    const { QuickMap, QuickArray, $identifier, $context, $parent, $notYetMemoized, $readOnly, $type } = imports;
 
     ${Array.from(this.aliases.entries())
       .map(([expression, alias]) => `const ${alias} = ${expression};`)
       .join("\n")}
 
+    ${this.getters.outerClosureStatements()}
+
     ${defineClassStatement}
+
+    return ${className}
   `;
 
     // console.log(`function for ${this.model.name}`, "\n\n\n", aliasFuncBody, "\n\n\n");
@@ -166,10 +175,9 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
         $identifier,
         $context,
         $parent,
-        $memos,
-        $memoizedKeys,
         $readOnly,
         $type,
+        $notYetMemoized,
         QuickMap,
         QuickArray,
       }) as T;
