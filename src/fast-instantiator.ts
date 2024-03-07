@@ -1,4 +1,6 @@
 import { ArrayType, QuickArray } from "./array";
+import { PropertyMetadata, ViewMetadata, getPropertyDescriptor } from "./class-model";
+import { RegistrationError } from "./errors";
 import { FrozenType } from "./frozen";
 import { MapType, QuickMap } from "./map";
 import { OptionalType } from "./optional";
@@ -306,5 +308,49 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     const alias = `v${this.aliases.size}`;
     this.aliases.set(expression, alias);
     return alias;
+  }
+}
+
+/** Assemble a function for getting the value of a readonly instance very quickly with static dispatch to properties */
+export class FastGetBuilder {
+  memoizableProperties: string[];
+  emptyMemoObjectLiteral: string;
+
+  constructor(metadatas: PropertyMetadata[], readonly klass: { new (...args: any[]): any }) {
+    this.memoizableProperties = metadatas
+      .filter((metadata): metadata is ViewMetadata => {
+        if (metadata.type !== "view") return false;
+        const property = metadata.property;
+        const descriptor = getPropertyDescriptor(klass.prototype, property);
+        if (!descriptor) {
+          throw new RegistrationError(`Property ${property} not found on ${klass} prototype, can't register view for class model`);
+        }
+        return descriptor.get !== undefined;
+      })
+      .map((metadata) => metadata.property);
+
+    this.emptyMemoObjectLiteral = `{${this.memoizableProperties.map((property) => `${property}: undefined`).join(",")}}`;
+  }
+
+  buildGetter(property: string, descriptor: PropertyDescriptor) {
+    const builder = eval(`
+    (
+      function build({ $readOnly, $memoizedKeys, $memos, descriptor }) {
+        return function get${property}(model, imports) {
+          if (!this[$readOnly]) return descriptor.get.call(this);
+          if (this[$memoizedKeys]?.${property}) return this[$memos].${property};
+          this[$memoizedKeys] ??= ${this.emptyMemoObjectLiteral};
+          this[$memos] ??= ${this.emptyMemoObjectLiteral};
+          const value = descriptor.get.call(this);
+          this[$memoizedKeys].${property} = true;
+          this[$memos].${property} = value;
+          return value;
+        }
+      }
+    )
+    //# sourceURL=mqt-eval/dynamic/${this.klass.name}-${property}-get.js
+  `);
+
+    return builder({ $readOnly, $memoizedKeys, $memos, descriptor });
   }
 }

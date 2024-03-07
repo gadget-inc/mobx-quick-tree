@@ -3,7 +3,7 @@ import type { IModelType as MSTIModelType, ModelActions } from "mobx-state-tree"
 import { types as mstTypes } from "mobx-state-tree";
 import "reflect-metadata";
 import { RegistrationError } from "./errors";
-import { buildFastInstantiator } from "./fast-instantiator";
+import { FastGetBuilder, buildFastInstantiator } from "./fast-instantiator";
 import { defaultThrowAction, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
 import {
   $context,
@@ -40,7 +40,7 @@ type ActionMetadata = {
 };
 
 /** @internal */
-type ViewMetadata = {
+export type ViewMetadata = {
   type: "view";
   property: string;
 };
@@ -53,7 +53,8 @@ export type VolatileMetadata = {
 };
 
 type VolatileInitializer<T> = (instance: T) => Record<string, any>;
-type PropertyMetadata = ActionMetadata | ViewMetadata | VolatileMetadata;
+/** @internal */
+export type PropertyMetadata = ActionMetadata | ViewMetadata | VolatileMetadata;
 
 const metadataPrefix = "mqt:properties";
 const viewKeyPrefix = `${metadataPrefix}:view`;
@@ -156,6 +157,8 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
     });
   }
 
+  const fastGetters = new FastGetBuilder(metadatas, klass);
+
   for (const metadata of metadatas) {
     switch (metadata.type) {
       case "view": {
@@ -169,16 +172,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
         if (descriptor.get) {
           Object.defineProperty(klass.prototype, property, {
             ...descriptor,
-            get() {
-              if (!this[$readOnly]) return descriptor.get!.call(this);
-              if (this[$memoizedKeys]?.[property]) return this[$memos][property];
-              this[$memoizedKeys] ??= {};
-              this[$memos] ??= {};
-              const value: any = descriptor.get!.call(this);
-              this[$memoizedKeys][property] = true;
-              this[$memos][property] = value;
-              return value;
-            },
+            get: fastGetters.buildGetter(property, descriptor),
           });
         }
 
@@ -449,7 +443,7 @@ function allPrototypeFunctionProperties(obj: any): string[] {
  * Get the property descriptor for a property from anywhere in the prototype chain
  * Similar to Object.getOwnPropertyDescriptor, but without the own bit
  */
-function getPropertyDescriptor(obj: any, property: string) {
+export function getPropertyDescriptor(obj: any, property: string) {
   while (obj) {
     const descriptor = Object.getOwnPropertyDescriptor(obj, property);
     if (descriptor) {
