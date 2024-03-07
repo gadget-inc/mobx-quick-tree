@@ -1,10 +1,8 @@
-import { Suite } from "benchmark";
+import { Bench } from "tinybench";
 import { TestClassModel } from "../spec/fixtures/TestClassModel";
 import { TestModel } from "../spec/fixtures/TestModel";
 import { TestPlainModel } from "./reference/plain-class";
 import { ObservablePlainModel } from "./reference/mobx";
-
-const suite = new Suite("instantiating same object with different paradigms");
 
 const TestModelSnapshot: (typeof TestModel)["InputType"] = {
   bool: true,
@@ -23,27 +21,27 @@ const TestModelSnapshot: (typeof TestModel)["InputType"] = {
   },
 };
 
-suite
-  .add("mobx-state-tree", function () {
-    TestModel.create(TestModelSnapshot);
-  })
-  .add("mobx-quick-tree types.model", function () {
-    TestModel.createReadOnly(TestModelSnapshot);
-  })
-  .add("mobx-quick-tree ClassModel", function () {
-    TestClassModel.createReadOnly(TestModelSnapshot);
-  })
-  .add("plain mobx", function () {
-    new ObservablePlainModel(TestModelSnapshot);
-  })
-  .add("plain es6", function () {
-    new TestPlainModel(TestModelSnapshot);
-  })
-  .on("cycle", function (event: any) {
-    console.log(String(event.target));
-  })
-  .on("complete", function (this: Suite) {
-    console.log("Fastest is " + this.filter("fastest").map("name"));
-    console.log("Slowest is " + this.filter("slowest").map("name"));
-  })
-  .run({ async: true });
+void (async () => {
+  const suite = new Bench();
+
+  suite
+    .add("mobx-state-tree", function () {
+      TestModel.create(TestModelSnapshot);
+    })
+    .add("mobx-quick-tree types.model", function () {
+      TestModel.createReadOnly(TestModelSnapshot);
+    })
+    .add("mobx-quick-tree ClassModel", function () {
+      TestClassModel.createReadOnly(TestModelSnapshot);
+    })
+    .add("plain mobx", function () {
+      new ObservablePlainModel(TestModelSnapshot);
+    })
+    .add("plain es6", function () {
+      new TestPlainModel(TestModelSnapshot);
+    });
+
+  await suite.warmup();
+  await suite.run();
+  console.table(suite.table());
+})();
