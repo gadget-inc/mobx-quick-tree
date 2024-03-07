@@ -66,4 +66,20 @@ export class FruitBin extends ClassModel({
 export class FruitAisle extends ClassModel({
   type: nodeTypeType("FruitAisle"),
   bins: types.map(FruitBin),
-}) {}
+}) {
+  get null() {
+    return null;
+  }
+
+  get binCount() {
+    return this.bins.size;
+  }
+
+  get firstBinType() {
+    return this.bins.keys().next().value.type;
+  }
+
+  get firstBinCount() {
+    return this.bins.keys().next().value.count;
+  }
+}

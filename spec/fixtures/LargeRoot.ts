@@ -153,4 +153,28 @@ export class LargeRoot extends ClassModel({
   salespeople: types.map(Salesperson),
   customers: types.map(Customer),
   orders: types.map(Order),
-}) {}
+}) {
+  get null() {
+    return null;
+  }
+
+  get carCount() {
+    return this.cars.size;
+  }
+
+  get partCount() {
+    return this.parts.size;
+  }
+
+  get dealershipsCount() {
+    return this.dealerships.size;
+  }
+
+  get firstCar() {
+    return [...this.cars.keys()][0];
+  }
+
+  get allCars() {
+    return this.cars.values();
+  }
+}
