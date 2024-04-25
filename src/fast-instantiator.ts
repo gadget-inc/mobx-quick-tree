@@ -49,7 +49,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
         segments.push(this.assignmentExpressionForMapType(key, type));
       } else {
         segments.push(`
-          // instantiate fallback for ${key} of type ${type.name}
+          // instantiate fallback for ${key} of type ${safeTypeName(type)}
           this["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
             snapshot?.["${key}"],
             context,
@@ -255,7 +255,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
   private assignmentExpressionForArrayType(key: string, type: ArrayType<any>): string {
     if (!isDirectlyAssignableType(type.childrenType) || type.childrenType instanceof DateType) {
       return `
-        // instantiate fallback for ${key} of type ${type.name}
+        // instantiate fallback for ${key} of type ${safeTypeName(type)}
         this["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
           snapshot?.["${key}"],
           context,
@@ -308,3 +308,5 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     return alias;
   }
 }
+
+const safeTypeName = (type: IAnyType) => type.name.replace(/\n/g, "");
