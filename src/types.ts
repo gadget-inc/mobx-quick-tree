@@ -110,7 +110,7 @@ export type ExtendedClassModel<
 /**
  * `IClassModelType` represents the type of MQT class models. This is the class-level type, not the instance level type, so it has a typed `new()` and all the static functions/properties of a MQT class model.
  *
- * Note: `IClassModelType` is regrettably *not* an `IType`. `IClassModelType` is an interface that all class model classes implement. It's also the concrete type of the base class models returned by the ClassModel class factory. It'd be great if we could make `IClassModelType` extend `IType`, but, we would need to ensure the `Instance` part of `IType` is updated to reference the final version of the declared class. Crucially, there's no TypeScript way to get the resulting type of a class *after* it has been defined to then start referring to it within an interface that the class implements. Decorators don't let us get a reference to the finished type of a class, nor do they let us return a new type that could reference it, so, we can't mutate the type of a defined class model. Hence, we can't make `IClassModelType` extend `IType` without it capturing a reference to an outdated `Instance` type that doesn't have the methods / properties added after class extension. Sad.
+ * Note: `IClassModelType` is regrettably *not* an `IType`. `IClassModelType` is an interface that all class model classes implement. It's also the concrete type of the base class models returned by the ClassModel class factory. It'd be great if we could make `IClassModelType` extend `IType`, but, we would need to ensure the `Instance` part of `IType` is updated to reference the final version of the declared class. Crucially, there's no TypeScript way to get the resulting type of a class *after* it has been defined, to then start referring to it within an interface that the class implements. Decorators don't let us get a reference to the finished type of a class, nor do they let us return a new type that could reference it, so, we can't mutate the type of a defined class model. Hence, we can't make `IClassModelType` extend `IType` without it capturing a reference to an outdated `Instance` type that doesn't have the methods / properties added after class extension. Sad.
  *
  * Instead, we have this type, and we compute the instance type of a class model in a different way than `IType`. The type of an instance of a class is the class itself. Whereas usually, we need to do:
  *
@@ -208,11 +208,9 @@ export type IMapType<T extends IAnyType> = IType<Record<string, T["InputType"]> 
 
 export type IArrayType<T extends IAnyType> = IType<Array<T["InputType"]> | undefined, T["OutputType"][], IMSTArray<T>>;
 
-export type IUnionType<Types extends [IAnyType, ...IAnyType[]]> = IType<
-  Types[number]["InputType"],
-  Types[number]["OutputType"],
-  InstanceWithoutSTNTypeForType<Types[number]>
->;
+export type IUnionType<Types extends [IAnyType, ...IAnyType[]]> = Types[number] extends IAnyClassModelType
+  ? Types[number]
+  : IType<Types[number]["InputType"], Types[number]["OutputType"], InstanceWithoutSTNTypeForType<Types[number]>>;
 
 // Utility types
 

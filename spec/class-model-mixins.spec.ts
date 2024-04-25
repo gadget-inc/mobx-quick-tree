@@ -1,6 +1,6 @@
 import type { IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
-import { Constructor, isType } from "../src";
+import { Constructor, IClassModelType, isType } from "../src";
 import { IAnyClassModelType, IAnyStateTreeNode, extend } from "../src";
 import { getSnapshot } from "../src";
 import { ClassModel, action, register, types } from "../src";
@@ -234,5 +234,55 @@ describe("class model mixins", () => {
     const instance = create(ExtendedMixedInNameExample, { key: "1", name: "Test", otherProp: "other" });
     expect(ExtendedMixedInNameExample.is(instance)).toBe(true);
     expect(ExtendedMixedInNameExample.is({})).toBe(false);
+  });
+
+  test("can build discriminated unions out of extended class models", () => {
+    types.union({ discriminator: "type" }, ChainedA, ChainedB, ChainedC);
+  });
+});
+
+describe("mixing in to unions", () => {
+  // type test for assigning class model classes to unions
+  @register
+  class Apple extends ClassModel({ color: types.string }) {
+    get tasty() {
+      return true;
+    }
+  }
+
+  @register
+  class Dragonfruit extends ClassModel({ color: types.string }) {
+    get tasty() {
+      return false;
+    }
+  }
+
+  const Fruit = types.union(Apple, Dragonfruit);
+
+  type x = typeof Apple;
+  type y = InstanceType<x>;
+
+  const ExtendFruit = <T extends typeof Fruit>(Fruit: T) => {
+    class FancyFruit extends extend(Fruit, { fancy: types.boolean }) {
+      get description() {
+        return "A fruit";
+      }
+    }
+    return FancyFruit;
+  };
+
+  @register
+  class FancyApple extends ExtendFruit(Apple) {}
+
+  test("extensions of unions can be instantiated as observables", () => {
+    const apple = FancyApple.create({ color: "red", fancy: true });
+    expect(apple.color).toBe("red");
+    expect(apple.description).toBe(`A fruit`);
+  });
+
+  test("extensions of unions can be instantiated as readonlys", () => {
+    const apple = FancyApple.createReadOnly({ color: "red", fancy: true });
+    expect(apple.color).toBe("red");
+    expect(apple.description).toBe(`A fruit`);
   });
 });
