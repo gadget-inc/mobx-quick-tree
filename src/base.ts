@@ -3,6 +3,7 @@ import { $quickType } from "./symbols";
 import type { IAnyStateTreeNode, IStateTreeNode, TreeContext, StateTreeNode } from "./types";
 
 export abstract class BaseType<InputType, OutputType, InstanceType> {
+  /** @internal */
   readonly [$quickType] = undefined;
 
   readonly InputType!: InputType;
