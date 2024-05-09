@@ -1,9 +1,9 @@
-import { Suite } from "benchmark";
 import { withCodSpeed } from "@codspeed/benchmark.js-plugin";
+import { Suite } from "benchmark";
 import findRoot from "find-root";
 import fs from "fs";
-import { LargeRoot } from "../spec/fixtures/LargeRoot";
 import { FruitAisle } from "../spec/fixtures/FruitAisle";
+import { LargeRoot } from "../spec/fixtures/LargeRoot";
 import { TestClassModel } from "../spec/fixtures/TestClassModel";
 import { BigTestModelSnapshot, TestModelSnapshot } from "../spec/fixtures/TestModel";
 
@@ -24,6 +24,18 @@ void suite
   })
   .add("instantiating a diverse root", function () {
     TestClassModel.createReadOnly(BigTestModelSnapshot);
+  })
+  .add("instantiating a small root (mobx-state-tree)", function () {
+    TestClassModel.create(TestModelSnapshot);
+  })
+  .add("instantiating a large root (mobx-state-tree)", function () {
+    LargeRoot.create(largeRoot);
+  })
+  .add("instantiating a large union (mobx-state-tree)", function () {
+    FruitAisle.create(fruitAisle);
+  })
+  .add("instantiating a diverse root (mobx-state-tree)", function () {
+    TestClassModel.create(BigTestModelSnapshot);
   })
   .on("start", function () {
     console.profile();
