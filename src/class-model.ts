@@ -112,7 +112,7 @@ class BaseClassModel {
  * }
  */
 export const ClassModel = <PropsDeclaration extends ModelPropertiesDeclaration>(
-  propertiesDeclaration: PropsDeclaration
+  propertiesDeclaration: PropsDeclaration,
 ): IClassModelType<TypesForModelPropsDeclaration<PropsDeclaration>> => {
   const props = propsFromModelPropsDeclaration(propertiesDeclaration);
 
@@ -137,7 +137,7 @@ export const ClassModel = <PropsDeclaration extends ModelPropertiesDeclaration>(
 export function register<Instance, Klass extends { new (...args: any[]): Instance }>(
   object: Klass,
   tags?: RegistrationTags<Instance>,
-  name?: string
+  name?: string,
 ) {
   let klass = object as any as IClassModelType<any>;
   const mstActions: ModelActions = {};
@@ -204,7 +204,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
           throw new RegistrationError(
             `Property ${metadata.property} not found on ${klass} prototype or instance, can't register action for class model. Using ${
               canUsePrototype ? "prototype" : "instance"
-            } to inspect.`
+            } to inspect.`,
           );
         }
 
@@ -214,7 +214,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
         }
         if (!actionFunction || !actionFunction.call) {
           throw new RegistrationError(
-            `Property ${metadata.property} found on ${klass} but can't be registered as an action because it isn't a function. It is ${actionFunction}.`
+            `Property ${metadata.property} found on ${klass} but can't be registered as an action because it isn't a function. It is ${actionFunction}.`,
           );
         }
 
@@ -322,7 +322,7 @@ export function volatile(initializer: (instance: any) => any): VolatileDefiner {
     {
       [$volatileDefiner]: true,
       initializer,
-    } as const
+    } as const,
   );
 }
 
@@ -331,7 +331,7 @@ export function volatile(initializer: (instance: any) => any): VolatileDefiner {
  */
 export function extend<T extends Constructor, SubClassProps extends ModelPropertiesDeclaration>(
   klass: T,
-  props: SubClassProps
+  props: SubClassProps,
 ): ExtendedClassModel<T, SubClassProps> {
   const subclass = class extends klass {} as any;
   subclass.properties = {
@@ -352,7 +352,7 @@ export const ensureRegistered = (type: IAnyType) => {
     if ((chain as any)[$requiresRegistration]) {
       if (!(type as any)[$registered]) {
         throw new Error(
-          `Type ${type.name} requires registration but has not been registered yet. Add the @register decorator to it for it to function correctly.`
+          `Type ${type.name} requires registration but has not been registered yet. Add the @register decorator to it for it to function correctly.`,
         );
       }
       break;

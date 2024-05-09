@@ -209,7 +209,7 @@ export const isRoot = (value: IAnyStateTreeNode): boolean => {
 export function resolveIdentifier<T extends IAnyModelType>(
   type: T,
   target: IStateTreeNode<IAnyType>,
-  identifier: string
+  identifier: string,
 ): Instance<T> | undefined {
   if (mstIsStateTreeNode(target)) {
     if (isType(type)) {
@@ -237,7 +237,7 @@ export const applySnapshot = <T extends IAnyType>(target: IStateTreeNode<T>, sna
 
 export const onSnapshot = <S>(
   target: IStateTreeNode<IType<any, S, any>> | IStateTreeNode<IClassModelType<any, any, S>>,
-  callback: (snapshot: S) => void
+  callback: (snapshot: S) => void,
 ): IDisposer => {
   if (mstIsStateTreeNode(target)) {
     return mstOnSnapshot<S>(target as MSTStateTreeNode, callback);
@@ -295,7 +295,7 @@ export function cast(snapshotOrInstance: any): any {
  * See https://mobx-state-tree.js.org/concepts/async-actions for more info.
  */
 export function flow<R, Args extends any[], This = unknown>(
-  generator: (this: This, ...args: Args) => Generator<PromiseLike<any>, R, any>
+  generator: (this: This, ...args: Args) => Generator<PromiseLike<any>, R, any>,
 ): (...args: Args) => Promise<FlowReturn<R>> {
   // wrap the passed generator in a function which restores the correct value of `this`
   const wrappedGenerator = mstFlow(function* (args: Args, instance: This) {

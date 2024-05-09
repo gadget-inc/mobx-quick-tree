@@ -18,7 +18,7 @@ test("is can create a map of frozen types from a snapshot", () => {
     expect.objectContaining({
       A: "one",
       B: null,
-    })
+    }),
   );
 });
 
@@ -30,7 +30,7 @@ test("can create a map of complex types", () => {
     expect.objectContaining({
       A: expect.objectContaining({ name: "A", amount: 10 }),
       B: expect.objectContaining({ name: "B", amount: 0 }),
-    })
+    }),
   );
 });
 

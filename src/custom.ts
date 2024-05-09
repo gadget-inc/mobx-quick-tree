@@ -26,7 +26,7 @@ export class CustomType<InputType, OutputType> extends BaseType<InputType, Outpu
 }
 
 export const custom = <InputType, OutputType>(
-  options: CustomTypeOptions<InputType, OutputType>
+  options: CustomTypeOptions<InputType, OutputType>,
 ): IType<InputType, OutputType, OutputType> => {
   return new CustomType(options);
 };

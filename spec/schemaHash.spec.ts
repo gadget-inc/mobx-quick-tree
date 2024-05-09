@@ -14,10 +14,10 @@ describe("schemaHash", () => {
 
   test("is the same for enums with the same options", async () => {
     expect(await types.enumeration("whatever", ["foo", "bar"]).schemaHash()).toEqual(
-      await types.enumeration("other", ["foo", "bar"]).schemaHash()
+      await types.enumeration("other", ["foo", "bar"]).schemaHash(),
     );
     expect(await types.enumeration("whatever", ["foo", "bar"]).schemaHash()).not.toEqual(
-      await types.enumeration("other", ["foo", "bar", "baz"]).schemaHash()
+      await types.enumeration("other", ["foo", "bar", "baz"]).schemaHash(),
     );
   });
 
@@ -33,10 +33,10 @@ describe("schemaHash", () => {
 
   test("is the same for refinements of a same type", async () => {
     expect(await types.refinement(types.number, () => true).schemaHash()).toEqual(
-      await types.refinement(types.number, () => true).schemaHash()
+      await types.refinement(types.number, () => true).schemaHash(),
     );
     expect(await types.refinement(types.number, () => true).schemaHash()).not.toEqual(
-      await types.refinement(types.string, () => true).schemaHash()
+      await types.refinement(types.string, () => true).schemaHash(),
     );
   });
 
@@ -243,14 +243,14 @@ describe("schemaHash", () => {
         class extends ClassModel({
           foo: types.string,
           bar: types.number,
-        }) {}
+        }) {},
       );
 
       const b = register(
         class extends ClassModel({
           foo: types.string,
           bar: types.number,
-        }) {}
+        }) {},
       );
 
       expect(await a.schemaHash()).toEqual(await b.schemaHash());
@@ -266,14 +266,14 @@ describe("schemaHash", () => {
         class extends ClassModel({
           foo: types.string,
           bar: SubModel,
-        }) {}
+        }) {},
       );
 
       const b = register(
         class extends ClassModel({
           foo: types.string,
           bar: SubModel,
-        }) {}
+        }) {},
       );
 
       expect(await a.schemaHash()).toEqual(await b.schemaHash());

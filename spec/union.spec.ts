@@ -39,7 +39,7 @@ describe("union", () => {
       expect(getSnapshot(unionInstance)).toEqual(
         expect.objectContaining({
           x: "test",
-        })
+        }),
       );
     });
 
@@ -70,7 +70,7 @@ describe("union", () => {
             },
           },
           Apple,
-          Banana
+          Banana,
         );
 
         const appleInstance = create(Union, { color: "red" }, readonly);
@@ -152,7 +152,7 @@ describe("union", () => {
     const Union = types.union({ discriminator: "type" }, Apple, Banana);
 
     expect(() => create(Union, { type: "pear" } as any, true)).toThrowErrorMatchingInlineSnapshot(
-      `"Discriminator property value \`pear\` for property \`type\` on incoming snapshot didn't correspond to a type. Options: apple, banana. Snapshot was \`{"type":"pear"}\`"`
+      `"Discriminator property value \`pear\` for property \`type\` on incoming snapshot didn't correspond to a type. Options: apple, banana. Snapshot was \`{"type":"pear"}\`"`,
     );
   });
 });

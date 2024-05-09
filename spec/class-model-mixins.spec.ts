@@ -99,9 +99,9 @@ class ChainedA extends AddVolatileMixin(
     AddActionMixin(
       ClassModel({
         name: types.string,
-      })
-    )
-  )
+      }),
+    ),
+  ),
 ) {}
 
 @register
@@ -110,9 +110,9 @@ class ChainedB extends AddActionMixin(
     AddVolatileMixin(
       ClassModel({
         name: types.string,
-      })
-    )
-  )
+      }),
+    ),
+  ),
 ) {}
 
 @register
@@ -121,9 +121,9 @@ class ChainedC extends AddActionMixin(
     AddViewMixin(
       ClassModel({
         name: types.string,
-      })
-    )
-  )
+      }),
+    ),
+  ),
 ) {}
 
 describe("class model mixins", () => {

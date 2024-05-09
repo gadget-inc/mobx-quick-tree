@@ -60,7 +60,7 @@ const DynamicNameExample = register(
     setVolatileProp: action,
     setVolatilePropOnReadonly: volatileAction,
   },
-  "NameExample"
+  "NameExample",
 );
 
 /**
@@ -283,7 +283,7 @@ describe("class models", () => {
                 name: "hello",
               },
             },
-            readOnly
+            readOnly,
           );
 
           expect(instance.key).toEqual("1");
@@ -394,7 +394,7 @@ describe("class models", () => {
 
       test("running async actions should throw because the instance is readonly", async () => {
         await expect(async () => await record.setNameAsync("Test 2")).rejects.toThrowErrorMatchingInlineSnapshot(
-          `"Can't run flow action for a readonly instance"`
+          `"Can't run flow action for a readonly instance"`,
         );
       });
 

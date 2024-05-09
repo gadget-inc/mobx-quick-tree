@@ -154,7 +154,7 @@ describe("applySnapshot", () => {
     expect(instance).toEqual(
       expect.objectContaining({
         optional: "a different value",
-      })
+      }),
     );
   });
 
@@ -170,7 +170,7 @@ describe("applySnapshot", () => {
     expect(instance).toEqual(
       expect.objectContaining({
         optional: "a different value",
-      })
+      }),
     );
   });
 

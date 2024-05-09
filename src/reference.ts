@@ -24,7 +24,10 @@ const referenceSchemaHash = async (type: string, targetType: IAnyType) => {
 };
 
 export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<string, string, InstanceWithoutSTNTypeForType<TargetType>> {
-  constructor(readonly targetType: IAnyComplexType, options?: ReferenceOptions<TargetType["mstType"]>) {
+  constructor(
+    readonly targetType: IAnyComplexType,
+    options?: ReferenceOptions<TargetType["mstType"]>,
+  ) {
     super(types.reference(targetType.mstType, options));
   }
 
@@ -50,7 +53,10 @@ export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseT
   string | undefined,
   InstanceWithoutSTNTypeForType<TargetType> | undefined
 > {
-  constructor(readonly targetType: IAnyComplexType, options?: SafeReferenceOptions<TargetType>) {
+  constructor(
+    readonly targetType: IAnyComplexType,
+    options?: SafeReferenceOptions<TargetType>,
+  ) {
     super(types.safeReference(targetType.mstType, options));
   }
 
@@ -73,7 +79,7 @@ export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseT
 
 export const reference = <TargetType extends IAnyComplexType>(
   targetType: TargetType,
-  options?: ReferenceOptions<TargetType["mstType"]>
+  options?: ReferenceOptions<TargetType["mstType"]>,
 ): IReferenceType<TargetType> => {
   ensureRegistered(targetType);
   return new ReferenceType(targetType, options);
@@ -81,7 +87,7 @@ export const reference = <TargetType extends IAnyComplexType>(
 
 export const safeReference = <TargetType extends IAnyComplexType>(
   targetType: TargetType,
-  options?: SafeReferenceOptions<TargetType>
+  options?: SafeReferenceOptions<TargetType>,
 ): IMaybeType<IReferenceType<TargetType>> => {
   ensureRegistered(targetType);
   return new SafeReferenceType(targetType, options);

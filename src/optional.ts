@@ -16,17 +16,17 @@ export type DefaultFuncOrValue<T extends IAnyType> = T["InputType"] | T["OutputT
 
 export class OptionalType<
   T extends IAnyType,
-  OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]] = [undefined]
+  OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]] = [undefined],
 > extends BaseType<T["InputType"] | OptionalValues[number], T["OutputType"], InstanceWithoutSTNTypeForType<T>> {
   constructor(
     readonly type: T,
     readonly defaultValueOrFunc: DefaultFuncOrValue<T>,
-    readonly undefinedValues: OptionalValues = [undefined] as any
+    readonly undefinedValues: OptionalValues = [undefined] as any,
   ) {
     super(
       undefinedValues
         ? mstTypes.optional(type.mstType, defaultValueOrFunc, undefinedValues)
-        : mstTypes.optional(type.mstType, defaultValueOrFunc)
+        : mstTypes.optional(type.mstType, defaultValueOrFunc),
     );
   }
 
@@ -69,14 +69,14 @@ export type OptionalFactory = {
   <T extends IAnyType, OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]>(
     type: T,
     defaultValue: DefaultFuncOrValue<T>,
-    undefinedValues: OptionalValues
+    undefinedValues: OptionalValues,
   ): IOptionalType<T, OptionalValues>;
 };
 
 export const optional: OptionalFactory = <T extends IAnyType, OptionalValues extends [ValidOptionalValue, ...ValidOptionalValue[]]>(
   type: T,
   defaultValue: DefaultFuncOrValue<T>,
-  undefinedValues?: OptionalValues
+  undefinedValues?: OptionalValues,
 ): IOptionalType<T, OptionalValues> => {
   ensureRegistered(type);
   return new OptionalType(type, defaultValue, undefinedValues);

@@ -52,7 +52,7 @@ const buildDiscriminatorTypeMap = (types: IAnyType[], discriminator: string) => 
       map[type.value] = instantiateAsType;
     } else {
       throw new InvalidDiscriminatorError(
-        `Can't use the discriminator property \`${discriminator}\` on the type \`${type}\` as it is of a type who's value can't be determined at union creation time.`
+        `Can't use the discriminator property \`${discriminator}\` on the type \`${type}\` as it is of a type who's value can't be determined at union creation time.`,
       );
     }
   };
@@ -72,7 +72,10 @@ class UnionType<Types extends IAnyType[]> extends BaseType<
 > {
   readonly dispatcher?: ITypeDispatcher;
 
-  constructor(readonly types: Types, readonly options: UnionOptions = {}) {
+  constructor(
+    readonly types: Types,
+    readonly options: UnionOptions = {},
+  ) {
     let dispatcher: ITypeDispatcher | undefined = undefined;
 
     if (options?.dispatcher) {
@@ -95,8 +98,8 @@ class UnionType<Types extends IAnyType[]> extends BaseType<
             `Discriminator property value \`${discriminatorValue}\` for property \`${
               options.discriminator
             }\` on incoming snapshot didn't correspond to a type. Options: ${Object.keys(discriminatorToTypeMap).join(
-              ", "
-            )}. Snapshot was \`${JSON.stringify(snapshot)}\``
+              ", ",
+            )}. Snapshot was \`${JSON.stringify(snapshot)}\``,
           );
         }
 
@@ -107,8 +110,8 @@ class UnionType<Types extends IAnyType[]> extends BaseType<
     super(
       mstTypes.union(
         { ...options, dispatcher: dispatcher ? (snapshot) => dispatcher!(snapshot).mstType : undefined },
-        ...types.map((x) => x.mstType)
-      )
+        ...types.map((x) => x.mstType),
+      ),
     );
 
     this.dispatcher = dispatcher;

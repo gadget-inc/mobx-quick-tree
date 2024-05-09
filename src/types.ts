@@ -42,11 +42,8 @@ export type IDateType = IType<Date | number, number, Date>;
 export type IAnyComplexType = IType<any, any, object> | IClassModelType<any, any>;
 
 /** Given any MQT type, get the type of an instance of the MQT type */
-export type InstanceWithoutSTNTypeForType<T extends IAnyType> = T extends IType<any, any, any>
-  ? T["InstanceTypeWithoutSTN"]
-  : T extends IClassModelType<any, any>
-  ? InstanceType<T>
-  : T;
+export type InstanceWithoutSTNTypeForType<T extends IAnyType> =
+  T extends IType<any, any, any> ? T["InstanceTypeWithoutSTN"] : T extends IClassModelType<any, any> ? InstanceType<T> : T;
 
 export interface INodeModelType<Props extends ModelProperties, Others>
   extends IType<
@@ -66,7 +63,7 @@ export interface INodeModelType<Props extends ModelProperties, Others>
       actions?: A;
       views?: V;
       state?: VS;
-    }
+    },
   ): INodeModelType<Props, Others & A & V & VS>;
 }
 
@@ -85,7 +82,7 @@ export interface IAnyNodeModelType extends IType<any, any, any> {
       actions?: A;
       views?: V;
       state?: VS;
-    }
+    },
   ): IAnyNodeModelType;
 }
 
@@ -97,7 +94,7 @@ export type ExtendedClassModel<
   SubClassProps extends ModelPropertiesDeclaration,
   Props extends ModelProperties = TypesForModelPropsDeclaration<SubClassProps>,
   InputType = InputsForModel<InputTypesForModelProps<Props>>,
-  OutputType = OutputTypesForModelProps<Props>
+  OutputType = OutputTypesForModelProps<Props>,
 > = T & {
   InputType: InputType;
   OutputType: OutputType;
@@ -124,7 +121,7 @@ export type ExtendedClassModel<
 export interface IClassModelType<
   Props extends ModelProperties,
   InputType = InputsForModel<InputTypesForModelProps<Props>>,
-  OutputType = OutputTypesForModelProps<Props>
+  OutputType = OutputTypesForModelProps<Props>,
 > {
   readonly [$quickType]: undefined;
   readonly [$registered]: true;
@@ -141,7 +138,7 @@ export interface IClassModelType<
    */
   extend<T extends Constructor, SubClassProps extends ModelPropertiesDeclaration>(
     this: T,
-    subclassProps: SubClassProps
+    subclassProps: SubClassProps,
   ): ExtendedClassModel<T, SubClassProps>;
 
   /** @hidden */
@@ -304,12 +301,12 @@ export type TypesForModelPropsDeclaration<T extends ModelPropertiesDeclaration> 
   [K in keyof T]: T[K] extends IAnyType
     ? T[K]
     : T[K] extends string
-    ? IOptionalType<ISimpleType<string>, [undefined]>
-    : T[K] extends number
-    ? IOptionalType<ISimpleType<number>, [undefined]>
-    : T[K] extends boolean
-    ? IOptionalType<ISimpleType<boolean>, [undefined]>
-    : IOptionalType<IDateType, [undefined]>;
+      ? IOptionalType<ISimpleType<string>, [undefined]>
+      : T[K] extends number
+        ? IOptionalType<ISimpleType<number>, [undefined]>
+        : T[K] extends boolean
+          ? IOptionalType<ISimpleType<boolean>, [undefined]>
+          : IOptionalType<IDateType, [undefined]>;
 };
 
 export type InputTypesForModelProps<T extends ModelProperties> = {
