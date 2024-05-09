@@ -1,13 +1,13 @@
 import memoize from "lodash.memoize";
 import type { UnionOptions as MSTUnionOptions } from "mobx-state-tree";
 import { types as mstTypes } from "mobx-state-tree";
+import { isModelType, isType } from "./api";
 import { BaseType } from "./base";
 import { ensureRegistered, isClassModel } from "./class-model";
-import type { IAnyType, InstanceWithoutSTNTypeForType, TreeContext, IStateTreeNode, IUnionType } from "./types";
-import { OptionalType } from "./optional";
-import { isModelType, isType } from "./api";
-import { LiteralType } from "./simple";
 import { InvalidDiscriminatorError } from "./errors";
+import { OptionalType } from "./optional";
+import { LiteralType } from "./simple";
+import type { IAnyType, IStateTreeNode, IUnionType, InstanceWithoutSTNTypeForType, TreeContext } from "./types";
 import { cyrb53 } from "./utils";
 
 export type ITypeDispatcher = (snapshot: any) => IAnyType;
@@ -109,7 +109,7 @@ class UnionType<Types extends IAnyType[]> extends BaseType<
 
     super(
       mstTypes.union(
-        { ...options, dispatcher: dispatcher ? (snapshot) => dispatcher!(snapshot).mstType : undefined },
+        { ...options, dispatcher: dispatcher ? (snapshot) => dispatcher(snapshot).mstType : undefined },
         ...types.map((x) => x.mstType),
       ),
     );
