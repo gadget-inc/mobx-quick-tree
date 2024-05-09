@@ -1,7 +1,8 @@
+import "reflect-metadata";
+
 import memoize from "lodash.memoize";
 import type { IModelType as MSTIModelType, ModelActions } from "mobx-state-tree";
 import { types as mstTypes } from "mobx-state-tree";
-import "reflect-metadata";
 import { RegistrationError } from "./errors";
 import { buildFastInstantiator } from "./fast-instantiator";
 import { defaultThrowAction, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
@@ -25,7 +26,6 @@ import type {
   IAnyType,
   IClassModelType,
   IStateTreeNode,
-  TreeContext,
   ModelPropertiesDeclaration,
   ModelViews,
   TypesForModelPropsDeclaration,
@@ -139,7 +139,8 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
   tags?: RegistrationTags<Instance>,
   name?: string,
 ) {
-  let klass = object as any as IClassModelType<any>;
+  const klass = object as any as IClassModelType<any>;
+
   const mstActions: ModelActions = {};
   const mstViews: ModelViews = {};
   const mstVolatiles: Record<string, VolatileMetadata> = {};
@@ -270,15 +271,13 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
     (klass as any).mstType = (klass as any).mstType.volatile((self: any) => initializeVolatiles({}, self, mstVolatiles));
   }
 
-  // define the class constructor and the following hot path functions dynamically
-  // .createReadOnly
-  // .is
-  // .instantiate
-  klass = buildFastInstantiator(klass);
-
   (klass as any)[$registered] = true;
 
-  return klass as any;
+  // define the class constructor and the following hot path functions dynamically
+  //   - .createReadOnly
+  //   - .is
+  //   - .instantiate
+  return buildFastInstantiator(klass) as any;
 }
 
 /**
@@ -350,7 +349,7 @@ export const ensureRegistered = (type: IAnyType) => {
   let chain = type;
   while (chain) {
     if ((chain as any)[$requiresRegistration]) {
-      if (!(type as any)[$registered]) {
+      if (!(chain as any)[$registered]) {
         throw new Error(
           `Type ${type.name} requires registration but has not been registered yet. Add the @register decorator to it for it to function correctly.`,
         );
