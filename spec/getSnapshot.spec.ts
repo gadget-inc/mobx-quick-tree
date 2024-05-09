@@ -1,6 +1,6 @@
 import type { IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
-import type { SnapshotOut } from "../src";
+import type { IReferenceType, SnapshotOut } from "../src";
 import { types } from "../src";
 import { getSnapshot } from "../src/api";
 import { TestClassModel } from "./fixtures/TestClassModel";
@@ -98,5 +98,36 @@ describe("getSnapshot", () => {
     const snapshot = getSnapshot(instance);
     verifySnapshot(snapshot);
     assert<IsExact<typeof snapshot.map.test_key, SnapshotOut<typeof NamedThing>>>(true);
+  });
+
+  test("snapshots a reference type correctly in a map / array", () => {
+    const RootType = types.model({
+      things: types.map(NamedThing),
+      refMap: types.map(types.reference(NamedThing)),
+      refArray: types.array(types.reference(NamedThing)),
+    });
+
+    const instance = RootType.createReadOnly({
+      things: {
+        a: { key: "a", name: "test a" },
+        b: { key: "b", name: "test b" },
+      },
+      refMap: { a: "a", b: "b" },
+      refArray: ["a", "b"],
+    });
+
+    const snapshot = getSnapshot(instance);
+    assert<IsExact<typeof snapshot.things.test_key, SnapshotOut<typeof NamedThing>>>(true);
+    assert<IsExact<typeof snapshot.refMap.test_key, SnapshotOut<IReferenceType<typeof NamedThing>>>>(true);
+    expect(snapshot.refMap.a).toEqual("a");
+    expect(snapshot.refMap.b).toEqual("b");
+    expect(snapshot.refArray[0]).toEqual("a");
+    expect(snapshot.refArray[1]).toEqual("b");
+
+    const reconstructedInstance = RootType.createReadOnly(snapshot);
+    expect(reconstructedInstance.refMap.get("a")?.name).toEqual("test a");
+    expect(reconstructedInstance.refMap.get("b")?.name).toEqual("test b");
+    expect(reconstructedInstance.refArray[0]?.name).toEqual("test a");
+    expect(reconstructedInstance.refArray[1]?.name).toEqual("test b");
   });
 });
