@@ -1,7 +1,7 @@
 import type { IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
 import type { SnapshotOut } from "../src";
-import { isReadOnlyNode, resolveIdentifier, types } from "../src";
+import { hasEnv, isReadOnlyNode, resolveIdentifier, types } from "../src";
 import {
   applySnapshot,
   getEnv,
@@ -15,7 +15,7 @@ import {
   isRoot,
 } from "../src/api";
 import { NamedThingClass, TestClassModel } from "./fixtures/TestClassModel";
-import { NamedThing, TestModel, TestModelSnapshot } from "./fixtures/TestModel";
+import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
 
 describe("getParent", () => {
   test("returns the proper root for a read-only instance", () => {
@@ -80,16 +80,53 @@ describe("getRoot", () => {
   });
 });
 
+describe("hasEnv", () => {
+  describe.each(["with", "without"])("%s an env", (withOrWithoutYou) => {
+    const expected = withOrWithoutYou == "with" ? true : false;
+    const env = withOrWithoutYou == "with" ? { test: 1 } : undefined;
+
+    test(`returns ${expected} for quick tree instances`, () => {
+      const m = TestModel.createReadOnly(TestModelSnapshot, env);
+      expect(hasEnv(m)).toEqual(expected);
+    });
+
+    test(`returns ${expected} for MST instances with an env`, () => {
+      const m = TestModel.create(TestModelSnapshot, env);
+      expect(hasEnv(m)).toEqual(expected);
+    });
+
+    test(`returns ${expected} for read only model class instances`, () => {
+      const m = TestClassModel.createReadOnly(TestModelSnapshot, env);
+      expect(hasEnv(m)).toEqual(expected);
+    });
+  });
+});
+
 describe("getEnv", () => {
-  test("returns expected env for quick tree instances", () => {
+  test("throws for quick tree instances without envs", () => {
     const m = TestModel.createReadOnly(TestModelSnapshot, { test: 1 });
     expect(getEnv(m)).toEqual({ test: 1 });
     expect(getEnv(m.map.get("test_key")!)).toEqual({ test: 1 });
   });
 
-  test("returns expected env for MST instances", () => {
+  test("throws for MST instances without envs", () => {
     const m = TestModel.create(TestModelSnapshot, { test: 1 });
     expect(getEnv(m)).toEqual({ test: 1 });
+  });
+
+  test("throws for read only model class instances without envs", () => {
+    const m = TestClassModel.createReadOnly(TestModelSnapshot);
+    expect(() => getEnv(m)).toThrow();
+  });
+
+  test("returns expected env for quick tree instances", () => {
+    const m = TestModel.createReadOnly(TestModelSnapshot);
+    expect(() => getEnv(m)).toThrow();
+  });
+
+  test("returns expected env for MST instances", () => {
+    const m = TestModel.create(TestModelSnapshot);
+    expect(() => getEnv(m)).toThrow();
   });
 
   test("returns expected env for read only model class instances", () => {

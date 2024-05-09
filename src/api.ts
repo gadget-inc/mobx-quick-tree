@@ -13,6 +13,7 @@ import {
   getParentOfType as mstGetParentOfType,
   getRoot as mstGetRoot,
   getType as mstGetType,
+  hasEnv as mstHasEnv,
   isArrayType as mstIsArrayType,
   isIdentifierType as mstIsIdentifierType,
   isMapType as mstIsMapType,
@@ -40,8 +41,8 @@ import type {
   IStateTreeNode,
   IType,
   Instance,
-  TreeContext,
   SnapshotIn,
+  TreeContext,
 } from "./types";
 
 export {
@@ -50,13 +51,13 @@ export {
   applyPatch,
   clone,
   createActionTrackingMiddleware2,
-  getRunningActionContext,
   destroy,
   detach,
   escapeJsonPath,
   getIdentifier,
   getPath,
   getPathParts,
+  getRunningActionContext,
   hasParent,
   isActionContextThisOrChildOf,
   isAlive,
@@ -178,7 +179,20 @@ export function getEnv<Env = any>(value: IAnyStateTreeNode): Env {
     return mstGetEnv(value);
   }
 
-  return (getContext(value)?.env ?? {}) as Env;
+  const env = getContext(value)?.env;
+  if (!env) {
+    throw new Error(`Failed to find the environment of ${value}`);
+  }
+
+  return env as Env;
+}
+
+export function hasEnv(value: IAnyStateTreeNode): boolean {
+  if (mstIsStateTreeNode(value)) {
+    return mstHasEnv(value);
+  }
+
+  return !!getContext(value)?.env;
 }
 
 export const getRoot = <T extends IAnyType>(value: IAnyStateTreeNode): Instance<T> => {
