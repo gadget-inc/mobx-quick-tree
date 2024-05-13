@@ -81,7 +81,7 @@ describe("late", () => {
               },
             ],
           },
-          observable
+          observable,
         );
 
         expect(basket.fruits.length).toBe(3);
@@ -98,7 +98,7 @@ describe("late", () => {
           {
             fruits: [apple, banana],
           },
-          observable
+          observable,
         );
 
         expect(basket.fruits.length).toBe(2);

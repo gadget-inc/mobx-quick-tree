@@ -46,4 +46,7 @@ void suite
   .on("complete", function (this: Suite) {
     console.profileEnd();
   })
-  .run({ async: true });
+  .run({
+    async: true,
+    initCount: 100
+  });

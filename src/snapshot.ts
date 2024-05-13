@@ -29,7 +29,7 @@ const snapshot = (value: any): unknown => {
     return Object.fromEntries(
       Array.from(value.entries()).map(([k, v]) => {
         return [k, childrenAreReferences ? v[$identifier] : snapshot(v)];
-      })
+      }),
     );
   }
 

@@ -50,14 +50,14 @@ describe("clas model references", () => {
           { key: "item-b", count: 523 },
         ],
       },
-      true
+      true,
     );
 
     expect(root.model.ref).toEqual(
       expect.objectContaining({
         key: "item-a",
         count: 12,
-      })
+      }),
     );
   });
 
@@ -74,7 +74,7 @@ describe("clas model references", () => {
             { key: "item-b", count: 523 },
           ],
         },
-        true
+        true,
       );
 
     expect(createRoot).toThrow();
@@ -93,14 +93,14 @@ describe("clas model references", () => {
           { key: "item-b", count: 523 },
         ],
       },
-      true
+      true,
     );
 
     expect(root.model.safeRef).toEqual(
       expect.objectContaining({
         key: "item-b",
         count: 523,
-      })
+      }),
     );
   });
 
@@ -117,7 +117,7 @@ describe("clas model references", () => {
           { key: "item-b", count: 523 },
         ],
       },
-      true
+      true,
     );
 
     expect(root.model.safeRef).toBeUndefined();
@@ -136,7 +136,7 @@ describe("clas model references", () => {
           { key: "item-b", count: 523 },
         ],
       },
-      true
+      true,
     );
 
     expect(root.model.ref).toBe(root.refs[0]);
@@ -157,7 +157,7 @@ describe("clas model references", () => {
           { key: "item-b", count: 523 },
         ],
       },
-      true
+      true,
     );
 
     expect(root.model.safeRef).toBe(root.refs[1]);
@@ -172,9 +172,9 @@ describe("class model factories with generic references", () => {
     InstanceOfT extends StateTreeNode<InstanceWithoutSTNTypeForType<T>, IReferenceType<T>> = StateTreeNode<
       InstanceWithoutSTNTypeForType<T>,
       IReferenceType<T>
-    >
+    >,
   >(
-    type: T
+    type: T,
   ) => {
     return register(
       class extends ClassModel({
@@ -188,7 +188,7 @@ describe("class model factories with generic references", () => {
           this.someGenericReference = ref;
         }
       },
-      { setReference: action }
+      { setReference: action },
     );
   };
 
@@ -211,7 +211,7 @@ describe("class model factories with generic references", () => {
           { key: "item-b", count: 523 },
         ],
       },
-      false
+      false,
     );
 
     const instance = root.example;

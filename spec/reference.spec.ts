@@ -46,7 +46,7 @@ test("can resolve valid references", () => {
     expect.objectContaining({
       key: "item-a",
       count: 12,
-    })
+    }),
   );
 });
 
@@ -81,7 +81,7 @@ test("can resolve valid safe references", () => {
     expect.objectContaining({
       key: "item-b",
       count: 523,
-    })
+    }),
   );
 });
 

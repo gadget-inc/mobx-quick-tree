@@ -10,7 +10,10 @@ export class SimpleType<T> extends BaseType<T, T, T> {
     return new SimpleType(expectedType, mstType);
   }
 
-  constructor(readonly expectedType: string, mstType: MSTSimpleType<T>) {
+  constructor(
+    readonly expectedType: string,
+    mstType: MSTSimpleType<T>,
+  ) {
     super(mstType);
   }
 

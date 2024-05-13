@@ -4,7 +4,10 @@ import type { IAnyStateTreeNode, TreeContext, ISimpleType, IStateTreeNode } from
 import memoize from "lodash.memoize";
 
 class EnumerationType<EnumOptions extends string> extends BaseType<EnumOptions, EnumOptions, EnumOptions> {
-  constructor(readonly name: string, readonly options: readonly EnumOptions[]) {
+  constructor(
+    readonly name: string,
+    readonly options: readonly EnumOptions[],
+  ) {
     super(types.enumeration<EnumOptions>(name, [...options]));
   }
 
@@ -32,7 +35,7 @@ type EnumerationFactory = {
 
 export const enumeration: EnumerationFactory = <EnumOptions extends string>(
   nameOrOptions: readonly EnumOptions[] | string,
-  options?: readonly EnumOptions[]
+  options?: readonly EnumOptions[],
 ): ISimpleType<EnumOptions> => {
   let name;
   if (typeof nameOrOptions == "string") {

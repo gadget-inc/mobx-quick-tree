@@ -26,7 +26,7 @@ import type {
 import { cyrb53 } from "./utils";
 
 export const propsFromModelPropsDeclaration = <Props extends ModelPropertiesDeclaration>(
-  propsDecl: Props
+  propsDecl: Props,
 ): TypesForModelPropsDeclaration<Props> => {
   const props: Record<string, IAnyType> = {};
   for (const name in propsDecl) {
@@ -92,7 +92,7 @@ export const instantiateInstanceFromProperties = (
   snapshot: Record<string, any> | undefined,
   properties: ModelProperties,
   identifierProp: string | undefined,
-  context: TreeContext
+  context: TreeContext,
 ) => {
   for (const propName in properties) {
     const propType = properties[propName];
@@ -139,7 +139,12 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   private identifierProp: string | undefined;
   private prototype: this["InstanceType"];
 
-  constructor(readonly properties: Props, readonly initializers: ModelInitializer[], mstType: MSTAnyModelType, prototype?: any) {
+  constructor(
+    readonly properties: Props,
+    readonly initializers: ModelInitializer[],
+    mstType: MSTAnyModelType,
+    prototype?: any,
+  ) {
     super(mstType);
     Object.defineProperty(this, "mstType", {
       value: mstType,
@@ -192,14 +197,14 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
   }
 
   props<AdditionalProps extends ModelPropertiesDeclaration>(
-    propsDecl: AdditionalProps
+    propsDecl: AdditionalProps,
   ): ModelType<Props & TypesForModelPropsDeclaration<AdditionalProps>, Others> {
     const props = propsFromModelPropsDeclaration(propsDecl);
     return new ModelType(
       { ...this.properties, ...props },
       this.initializers,
       this.mstType.props(mstPropsFromQuickProps(props)),
-      this.prototype
+      this.prototype,
     );
   }
 
@@ -217,7 +222,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
       actions?: Actions;
       views?: Views;
       state?: VolatileState;
-    }
+    },
   ): INodeModelType<Props, Others & Actions & Views & VolatileState> {
     const init = (self: Instance<this>) => {
       const result = fn(self);
@@ -229,7 +234,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return new ModelType<Props, Others & Actions & Views & VolatileState>(
       this.properties,
       [...this.initializers, init],
-      this.mstType.extend<Actions, Views, VolatileState>(fn)
+      this.mstType.extend<Actions, Views, VolatileState>(fn),
     );
   }
 
@@ -300,7 +305,7 @@ export type ModelFactory = {
 
 export const model: ModelFactory = <Props extends ModelPropertiesDeclaration>(
   nameOrProperties?: string | Props,
-  properties?: Props
+  properties?: Props,
 ): INodeModelType<TypesForModelPropsDeclaration<Props>, {}> => {
   let propsDecl: Props;
   let name = "model";

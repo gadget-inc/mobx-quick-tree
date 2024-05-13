@@ -4,7 +4,10 @@ import { BaseType } from "./base";
 import type { IAnyType, InstanceWithoutSTNTypeForType, TreeContext, IStateTreeNode, IType } from "./types";
 
 class RefinementType<T extends IAnyType> extends BaseType<T["InputType"], T["OutputType"], InstanceWithoutSTNTypeForType<T>> {
-  constructor(readonly type: T, readonly predicate: (snapshot: Instance<T> | Instance<T["mstType"]>) => boolean) {
+  constructor(
+    readonly type: T,
+    readonly predicate: (snapshot: Instance<T> | Instance<T["mstType"]>) => boolean,
+  ) {
     super(types.refinement(type.mstType, predicate));
   }
 
@@ -28,7 +31,7 @@ class RefinementType<T extends IAnyType> extends BaseType<T["InputType"], T["Out
 
 export const refinement = <T extends IAnyType>(
   type: T,
-  predicate: (snapshot: Instance<T> | Instance<T["mstType"]>) => boolean
+  predicate: (snapshot: Instance<T> | Instance<T["mstType"]>) => boolean,
 ): IType<T["InputType"], T["OutputType"], InstanceWithoutSTNTypeForType<T>> => {
   return new RefinementType(type, predicate);
 };
