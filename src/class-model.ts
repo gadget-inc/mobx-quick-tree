@@ -74,6 +74,7 @@ class BaseClassModel {
   static isMQTClassModel = true as const;
   static mstType: MSTIModelType<any, any>;
   static readonly [$requiresRegistration] = true;
+  /** @internal */
   static readonly [$quickType] = true;
 
   static extend(props: ModelPropertiesDeclaration) {

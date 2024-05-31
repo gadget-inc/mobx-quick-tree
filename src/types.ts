@@ -9,6 +9,7 @@ export type { IJsonPatch, IMiddlewareEvent, IPatchRecorder, ReferenceOptions, Un
 export type Constructor<T = {}> = new (...args: any[]) => T;
 
 export interface IType<InputType, OutputType, InstanceType> {
+  /** @internal */
   readonly [$quickType]: undefined;
 
   readonly InputType: InputType;
@@ -123,7 +124,9 @@ export interface IClassModelType<
   InputType = InputsForModel<InputTypesForModelProps<Props>>,
   OutputType = OutputTypesForModelProps<Props>,
 > {
+  /** @internal */
   readonly [$quickType]: undefined;
+  /** @internal */
   readonly [$registered]: true;
 
   readonly InputType: InputType;
