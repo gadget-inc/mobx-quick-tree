@@ -1,12 +1,12 @@
-import { Bench } from "tinybench";
 import findRoot from "find-root";
 import fs from "fs";
 import { FruitAisle } from "../spec/fixtures/FruitAisle";
+import { benchmarker } from "./benchmark";
 
 const root = findRoot(__dirname);
 const fruitBasket = JSON.parse(fs.readFileSync(root + "/spec/fixtures/fruit-aisle-snapshot.json", "utf8"));
 
-export const registerPropertyAccess = (suite: Bench) => {
+export default benchmarker(async (suite) => {
   const shared = FruitAisle.createReadOnly(fruitBasket);
 
   const touchProperties = (instance: FruitAisle) => {
@@ -47,14 +47,5 @@ export const registerPropertyAccess = (suite: Bench) => {
     .add("accessing memoized getter properties of a class model", function () {
       touchProperties(shared);
     });
-};
+});
 
-if (require.main === module) {
-  void (async () => {
-    const suite = new Bench();
-    registerPropertyAccess(suite);
-    await suite.warmup();
-    await suite.run();
-    console.table(suite.table());
-  })();
-}

@@ -23,6 +23,7 @@
               bash = pkgs.bash;
               nodejs = pkgs.nodejs_21;
               pnpm = pkgs.nodejs_21.pkgs.pnpm;
+              npm = pkgs.nodejs_21.pkgs.npm;
             };
 
           devShell = pkgs.mkShell {

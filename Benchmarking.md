@@ -7,10 +7,16 @@
 You can run a benchmark file with `pnpm x <the file>`:
 
 ```shell
-pnpm x bench/create-large-root.ts
+pnpm x bench/instantiation.benchmark.ts
 ```
 
 This will run the file and output a speed measurement for comparison between git branches.
+
+You can also run all the benchmarks with:
+
+```shell
+pnpm x bench/all.ts
+```
 
 ## Profiling
 
@@ -18,7 +24,13 @@ It's nice to use the benchmarks for profiling to identify optimization candidate
 
 ### CPU profiling
 
-You can run a benchmark to generate a profile using node.js' built in sampling profiler
+The benchmark framework supports a `--profile` option for writing a profile of the benchmark loop, excluding setup and teardown code. Run a benchmark with profile, then open the created `.cpuprofile` file:
+
+```shell
+pnpm x bench/instantiation.benchmark.ts --profile
+```
+
+You can also run a benchmark to generate a profile using node.js' built in sampling profiler
 
 ```shell
 node -r ts-node/register/transpile-only --prof bench/create-large-root.ts
