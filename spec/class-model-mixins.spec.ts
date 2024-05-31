@@ -1,6 +1,7 @@
 import type { IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
-import { Constructor, isType } from "../src";
+import type { Constructor } from "../src";
+import { isType } from "../src";
 import { IAnyClassModelType, IAnyStateTreeNode, extend } from "../src";
 import { getSnapshot } from "../src";
 import { ClassModel, action, register, types } from "../src";

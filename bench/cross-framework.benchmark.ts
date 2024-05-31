@@ -1,8 +1,8 @@
-import { Bench } from "tinybench";
 import { TestClassModel } from "../spec/fixtures/TestClassModel";
 import { TestModel } from "../spec/fixtures/TestModel";
 import { TestPlainModel } from "./reference/plain-class";
 import { ObservablePlainModel } from "./reference/mobx";
+import { benchmarker } from "./benchmark";
 
 const TestModelSnapshot: (typeof TestModel)["InputType"] = {
   bool: true,
@@ -21,9 +21,7 @@ const TestModelSnapshot: (typeof TestModel)["InputType"] = {
   },
 };
 
-void (async () => {
-  const suite = new Bench();
-
+export default benchmarker(async (suite) => {
   suite
     .add("mobx-state-tree", function () {
       TestModel.create(TestModelSnapshot);
@@ -41,7 +39,5 @@ void (async () => {
       new TestPlainModel(TestModelSnapshot);
     });
 
-  await suite.warmup();
-  await suite.run();
-  console.table(suite.table());
-})();
+  return suite
+});

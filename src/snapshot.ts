@@ -1,8 +1,10 @@
 import type { IStateTreeNode as MSTStateTreeNode } from "mobx-state-tree";
 import { getSnapshot as mstGetSnapshot, isStateTreeNode as mstIsStateTreeNode } from "mobx-state-tree";
 import { getType, isModelType, isReferenceType, isStateTreeNode } from "./api";
-import { ArrayType, QuickArray } from "./array";
-import { MapType, QuickMap } from "./map";
+import type { ArrayType } from "./array";
+import { QuickArray } from "./array";
+import type { MapType } from "./map";
+import { QuickMap } from "./map";
 import { $identifier } from "./symbols";
 import type { IAnyType, IStateTreeNode, SnapshotOut } from "./types";
 
