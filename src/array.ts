@@ -82,9 +82,7 @@ export class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]
   instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, parent: IStateTreeNode | null): this["InstanceType"] {
     const array = new QuickArray<T>(this, parent, context);
     if (snapshot) {
-      for (let index = 0; index < snapshot?.length; ++index) {
-        array.push(this.childrenType.instantiate(snapshot[index], context, array));
-      }
+      array.push(...snapshot.map((element) => this.childrenType.instantiate(element, context, array)));
     }
     return array as this["InstanceType"];
   }
