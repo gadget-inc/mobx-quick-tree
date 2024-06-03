@@ -11,12 +11,12 @@ import type {
   TreeContext,
 } from "./types";
 
-class MaybeType<Type extends IAnyType> extends BaseType<
+export class MaybeType<Type extends IAnyType> extends BaseType<
   Type["InputType"] | undefined,
   Type["OutputType"] | undefined,
   InstanceWithoutSTNTypeForType<Type> | undefined
 > {
-  constructor(private type: Type) {
+  constructor(readonly type: Type) {
     super(mstTypes.maybe(type.mstType));
   }
 
@@ -39,12 +39,12 @@ class MaybeType<Type extends IAnyType> extends BaseType<
   }
 }
 
-class MaybeNullType<Type extends IAnyType> extends BaseType<
+export class MaybeNullType<Type extends IAnyType> extends BaseType<
   Type["InputType"] | null | undefined,
   Type["OutputType"] | null,
   InstanceWithoutSTNTypeForType<Type> | null
 > {
-  constructor(private type: Type) {
+  constructor(readonly type: Type) {
     super(mstTypes.maybeNull(type.mstType));
   }
 
