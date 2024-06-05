@@ -102,6 +102,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
           for (const resolver of context.referencesToResolve) {
             resolver();
           }
+          context.referencesToResolve = null; // cleanup these closures, no need to retain them past construction
 
           return instance;
         };
