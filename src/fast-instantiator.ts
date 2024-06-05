@@ -1,3 +1,4 @@
+import { isReferenceType, isUnionType } from "mobx-state-tree";
 import { ArrayType, QuickArray } from "./array";
 import type { FastGetBuilder } from "./fast-getter";
 import { FrozenType } from "./frozen";
@@ -7,6 +8,7 @@ import { ReferenceType, SafeReferenceType } from "./reference";
 import { DateType, IntegerType, LiteralType, SimpleType } from "./simple";
 import { $context, $identifier, $notYetMemoized, $parent, $readOnly, $type } from "./symbols";
 import type { IAnyType, IClassModelType, ValidOptionalValue } from "./types";
+import { MaybeNullType, MaybeType } from "./maybe";
 
 /**
  * Compiles a fast function for taking snapshots and turning them into instances of a class model.
@@ -48,7 +50,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       `);
       } else if (type instanceof OptionalType) {
         segments.push(this.assignmentExpressionForOptionalType(key, type));
-      } else if (type instanceof ReferenceType || type instanceof SafeReferenceType) {
+      } else if (isReferenceType(type.mstType)) {
         segments.push(this.assignmentExpressionForReferenceType(key, type));
       } else if (type instanceof ArrayType) {
         segments.push(this.assignmentExpressionForArrayType(key, type));
@@ -191,27 +193,51 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     return type instanceof DateType ? `new Date(${valueExpression})` : valueExpression;
   }
 
-  private assignmentExpressionForReferenceType(key: string, type: ReferenceType<IAnyType> | SafeReferenceType<IAnyType>): string {
+  private assignmentExpressionForReferenceType(key: string, type: IAnyType): string {
     const varName = `identifier${key}`;
-    let notFoundBehavior;
-    if (type instanceof SafeReferenceType) {
-      notFoundBehavior = `// safe reference, no error`;
+    const assignReferenceChunk = `
+      if (${varName}) {
+        const referencedInstance = context.referenceCache.get(${varName});
+        if (referencedInstance) {
+          this["${key}"] = referencedInstance;
+          return;
+        }
+      }
+    `;
+
+    let resolve;
+    if (
+      type instanceof SafeReferenceType ||
+      ((type instanceof MaybeType || type instanceof MaybeNullType) &&
+        (type.type instanceof ReferenceType || type.type instanceof SafeReferenceType))
+    ) {
+      // we're resolving a safe reference, or a maybe/maybeNull of a reference. don't error if the reference can't be resolved
+      resolve = `
+        ${assignReferenceChunk}
+        // safe reference, no error if not found
+      `;
+    } else if (type instanceof ReferenceType) {
+      // we're resolving a plain old reference -- error if the reference can't be resolved
+      resolve = `
+        ${assignReferenceChunk}
+        throw new Error(\`can't resolve reference for property "${key}" using identifier \${${varName}}\`);
+      `;
     } else {
-      notFoundBehavior = `throw new Error(\`can't resolve reference \${${varName}} for key "${key}"\`);`;
+      // we're resolving a type that `isReferenceType` returns true for, but that we don't have a fastpath for, like a union of a model and a reference. fall back this type's instantiate call, but do it late in a context callback so that any reference elements of the union can be resolved
+      resolve = `
+        this["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
+          ${varName},
+          context,
+          this
+        );
+      `;
     }
 
     return `
       // setup reference for ${key}
       const ${varName} = snapshot?.["${key}"];
       context.referencesToResolve.push(() => {
-        if (${varName}) {
-          const referencedInstance = context.referenceCache.get(${varName});
-          if (referencedInstance) {
-            this["${key}"] = referencedInstance;
-            return;
-          }
-        }
-        ${notFoundBehavior}
+        ${resolve}
       });
     `;
   }
