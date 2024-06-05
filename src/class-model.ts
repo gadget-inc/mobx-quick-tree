@@ -517,7 +517,10 @@ export const isClassModel = (type: IAnyType): type is IClassModelType<any, any, 
 const buildSnapshottedViewProcessor = (snapshottedViews: SnapshottedViewMetadata[], mstType: MSTIModelType<any, any>) => {
   return mstTypes.snapshotProcessor(mstType, {
     postProcessor(snapshot, node) {
-      if (!node) return snapshot; // FIXME -- undesirable to ever run without a node because we are thusly not putting a snapshot of the view in the snapshot
+      if (!node) {
+        debugger;
+        return snapshot; // FIXME -- undesirable to ever run without a node because we are thusly not putting a snapshot of the view in the snapshot
+      }
       for (const snapshottedView of snapshottedViews) {
         storeViewOnSnapshot(node, snapshottedView, snapshot);
       }

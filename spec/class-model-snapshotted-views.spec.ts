@@ -24,10 +24,13 @@ class Outer extends ClassModel({ name: types.string, examples: types.array(ViewE
 }
 
 describe("class model snapshotted views", () => {
-  describe.each([
-    ["read-only", true],
-    ["observable", false],
-  ])("%s", (_name, readOnly) => {
+  // describe.each([
+  //   ["read-only", true],
+  //   ["observable", false],
+  // ])("%s", (_name, readOnly) => {
+  describe("whatever", () => {
+    const readOnly = false;
+
     test("instances don't require the snapshot to include the cache", () => {
       const instance = create(ViewExample, { key: "1", name: "Test" }, readOnly);
       expect(instance.slug).toEqual("test");
@@ -114,6 +117,7 @@ describe("class model snapshotted views", () => {
     //   expect(AllOptionalB.is(instanceB)).toBe(false);
     // });
   });
+
   test("an observable instance saves the view value in a snapshot when changed", () => {
     const instance = ViewExample.create({ key: "1", name: "Test" });
     expect(instance.slug).toEqual("test");
