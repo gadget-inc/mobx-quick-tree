@@ -1,6 +1,6 @@
 import type { IInterceptor, IMapDidChange, IMapWillChange, Lambda } from "mobx";
 import type { IAnyType as MSTAnyType } from "mobx-state-tree";
-import type { VolatileMetadata } from "./class-model";
+import type { SnapshottedViewMetadata, VolatileMetadata } from "./class-model";
 import type { $quickType, $registered, $type } from "./symbols";
 
 export type { $quickType, $registered, $type } from "./symbols";
@@ -146,6 +146,9 @@ export interface IClassModelType<
 
   /** @hidden */
   volatiles: Record<string, VolatileMetadata>;
+
+  /** @hidden */
+  snapshottedViews: SnapshottedViewMetadata[];
 
   /** @hidden */
   instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, parent: IStateTreeNode | null): InstanceType<this>;

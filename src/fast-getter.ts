@@ -13,7 +13,7 @@ export class FastGetBuilder {
   ) {
     this.memoizableProperties = metadatas
       .filter((metadata): metadata is ViewMetadata => {
-        if (metadata.type !== "view") return false;
+        if (metadata.type !== "view" && metadata.type !== "snapshotted-view") return false;
         const property = metadata.property;
         const descriptor = getPropertyDescriptor(klass.prototype, property);
         if (!descriptor) {
@@ -24,11 +24,15 @@ export class FastGetBuilder {
       .map((metadata) => metadata.property);
   }
 
+  memoSymbolName(property: string) {
+    return `mqt/${property}-memo`;
+  }
+
   outerClosureStatements(className: string) {
     return this.memoizableProperties
       .map(
         (property) => `
-          const ${property}Memo = Symbol.for("mqt/${property}-memo");
+          const ${property}Memo = Symbol.for("${this.memoSymbolName(property)}");
           ${className}.prototype[${property}Memo] = $notYetMemoized;
         `,
       )
@@ -36,7 +40,7 @@ export class FastGetBuilder {
   }
 
   buildGetter(property: string, descriptor: PropertyDescriptor) {
-    const $memo = Symbol.for(`mqt/${property}-memo`);
+    const $memo = Symbol.for(this.memoSymbolName(property));
     const source = `
       (
         function build({ $readOnly, $memo, $notYetMemoized, getValue }) {

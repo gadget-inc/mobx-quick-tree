@@ -13,11 +13,11 @@
 
 ## Why?
 
-[`mobx-state-tree`](https://mobx-state-tree.js.org/) is great for modeling data and observing changes to it, but it adds a lot of runtime overhead! Raw `mobx` itself adds substantial overhead over plain old JS objects or ES6 classes, and `mobx-state-tree` adds more on top of that. If you want to use your MST data models in a non-reactive or non-observing context, all that runtime overhead for observability is just wasted, as nothing is ever changing.
+[`mobx-state-tree`](https://mobx-state-tree.js.org/) is great for modeling data and observing changes to it, but it adds a lot of runtime overhead! Raw `mobx` itself adds substantial overhead over plain old JS objects or ES6 classes, and `mobx-state-tree` adds more on top of that. If you want to use your MST data models in a non-reactive or non-observing context, all that runtime overhead for observability is just wasted, as nothing is ever-changing.
 
 `mobx-quick-tree` implements the same API as MST and exposes the same useful observable instances for use in observable contexts, but adds a second option for instantiating a read-only instance that is 100x faster.
 
-If `mobx-state-tree` instances are great for modeling within an "editor" part of an app where nodes and properties are changed all over the place, the performant, read-only instances constructed by `mobx-quick-tree` are great for using within a "read" part of an app that displays data in the tree without ever changing it. For a website builder for example, you might use MST in the page builder area where someone arranges components within a page, and then use MQT in the part of the app that needs to render those webpages frequently.
+If `mobx-state-tree` instances are great for modeling within an "editor" part of an app where nodes and properties are changed all over the place, the performant, read-only instances constructed by `mobx-quick-tree` are great for use within a "read" part of an app that displays data in the tree without ever changing it. For a website builder for example, you might use MST in the page builder area where someone arranges components within a page, and then use MQT in the part of the app that needs to render those web pages frequently.
 
 ### Two APIs
 
@@ -164,7 +164,7 @@ class Car extends ClassModel({
 }
 ```
 
-Each Class Model **must** be registered with the system using the `@register` decorator in order to be instantiated.
+Each Class Model **must** be registered with the system using the `@register` decorator to be instantiated.
 `@register` is necessary for setting up the internal state of the class and generating the observable MST type.
 
 Within Class Model class bodies, refer to the current instance using the standard ES6/JS `this` keyword. `mobx-state-tree` users tend to use `self` within view or action blocks, but Class Models return to using standard JS `this` for performance.
@@ -284,11 +284,11 @@ class Car extends ClassModel({
 }
 ```
 
-Explicit decoration of views is exactly equivalent to implicit declaration of views without a decorator.
+Explicit decoration of views is exactly equivalent to an implicit declaration of views without a decorator.
 
 #### Defining actions with `@action`
 
-Class Models support actions on instances, which are functions that change state on the instance or it's children. Class Model actions are exactly the same as `mobx-state-tree` actions defined using the `.actions()` API on a `types.model`. See the [`mobx-state-tree` actions docs](https://mobx-state-tree.js.org/concepts/actions) for more information.
+Class Models support actions on instances, which are functions that change the state of the instance or its children. Class Model actions are exactly the same as `mobx-state-tree` actions defined using the `.actions()` API on a `types.model`. See the [`mobx-state-tree` actions docs](https://mobx-state-tree.js.org/concepts/actions) for more information.
 
 To define an action on a Class Model, define a function within a Class Model body, and register it as an action with `@action`.
 
@@ -432,6 +432,95 @@ watch.stop();
 ```
 
 **Note**: Volatile actions will _not_ trigger observers on readonly instances. Readonly instances are not observable because they are readonly (and for performance), and so volatiles aren't observable, and so volatile actions that change them won't fire observers. This makes volatile actions appropriate for reference tracking and implementation that syncs with external systems, but not for general state management. If you need to be able to observe state, use an observable instance.
+
+#### Caching view values in snapshots with `snapshottedView`
+
+For expensive views, `mobx-quick-tree` supports hydrating computed views from a snapshot. This allows read-only instances to skip re-computing the expensive view, and instead return a cached value from the snapshot quickly.
+
+To hydrate a view's value from a snapshot, define a view with the `@snapshottedView` decorator.
+
+```typescript
+import { ClassModel, register, view, snapshottedView } from "@gadgetinc/mobx-quick-tree";
+
+@register
+class Car extends ClassModel({
+  make: types.string,
+  model: types.string,
+  year: types.number,
+}) {
+  @snapshottedView()
+  get name() {
+    console.log("computing name"); // pretend this is expensive
+    return `${this.year} ${this.model} ${this.make}`;
+  }
+}
+
+// create an observable instance
+const car = Car.create({ make: "Toyota", model: "Prius", year: 2008 });
+car.name; // => "2008 Toyota Prius" (logs "computing name")
+
+// create a snapshot of the observable instance
+const snapshot = {
+  ...getSnapshot(car),
+  name: car.name, // NOTE: you must add the snapshotted view's value to the snapshot manually
+};
+
+const readOnlyCar = Car.createReadOnly(snapshot);
+readOnlyCar.name; // => "2008 Toyota Prius" (does not log "computing name")
+```
+
+Snapshotted views can transform the value from the snapshot before it is stored on the read-only instance. To transform the value of a snapshotted view, pass a `createReadOnly` function to the `@snapshottedView` decorator.
+
+For example, for a view that returns a rich type like a `URL`, we can store the view's value as a string in the snapshot, and re-create the rich type when a read-only instance is created:
+
+```typescript
+import { ClassModel, register, view, snapshottedView } from "@gadgetinc/mobx-quick-tree";
+
+@register
+class TransformExample extends ClassModel({ url: types.string }) {
+  @snapshottedView<string>({
+    createReadOnly(value, snapshot, node) {
+      return value ? new URL(value) : undefined;
+    },
+  })
+  get withoutParams() {
+    const url = new URL(this.url);
+    for (const [key] of url.searchParams.entries()) {
+      url.searchParams.delete(key);
+    }
+    return url;
+  }
+
+  @action
+  setURL(url: string) {
+    this.url = url;
+  }
+}
+
+const example = TransformExample.create({ url: "https://example.com?foo=bar" });
+
+const snapshot = {
+  ...getSnapshot(example),
+  withoutParams: example.withoutParams.toString(),
+};
+
+snapshot.withoutParams; // => "https://example.com"
+
+const readOnlyExample = TransformExample.createReadOnly(snapshot);
+readOnlyExample.withoutParams; // => URL { href: "https://example.com" }
+```
+
+##### Snapshotted view semantics
+
+Snapshotted views are a complicated beast, and are best avoided until your performance demands less computation on readonly instances.
+
+On observable instances, snapshotted views act like normal views and **are not** populated from the snapshot.
+
+On readonly instances, snapshotted views go through the following lifecycle:
+
+- when a readonly instance is created, any snapshotted view values in the snapshot are memoized and stored in the readonly instance
+- snapshotted views are never re-computed on readonly instances, and their value is always returned from the snapshot if present
+- if the incoming snapshot does not have a value for the view, then the view is lazily computed on first access like a normal `@view`, and memoized forever after that
 
 #### References to and from class models
 
@@ -588,7 +677,7 @@ const buildClass = () => {
       someView: view,
       someAction: action,
     },
-    "Example"
+    "Example",
   );
 };
 
@@ -728,7 +817,7 @@ class Student extends addName(
     firstName: types.string,
     lastName: types.string,
     homeroom: types.string,
-  })
+  }),
 ) {}
 
 @register
@@ -737,7 +826,7 @@ class Teacher extends addName(
     firstName: types.string,
     lastName: types.string,
     email: types.string,
-  })
+  }),
 ) {}
 ```
 
