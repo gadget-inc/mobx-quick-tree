@@ -44,7 +44,7 @@ type ActionMetadata = {
 /** Options that configure a snapshotted view */
 export interface SnapshottedViewOptions<V, T extends IAnyClassModelType> {
   /** A function for converting a stored value in the snapshot back to the rich type for the view to return */
-  createReadOnly?: (value: V | undefined, snapshot: T["InputType"], node: Instance<T>) => V | undefined;
+  createReadOnly?: (value: V | undefined, node: Instance<T>) => V | undefined;
 
   /** A function for converting the view value to a snapshot value */
   createSnapshot?: (value: V) => any;
@@ -195,7 +195,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
         if (descriptor.get) {
           Object.defineProperty(klass.prototype, property, {
             ...descriptor,
-            get: fastGetters.buildGetter(property, descriptor),
+            get: fastGetters.buildViewGetter(metadata, descriptor),
           });
         }
 

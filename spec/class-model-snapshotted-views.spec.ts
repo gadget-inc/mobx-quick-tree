@@ -1,4 +1,4 @@
-import { observable } from "mobx";
+import { observable, runInAction } from "mobx";
 import { ClassModel, action, snapshottedView, getSnapshot, register, types, onPatch } from "../src";
 import { Apple } from "./fixtures/FruitAisle";
 import { create } from "./helpers";
@@ -85,7 +85,9 @@ describe("class model snapshotted views", () => {
     const instance = MyViewExample.create({ key: "1", name: "Test" });
     onPatch(instance, fn);
 
-    observableArray.push("a");
+    runInAction(() => {
+      observableArray.push("a");
+    });
     expect(fn).toMatchSnapshot();
   });
 
@@ -141,8 +143,7 @@ describe("class model snapshotted views", () => {
     @register
     class HydrateExample extends ClassModel({ url: types.string }) {
       @snapshottedView<URL>({
-        createReadOnly(value, snapshot, node) {
-          expect(snapshot).toBeDefined();
+        createReadOnly(value, node) {
           expect(node).toBeDefined();
           return value ? new URL(value) : undefined;
         },
@@ -177,6 +178,25 @@ describe("class model snapshotted views", () => {
         withoutParams: "https://gadget.dev/blog/feature/extra", // pass a different value so we can be sure it is what is being used
       } as any);
       expect(instance.withoutParams).toEqual(new URL("https://gadget.dev/blog/feature/extra"));
+    });
+
+    test("hydrators aren't called eagerly on readonly instances in case they are expensive", () => {
+      const fn = jest.fn().mockReturnValue("whatever");
+      @register
+      class HydrateExampleSpy extends ClassModel({}) {
+        @snapshottedView<URL>({
+          createReadOnly: fn,
+        })
+        get someView() {
+          return "view value";
+        }
+      }
+
+      const instance = HydrateExampleSpy.createReadOnly({ someView: "snapshot value" });
+      expect(fn).not.toHaveBeenCalled();
+
+      expect(instance.someView).toEqual("whatever");
+      expect(fn).toHaveBeenCalledTimes(1);
     });
   });
 

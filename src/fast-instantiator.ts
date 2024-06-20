@@ -79,8 +79,8 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     `);
     }
 
-    for (const [index, snapshottedView] of this.model.snapshottedViews.entries()) {
-      segments.push(this.assignSnapshottedViewExpression(snapshottedView, index));
+    for (const snapshottedView of this.model.snapshottedViews) {
+      segments.push(this.assignSnapshottedViewExpression(snapshottedView));
     }
 
     let className = this.model.name;
@@ -332,21 +332,24 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
       }`;
   }
 
-  private assignSnapshottedViewExpression(snapshottedView: SnapshottedViewMetadata, index: number) {
+  private assignSnapshottedViewExpression(snapshottedView: SnapshottedViewMetadata) {
     const varName = `view${snapshottedView.property}`;
 
-    let valueExpression = `snapshot?.["${snapshottedView.property}"]`;
+    let destinationProp;
     if (snapshottedView.options.createReadOnly) {
-      const alias = this.alias(`snapshottedViews[${index}].options.createReadOnly`);
-      valueExpression = `${alias}(${valueExpression}, snapshot, this)`;
+      // we're using a hydrator, so we don't store it right at the memo, and instead stash it where we'll lazily hydrate it in the getter
+      destinationProp = this.alias(`Symbol.for("${this.getters.snapshottedViewInputSymbolName(snapshottedView.property)}")`);
+    } else {
+      // we're not using a hydrator, so we can stash the snapshotted value right into the memoized spot
+      destinationProp = this.alias(`Symbol.for("${this.getters.memoSymbolName(snapshottedView.property)}")`);
     }
-    const memoSymbolAlias = this.alias(`Symbol.for("${this.getters.memoSymbolName(snapshottedView.property)}")`);
 
+    const valueExpression = `snapshot?.["${snapshottedView.property}"]`;
     return `
       // setup snapshotted view for ${snapshottedView.property}
       const ${varName} = ${valueExpression};
       if (typeof ${varName} != "undefined") {
-        this[${memoSymbolAlias}] = ${varName};
+        this[${destinationProp}] = ${varName};
       }
     `;
   }
