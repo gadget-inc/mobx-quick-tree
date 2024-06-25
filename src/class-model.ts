@@ -298,24 +298,24 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
         const hook = isRoot(self) ? "afterCreate" : "afterAttach";
         return {
           [hook]() {
-            reaction(
-              () => {
-                return klass.snapshottedViews.map((sv) => {
-                  const value = self[sv.property];
-                  if (sv.options.createSnapshot) {
-                    return sv.options.createSnapshot(value);
+            for (const view of klass.snapshottedViews) {
+              reaction(
+                () => {
+                  const value = self[view.property];
+                  if (view.options.createSnapshot) {
+                    return view.options.createSnapshot(value);
                   }
                   if (Array.isArray(value)) {
                     return value.map(getSnapshot);
                   }
                   return getSnapshot(value);
-                });
-              },
-              () => {
-                self.__incrementSnapshottedViewsEpoch();
-              },
-              { equals: comparer.structural },
-            );
+                },
+                () => {
+                  self.__incrementSnapshottedViewsEpoch();
+                },
+                { equals: comparer.structural },
+              );
+            }
           },
         };
       });
