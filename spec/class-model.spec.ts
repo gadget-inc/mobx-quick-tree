@@ -12,7 +12,7 @@ import type {
   ModelPropertiesDeclaration,
   SnapshotIn,
 } from "../src";
-import { flow, getSnapshot, getType, isReadOnlyNode, isStateTreeNode, isType, types } from "../src";
+import { flow, getSnapshot, getType, isReadOnlyNode, isStateTreeNode, isType, snapshottedView, types } from "../src";
 import { ClassModel, action, extend, register, view, volatile, volatileAction } from "../src/class-model";
 import { $identifier } from "../src/symbols";
 import { NameExample } from "./fixtures/NameExample";
@@ -135,6 +135,17 @@ class ExtendedMixedInNameExample extends extendingClassModelMixin(NameExample) {
   }
 }
 
+/**
+ * Example class wth a snapshotted view
+ */
+@register
+class NameExampleWithSnapshottedView extends NameExample {
+  @snapshottedView()
+  get extendedNameLength() {
+    return this.name.length;
+  }
+}
+
 @register
 class AutoIdentified extends ClassModel({ key: types.optional(types.identifier, () => "test") }) {
   testKeyIsAlwaysSet() {
@@ -180,6 +191,7 @@ describe("class models", () => {
     ["mixin'd class model", MixedInNameExample],
     ["extended props class model", ExtendedNameExample],
     ["extended mixin'd props class model", ExtendedMixedInNameExample],
+    ["class model with snapshotted views", NameExampleWithSnapshottedView],
   ])("%s", (_name, NameExample) => {
     test("types are identified as quick types", () => {
       expect(isType(NameExample)).toBe(true);

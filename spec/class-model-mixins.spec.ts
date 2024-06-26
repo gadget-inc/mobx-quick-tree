@@ -1,8 +1,8 @@
 import type { IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
 import type { Constructor } from "../src";
-import { isType } from "../src";
-import { IAnyClassModelType, IAnyStateTreeNode, extend } from "../src";
+import { isType, snapshottedView } from "../src";
+import { extend } from "../src";
 import { getSnapshot } from "../src";
 import { ClassModel, action, register, types } from "../src";
 import { volatile } from "../src/class-model";
@@ -69,6 +69,17 @@ const AddViewMixin = <T extends Constructor<{ name: string }>>(Klass: T) => {
   return MixedIn;
 };
 
+const AddSnapshottedViewMixin = <T extends Constructor<{ name: string }>>(Klass: T) => {
+  class MixedIn extends Klass {
+    @snapshottedView()
+    get snapshottedMixinGetter() {
+      return this.name.toUpperCase();
+    }
+  }
+
+  return MixedIn;
+};
+
 const AddActionMixin = <T extends Constructor<{ name: string }>>(Klass: T) => {
   class MixedIn extends Klass {
     @action
@@ -97,21 +108,25 @@ const AddVolatileMixin = <T extends Constructor<{ name: string }>>(Klass: T) => 
 @register
 class ChainedA extends AddVolatileMixin(
   AddViewMixin(
-    AddActionMixin(
-      ClassModel({
-        name: types.string,
-      }),
+    AddSnapshottedViewMixin(
+      AddActionMixin(
+        ClassModel({
+          name: types.string,
+        }),
+      ),
     ),
   ),
 ) {}
 
 @register
 class ChainedB extends AddActionMixin(
-  AddViewMixin(
-    AddVolatileMixin(
-      ClassModel({
-        name: types.string,
-      }),
+  AddSnapshottedViewMixin(
+    AddViewMixin(
+      AddVolatileMixin(
+        ClassModel({
+          name: types.string,
+        }),
+      ),
     ),
   ),
 ) {}
@@ -120,9 +135,24 @@ class ChainedB extends AddActionMixin(
 class ChainedC extends AddActionMixin(
   AddVolatileMixin(
     AddViewMixin(
-      ClassModel({
-        name: types.string,
-      }),
+      AddSnapshottedViewMixin(
+        ClassModel({
+          name: types.string,
+        }),
+      ),
+    ),
+  ),
+) {}
+
+@register
+class ChainedD extends AddSnapshottedViewMixin(
+  AddActionMixin(
+    AddVolatileMixin(
+      AddViewMixin(
+        ClassModel({
+          name: types.string,
+        }),
+      ),
     ),
   ),
 ) {}
@@ -132,6 +162,7 @@ describe("class model mixins", () => {
     ["Chain A", ChainedA],
     ["Chain B", ChainedB],
     ["Chain C", ChainedC],
+    ["Chain D", ChainedD],
   ])("%s", (_name, Klass) => {
     test("function views can be added to classes by mixins", () => {
       let instance = Klass.createReadOnly({ name: "Test" });
@@ -147,6 +178,14 @@ describe("class model mixins", () => {
 
       instance = Klass.create({ name: "Test" });
       expect(instance.mixinGetter).toBe("TEST");
+    });
+
+    test("snapshotted views can be added to classes by mixins", () => {
+      let instance = Klass.createReadOnly({ name: "Test" });
+      expect(instance.snapshottedMixinGetter).toBe("TEST");
+
+      instance = Klass.createReadOnly({ name: "Test", snapshottedMixinGetter: "foobar" } as any);
+      expect(instance.snapshottedMixinGetter).toBe("foobar");
     });
 
     test("actions can be added to classes by mixins", () => {

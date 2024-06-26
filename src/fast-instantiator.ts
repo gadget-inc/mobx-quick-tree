@@ -1,24 +1,16 @@
-import { isReferenceType, isUnionType } from "mobx-state-tree";
+import { isReferenceType } from "mobx-state-tree";
+import type { IAnyModelType as MSTIAnyModelType, IAnyType as MSTIAnyType } from "mobx-state-tree";
 import { ArrayType, QuickArray } from "./array";
+import type { SnapshottedViewMetadata } from "./class-model";
 import type { FastGetBuilder } from "./fast-getter";
 import { FrozenType } from "./frozen";
 import { MapType, QuickMap } from "./map";
+import { MaybeNullType, MaybeType } from "./maybe";
 import { OptionalType } from "./optional";
 import { ReferenceType, SafeReferenceType } from "./reference";
 import { DateType, IntegerType, LiteralType, SimpleType } from "./simple";
 import { $context, $identifier, $notYetMemoized, $parent, $readOnly, $type } from "./symbols";
 import type { IAnyType, IClassModelType, ValidOptionalValue } from "./types";
-import { MaybeNullType, MaybeType } from "./maybe";
-
-/**
- * Compiles a fast function for taking snapshots and turning them into instances of a class model.
- **/
-export const buildFastInstantiator = <T extends IClassModelType<Record<string, IAnyType>, any, any>>(
-  model: T,
-  fastGetters: FastGetBuilder,
-): T => {
-  return new InstantiatorBuilder(model, fastGetters).build();
-};
 
 type DirectlyAssignableType = SimpleType<any> | IntegerType | LiteralType<any> | DateType;
 const isDirectlyAssignableType = (type: IAnyType): type is DirectlyAssignableType => {
@@ -31,7 +23,10 @@ const isDirectlyAssignableType = (type: IAnyType): type is DirectlyAssignableTyp
   );
 };
 
-class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, any, any>> {
+/**
+ * Compiles a fast class constructor that takes snapshots and turns them into instances of a class model.
+ **/
+export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, any, any>> {
   aliases = new Map<string, string>();
 
   constructor(
@@ -74,13 +69,18 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     `);
     }
 
-    const identifierProp = this.model.mstType.identifierAttribute;
+    const modelType = innerModelType(this.model.mstType);
+    const identifierProp = modelType?.identifierAttribute;
     if (identifierProp) {
       segments.push(`
       const id = this["${identifierProp}"];
       this[$identifier] = id;
       context.referenceCache.set(id, this);
     `);
+    }
+
+    for (const snapshottedView of this.model.snapshottedViews) {
+      segments.push(this.assignSnapshottedViewExpression(snapshottedView));
     }
 
     let className = this.model.name;
@@ -144,7 +144,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
     `;
 
     const aliasFuncBody = `
-    const { QuickMap, QuickArray, $identifier, $context, $parent, $notYetMemoized, $readOnly, $type } = imports;
+    const { QuickMap, QuickArray, $identifier, $context, $parent, $notYetMemoized, $readOnly, $type, snapshottedViews } = imports;
 
     ${Array.from(this.aliases.entries())
       .map(([expression, alias]) => `const ${alias} = ${expression};`)
@@ -182,6 +182,7 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
         $notYetMemoized,
         QuickMap,
         QuickArray,
+        snapshottedViews: this.model.snapshottedViews,
       }) as T;
     } catch (e) {
       console.warn("failed to build fast instantiator for", this.model.name);
@@ -331,6 +332,28 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
       }`;
   }
 
+  private assignSnapshottedViewExpression(snapshottedView: SnapshottedViewMetadata) {
+    const varName = `view${snapshottedView.property}`;
+
+    let destinationProp;
+    if (snapshottedView.options.createReadOnly) {
+      // we're using a hydrator, so we don't store it right at the memo, and instead stash it where we'll lazily hydrate it in the getter
+      destinationProp = this.alias(`Symbol.for("${this.getters.snapshottedViewInputSymbolName(snapshottedView.property)}")`);
+    } else {
+      // we're not using a hydrator, so we can stash the snapshotted value right into the memoized spot
+      destinationProp = this.alias(`Symbol.for("${this.getters.memoSymbolName(snapshottedView.property)}")`);
+    }
+
+    const valueExpression = `snapshot?.["${snapshottedView.property}"]`;
+    return `
+      // setup snapshotted view for ${snapshottedView.property}
+      const ${varName} = ${valueExpression};
+      if (typeof ${varName} != "undefined") {
+        this[${destinationProp}] = ${varName};
+      }
+    `;
+  }
+
   alias(expression: string): string {
     const existing = this.aliases.get(expression);
     if (existing) {
@@ -344,3 +367,17 @@ class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, an
 }
 
 const safeTypeName = (type: IAnyType) => type.name.replace(/\n/g, "");
+
+const innerModelType = (type: MSTIAnyType): MSTIAnyModelType | undefined => {
+  if ("identifierAttribute" in type) return type as MSTIAnyModelType;
+  if ("getSubTypes" in type) {
+    const subTypes = (type as { getSubTypes(): MSTIAnyType[] | MSTIAnyType | null }).getSubTypes();
+    if (subTypes) {
+      if (Array.isArray(subTypes)) {
+        return innerModelType(subTypes[0]);
+      } else if (subTypes && typeof subTypes == "object") {
+        return innerModelType(subTypes);
+      }
+    }
+  }
+};
