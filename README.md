@@ -479,7 +479,7 @@ import { ClassModel, register, view, snapshottedView } from "@gadgetinc/mobx-qui
 @register
 class TransformExample extends ClassModel({ url: types.string }) {
   @snapshottedView<string>({
-    createReadOnly(value, snapshot, node) {
+    createReadOnly(value, node) {
       return value ? new URL(value) : undefined;
     },
   })
