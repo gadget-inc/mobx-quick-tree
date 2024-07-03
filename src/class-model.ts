@@ -2,7 +2,7 @@ import "reflect-metadata";
 
 import memoize from "lodash.memoize";
 import type { Instance, IModelType as MSTIModelType, ModelActions } from "mobx-state-tree";
-import { isRoot, types as mstTypes } from "mobx-state-tree";
+import { types as mstTypes } from "mobx-state-tree";
 import { RegistrationError } from "./errors";
 import { InstantiatorBuilder } from "./fast-instantiator";
 import { FastGetBuilder } from "./fast-getter";
@@ -31,7 +31,7 @@ import type {
   TypesForModelPropsDeclaration,
 } from "./types";
 import { cyrb53 } from "./utils";
-import { comparer, reaction } from "mobx";
+import { comparer, reaction, type IReactionDisposer } from "mobx";
 import { getSnapshot } from "./snapshot";
 
 /** @internal */
@@ -48,6 +48,9 @@ export interface SnapshottedViewOptions<V, T extends IAnyClassModelType> {
 
   /** A function for converting the view value to a snapshot value */
   createSnapshot?: (value: V) => any;
+
+  /** A function that will be called when the view's reaction throws an error. */
+  onError?: (error: any) => void;
 }
 
 /** @internal */
@@ -295,26 +298,34 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
       .props({ __snapshottedViewsEpoch: mstTypes.optional(mstTypes.number, 0) })
       .actions((self) => ({ __incrementSnapshottedViewsEpoch: () => self.__snapshottedViewsEpoch++ }))
       .actions((self) => {
-        const hook = isRoot(self) ? "afterCreate" : "afterAttach";
+        const reactions: IReactionDisposer[] = [];
+
         return {
-          [hook]() {
+          afterCreate() {
             for (const view of klass.snapshottedViews) {
-              reaction(
-                () => {
-                  const value = self[view.property];
-                  if (view.options.createSnapshot) {
-                    return view.options.createSnapshot(value);
-                  }
-                  if (Array.isArray(value)) {
-                    return value.map(getSnapshot);
-                  }
-                  return getSnapshot(value);
-                },
-                () => {
-                  self.__incrementSnapshottedViewsEpoch();
-                },
-                { equals: comparer.structural },
+              reactions.push(
+                reaction(
+                  () => {
+                    const value = self[view.property];
+                    if (view.options.createSnapshot) {
+                      return view.options.createSnapshot(value);
+                    }
+                    if (Array.isArray(value)) {
+                      return value.map(getSnapshot);
+                    }
+                    return getSnapshot(value);
+                  },
+                  () => {
+                    self.__incrementSnapshottedViewsEpoch();
+                  },
+                  { equals: comparer.structural, onError: view.options.onError },
+                ),
               );
+            }
+          },
+          beforeDestroy() {
+            for (const dispose of reactions) {
+              dispose();
             }
           },
         };

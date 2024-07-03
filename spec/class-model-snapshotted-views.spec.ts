@@ -2,6 +2,7 @@ import { observable, runInAction } from "mobx";
 import { ClassModel, action, snapshottedView, getSnapshot, register, types, onPatch } from "../src";
 import { Apple } from "./fixtures/FruitAisle";
 import { create } from "./helpers";
+import { getParent } from "mobx-state-tree";
 
 @register
 class ViewExample extends ClassModel({ key: types.identifier, name: types.string }) {
@@ -226,6 +227,62 @@ describe("class model snapshotted views", () => {
       });
 
       expect(getSnapshot(root)).toMatchSnapshot();
+    });
+  });
+
+  describe("parents", () => {
+    const onError = jest.fn();
+
+    @register
+    class Child extends ClassModel({}) {
+      @snapshottedView({ onError })
+      get parentsChildLength() {
+        const parent: Parent = getParent(this, 2);
+        return parent.children.size;
+      }
+    }
+
+    @register
+    class Parent extends ClassModel({ children: types.map(Child) }) {
+      @action
+      setChild(key: string, child: Child) {
+        this.children.set(key, child);
+      }
+
+      @action
+      createChild(key: string) {
+        this.children.set(key, {});
+        return this.children.get(key);
+      }
+
+      @action
+      removeChild(key: string) {
+        this.children.delete(key);
+      }
+    }
+
+    test("observable instances with views that access their parent will cause their view's reaction to error when created outside an action", () => {
+      Child.create();
+      expect(onError).toHaveBeenCalled();
+    });
+
+    test("observable instances with views that access their parent will not cause their view's reaction to error when created inside an action", () => {
+      runInAction(() => {
+        const child = Child.create();
+        const parent = Parent.create();
+        parent.setChild("foo", child);
+      });
+
+      expect(onError).not.toHaveBeenCalled();
+    });
+
+    test("observable instances don't run their view's reaction when they are destroyed", () => {
+      const parent = Parent.create();
+      parent.createChild("foo");
+      parent.removeChild("foo");
+
+      // would have errored if child.parentsChildLength was accessed after the child was removed
+      expect(onError).not.toHaveBeenCalled();
     });
   });
 });
