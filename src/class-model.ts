@@ -1,12 +1,14 @@
 import "reflect-metadata";
 
 import memoize from "lodash.memoize";
-import type { Instance, IModelType as MSTIModelType, ModelActions } from "mobx-state-tree";
+import { comparer, reaction, type IReactionDisposer } from "mobx";
+import type { IModelType as MSTIModelType, ModelActions } from "mobx-state-tree";
 import { types as mstTypes } from "mobx-state-tree";
 import { RegistrationError } from "./errors";
-import { InstantiatorBuilder } from "./fast-instantiator";
 import { FastGetBuilder } from "./fast-getter";
+import { InstantiatorBuilder } from "./fast-instantiator";
 import { defaultThrowAction, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
+import { getSnapshot } from "./snapshot";
 import {
   $context,
   $identifier,
@@ -26,13 +28,13 @@ import type {
   IAnyType,
   IClassModelType,
   IStateTreeNode,
+  Instance,
   ModelPropertiesDeclaration,
   ModelViews,
+  SnapshotIn,
   TypesForModelPropsDeclaration,
 } from "./types";
 import { cyrb53 } from "./utils";
-import { comparer, reaction, type IReactionDisposer } from "mobx";
-import { getSnapshot } from "./snapshot";
 
 /** @internal */
 type ActionMetadata = {
@@ -42,12 +44,12 @@ type ActionMetadata = {
 };
 
 /** Options that configure a snapshotted view */
-export interface SnapshottedViewOptions<V, T extends IAnyClassModelType> {
+export interface SnapshottedViewOptions<ViewReturnT, ParentNodeT extends IAnyClassModelType> {
   /** A function for converting a stored value in the snapshot back to the rich type for the view to return */
-  createReadOnly?: (value: V | undefined, node: Instance<T>) => V | undefined;
+  createReadOnly?: (value: SnapshotIn<ViewReturnT> | undefined, node: Instance<ParentNodeT>) => Instance<ViewReturnT> | undefined;
 
   /** A function for converting the view value to a snapshot value */
-  createSnapshot?: (value: V) => any;
+  createSnapshot?: (value: ViewReturnT) => any;
 
   /** A function that will be called when the view's reaction throws an error. */
   onError?: (error: any) => void;
@@ -74,6 +76,7 @@ export type VolatileMetadata = {
 };
 
 type VolatileInitializer<T> = (instance: T) => Record<string, any>;
+
 /** @internal */
 export type PropertyMetadata = ActionMetadata | ViewMetadata | SnapshottedViewMetadata | VolatileMetadata;
 
