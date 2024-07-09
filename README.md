@@ -510,6 +510,8 @@ const readOnlyExample = TransformExample.createReadOnly(snapshot);
 readOnlyExample.withoutParams; // => URL { href: "https://example.com" }
 ```
 
+Snapshotted views emit patches when their values change. If you don't want snapshotted views to emit a patch when they change, you can pass a `shouldEmitPatchOnChange` function that returns `false` to the `@snapshottedView`, or you can pass `false` to `setDefaultShouldEmitPatchOnChange` to disable patch emission for all snapshotted views.
+
 ##### Snapshotted view semantics
 
 Snapshotted views are a complicated beast, and are best avoided until your performance demands less computation on readonly instances.
