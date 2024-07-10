@@ -3,6 +3,7 @@ import { ClassModel, action, snapshottedView, getSnapshot, register, types, onPa
 import { Apple } from "./fixtures/FruitAisle";
 import { create } from "./helpers";
 import { getParent } from "mobx-state-tree";
+import { setDefaultShouldEmitPatchOnChange } from "../src/class-model";
 
 @register
 class ViewExample extends ClassModel({ key: types.identifier, name: types.string }) {
@@ -283,6 +284,151 @@ describe("class model snapshotted views", () => {
 
       // would have errored if child.parentsChildLength was accessed after the child was removed
       expect(onError).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("shouldEmitPatchOnChange", () => {
+    afterEach(() => {
+      // reset the default value
+      setDefaultShouldEmitPatchOnChange(true);
+    });
+
+    test("readonly instances don't use the shouldEmitPatchOnChange option", () => {
+      const fn = jest.fn();
+      @register
+      class MyViewExample extends ClassModel({ key: types.identifier, name: types.string }) {
+        @snapshottedView({ shouldEmitPatchOnChange: fn })
+        get slug() {
+          return this.name.toLowerCase().replace(/ /g, "-");
+        }
+      }
+
+      const instance = MyViewExample.createReadOnly({ key: "1", name: "Test" });
+      expect(instance.slug).toEqual("test");
+      expect(fn).not.toHaveBeenCalled();
+    });
+
+    test("observable instances don't emit a patch when shouldEmitPatchOnChange returns false", () => {
+      const shouldEmitPatchOnChangeFn = jest.fn(() => false);
+      const observableArray = observable.array<string>([]);
+
+      @register
+      class MyViewExample extends ClassModel({ key: types.identifier, name: types.string }) {
+        @snapshottedView({ shouldEmitPatchOnChange: shouldEmitPatchOnChangeFn })
+        get arrayLength() {
+          return observableArray.length;
+        }
+      }
+
+      const instance = MyViewExample.create({ key: "1", name: "Test" });
+      expect(shouldEmitPatchOnChangeFn).toHaveBeenCalled();
+
+      const onPatchFn = jest.fn();
+      onPatch(instance, onPatchFn);
+
+      runInAction(() => {
+        observableArray.push("a");
+      });
+
+      expect(onPatchFn).not.toHaveBeenCalled();
+    });
+
+    test("observable instances do emit a patch when shouldEmitPatchOnChange returns true", () => {
+      const shouldEmitPatchOnChangeFn = jest.fn(() => true);
+      const observableArray = observable.array<string>([]);
+
+      @register
+      class MyViewExample extends ClassModel({ key: types.identifier, name: types.string }) {
+        @snapshottedView({ shouldEmitPatchOnChange: shouldEmitPatchOnChangeFn })
+        get arrayLength() {
+          return observableArray.length;
+        }
+      }
+
+      const instance = MyViewExample.create({ key: "1", name: "Test" });
+      expect(shouldEmitPatchOnChangeFn).toHaveBeenCalled();
+
+      const onPatchFn = jest.fn();
+      onPatch(instance, onPatchFn);
+
+      runInAction(() => {
+        observableArray.push("a");
+      });
+
+      expect(onPatchFn).toHaveBeenCalled();
+    });
+
+    test("observable instances do emit a patch when shouldEmitPatchOnChange is undefined and setDefaultShouldEmitPatchOnChange hasn't been called", () => {
+      const observableArray = observable.array<string>([]);
+
+      @register
+      class MyViewExample extends ClassModel({ key: types.identifier, name: types.string }) {
+        @snapshottedView()
+        get arrayLength() {
+          return observableArray.length;
+        }
+      }
+
+      const instance = MyViewExample.create({ key: "1", name: "Test" });
+
+      const onPatchFn = jest.fn();
+      onPatch(instance, onPatchFn);
+
+      runInAction(() => {
+        observableArray.push("a");
+      });
+
+      expect(onPatchFn).toHaveBeenCalled();
+    });
+
+    test("observable instances do emit a patch when shouldEmitPatchOnChange is undefined and setDefaultShouldEmitPatchOnChange was passed true", () => {
+      setDefaultShouldEmitPatchOnChange(true);
+
+      const observableArray = observable.array<string>([]);
+
+      @register
+      class MyViewExample extends ClassModel({ key: types.identifier, name: types.string }) {
+        @snapshottedView()
+        get arrayLength() {
+          return observableArray.length;
+        }
+      }
+
+      const instance = MyViewExample.create({ key: "1", name: "Test" });
+
+      const onPatchFn = jest.fn();
+      onPatch(instance, onPatchFn);
+
+      runInAction(() => {
+        observableArray.push("a");
+      });
+
+      expect(onPatchFn).toHaveBeenCalled();
+    });
+
+    test("observable instances don't emit a patch when shouldEmitPatchOnChange is undefined and setDefaultShouldEmitPatchOnChange was passed false", () => {
+      setDefaultShouldEmitPatchOnChange(false);
+
+      const observableArray = observable.array<string>([]);
+
+      @register
+      class MyViewExample extends ClassModel({ key: types.identifier, name: types.string }) {
+        @snapshottedView()
+        get arrayLength() {
+          return observableArray.length;
+        }
+      }
+
+      const instance = MyViewExample.create({ key: "1", name: "Test" });
+
+      const onPatchFn = jest.fn();
+      onPatch(instance, onPatchFn);
+
+      runInAction(() => {
+        observableArray.push("a");
+      });
+
+      expect(onPatchFn).not.toHaveBeenCalled();
     });
   });
 });

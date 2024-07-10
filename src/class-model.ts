@@ -49,6 +49,9 @@ export interface SnapshottedViewOptions<V, T extends IAnyClassModelType> {
   /** A function for converting the view value to a snapshot value */
   createSnapshot?: (value: V) => any;
 
+  /** A function that determines whether the view should emit a patch when it changes. */
+  shouldEmitPatchOnChange?: (node: Instance<T>) => boolean;
+
   /** A function that will be called when the view's reaction throws an error. */
   onError?: (error: any) => void;
 }
@@ -303,24 +306,26 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
         return {
           afterCreate() {
             for (const view of klass.snapshottedViews) {
-              reactions.push(
-                reaction(
-                  () => {
-                    const value = self[view.property];
-                    if (view.options.createSnapshot) {
-                      return view.options.createSnapshot(value);
-                    }
-                    if (Array.isArray(value)) {
-                      return value.map(getSnapshot);
-                    }
-                    return getSnapshot(value);
-                  },
-                  () => {
-                    self.__incrementSnapshottedViewsEpoch();
-                  },
-                  { equals: comparer.structural, onError: view.options.onError },
-                ),
-              );
+              if (view.options.shouldEmitPatchOnChange?.(self) ?? defaultShouldEmitPatchOnChange) {
+                reactions.push(
+                  reaction(
+                    () => {
+                      const value = self[view.property];
+                      if (view.options.createSnapshot) {
+                        return view.options.createSnapshot(value);
+                      }
+                      if (Array.isArray(value)) {
+                        return value.map(getSnapshot);
+                      }
+                      return getSnapshot(value);
+                    },
+                    () => {
+                      self.__incrementSnapshottedViewsEpoch();
+                    },
+                    { equals: comparer.structural, onError: view.options.onError },
+                  ),
+                );
+              }
             }
           },
           beforeDestroy() {
@@ -554,3 +559,18 @@ export function getPropertyDescriptor(obj: any, property: string) {
 export const isClassModel = (type: IAnyType): type is IClassModelType<any, any, any> => {
   return (type as any).isMQTClassModel;
 };
+
+let defaultShouldEmitPatchOnChange = true;
+
+/**
+ * Sets the default value for the `shouldEmitPatchOnChange` option for
+ * snapshotted views.
+ *
+ * If a snapshotted view does not have a `shouldEmitPatchOnChange`
+ * function defined, this value will be used instead.
+ *
+ * @param value - The new default value for the `shouldEmitPatchOnChange` option.
+ */
+export function setDefaultShouldEmitPatchOnChange(value: boolean) {
+  defaultShouldEmitPatchOnChange = value;
+}
