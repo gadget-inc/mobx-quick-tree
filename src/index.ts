@@ -17,6 +17,7 @@ import { lazyUnion, union } from "./union";
 export * from "./api";
 export * from "./types";
 export { $type } from "./symbols";
+export { setDefaultShouldEmitPatchOnChange } from "./class-model";
 
 export const types = {
   boolean: SimpleType.for("boolean", mstTypes.boolean),
