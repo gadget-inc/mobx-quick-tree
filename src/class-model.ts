@@ -560,7 +560,7 @@ export const isClassModel = (type: IAnyType): type is IClassModelType<any, any, 
   return (type as any).isMQTClassModel;
 };
 
-let defaultShouldEmitPatchOnChange = true;
+let defaultShouldEmitPatchOnChange = false;
 
 /**
  * Sets the default value for the `shouldEmitPatchOnChange` option for
