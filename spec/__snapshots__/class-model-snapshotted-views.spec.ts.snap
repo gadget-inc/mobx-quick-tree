@@ -1,30 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`class model snapshotted views an observable instance emits a patch when the view value changes 1`] = `
-[MockFunction] {
-  "calls": [
-    [
-      {
-        "op": "replace",
-        "path": "/__snapshottedViewsEpoch",
-        "value": 1,
-      },
-      {
-        "op": "replace",
-        "path": "/__snapshottedViewsEpoch",
-        "value": 0,
-      },
-    ],
-  ],
-  "results": [
-    {
-      "type": "return",
-      "value": undefined,
-    },
-  ],
-}
-`;
-
 exports[`class model snapshotted views references references to models with snapshotted views can be instantiated 1`] = `
 {
   "examples": {

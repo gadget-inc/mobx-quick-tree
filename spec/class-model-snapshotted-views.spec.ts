@@ -72,27 +72,6 @@ describe("class model snapshotted views", () => {
     expect(instance.slug).toEqual("test");
   });
 
-  test("an observable instance emits a patch when the view value changes", () => {
-    const observableArray = observable.array<string>([]);
-
-    @register
-    class MyViewExample extends ClassModel({ key: types.identifier, name: types.string }) {
-      @snapshottedView()
-      get arrayLength() {
-        return observableArray.length;
-      }
-    }
-
-    const fn = jest.fn();
-    const instance = MyViewExample.create({ key: "1", name: "Test" });
-    onPatch(instance, fn);
-
-    runInAction(() => {
-      observableArray.push("a");
-    });
-    expect(fn).toMatchSnapshot();
-  });
-
   test("an observable instance's snapshot includes the snapshotted views epoch", () => {
     const instance = ViewExample.create({ key: "1", name: "Test" });
     expect(getSnapshot(instance)).toEqual({ __snapshottedViewsEpoch: 0, key: "1", name: "Test" });
@@ -236,7 +215,7 @@ describe("class model snapshotted views", () => {
 
     @register
     class Child extends ClassModel({}) {
-      @snapshottedView({ onError })
+      @snapshottedView({ onError, shouldEmitPatchOnChange: () => true })
       get parentsChildLength() {
         const parent: Parent = getParent(this, 2);
         return parent.children.size;
@@ -290,7 +269,7 @@ describe("class model snapshotted views", () => {
   describe("shouldEmitPatchOnChange", () => {
     afterEach(() => {
       // reset the default value
-      setDefaultShouldEmitPatchOnChange(true);
+      setDefaultShouldEmitPatchOnChange(false);
     });
 
     test("readonly instances don't use the shouldEmitPatchOnChange option", () => {
@@ -356,9 +335,15 @@ describe("class model snapshotted views", () => {
       });
 
       expect(onPatchFn).toHaveBeenCalled();
+      expect(onPatchFn.mock.calls).toEqual([
+        [
+          { op: "replace", path: "/__snapshottedViewsEpoch", value: 1 },
+          { op: "replace", path: "/__snapshottedViewsEpoch", value: 0 },
+        ],
+      ]);
     });
 
-    test("observable instances do emit a patch when shouldEmitPatchOnChange is undefined and setDefaultShouldEmitPatchOnChange hasn't been called", () => {
+    test("observable instances don't emit a patch when shouldEmitPatchOnChange is undefined and setDefaultShouldEmitPatchOnChange hasn't been called", () => {
       const observableArray = observable.array<string>([]);
 
       @register
@@ -378,7 +363,7 @@ describe("class model snapshotted views", () => {
         observableArray.push("a");
       });
 
-      expect(onPatchFn).toHaveBeenCalled();
+      expect(onPatchFn).not.toHaveBeenCalled();
     });
 
     test("observable instances do emit a patch when shouldEmitPatchOnChange is undefined and setDefaultShouldEmitPatchOnChange was passed true", () => {
@@ -404,6 +389,13 @@ describe("class model snapshotted views", () => {
       });
 
       expect(onPatchFn).toHaveBeenCalled();
+      expect(onPatchFn).toHaveBeenCalled();
+      expect(onPatchFn.mock.calls).toEqual([
+        [
+          { op: "replace", path: "/__snapshottedViewsEpoch", value: 1 },
+          { op: "replace", path: "/__snapshottedViewsEpoch", value: 0 },
+        ],
+      ]);
     });
 
     test("observable instances don't emit a patch when shouldEmitPatchOnChange is undefined and setDefaultShouldEmitPatchOnChange was passed false", () => {
