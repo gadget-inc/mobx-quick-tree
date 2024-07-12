@@ -1,8 +1,19 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 import type { Has, IsExact } from "conditional-type-checks";
 import { assert } from "conditional-type-checks";
-import { SnapshotIn, TypesForModelPropsDeclaration, action, register } from "../src";
-import { IMaybeNullType, INodeModelType, IOptionalType, ISimpleType, types } from "../src";
+import {
+  ClassModel,
+  IMaybeNullType,
+  INodeModelType,
+  IOptionalType,
+  ISimpleType,
+  SnapshotIn,
+  TypesForModelPropsDeclaration,
+  action,
+  register,
+  snapshottedView,
+  types,
+} from "../src";
 import { NamedThingClass, TestClassModel } from "./fixtures/TestClassModel";
 import { NamedThing, TestModel } from "./fixtures/TestModel";
 
@@ -61,7 +72,7 @@ describe("SnapshotIn", () => {
           return "hello";
         }
         @action
-        mixinAction(value: string) {
+        mixinAction(_value: string) {
           // empty
         }
       }
@@ -76,5 +87,23 @@ describe("SnapshotIn", () => {
     assert<IsExact<Actual["bool"], boolean>>(true);
     assert<IsExact<Actual["optional"], string | undefined>>(true);
     assert<Has<keyof Actual, "mixinView">>(false);
+  });
+
+  test("works on class models with snapshotted views", () => {
+    @register
+    class DataContainer extends ClassModel({ id: types.identifier }) {}
+
+    @register
+    class DataMap extends ClassModel({ stuff: types.map(DataContainer) }) {}
+
+    @register
+    class _SnapshottedViewClass extends TestClassModel {
+      @snapshottedView<typeof DataMap>({
+        createReadOnly: (value) => DataMap.createReadOnly(value),
+      })
+      get test() {
+        return DataMap.createReadOnly();
+      }
+    }
   });
 });
