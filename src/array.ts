@@ -4,6 +4,7 @@ import { ensureRegistered } from "./class-model";
 import { getSnapshot } from "./snapshot";
 import { $context, $parent, $readOnly, $type } from "./symbols";
 import type { IAnyStateTreeNode, IAnyType, IArrayType, IMSTArray, IStateTreeNode, Instance, TreeContext } from "./types";
+import { SafeReferenceType } from "./reference";
 
 export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implements IMSTArray<T> {
   static get [Symbol.species]() {
@@ -82,8 +83,13 @@ export class ArrayType<T extends IAnyType> extends BaseType<Array<T["InputType"]
   instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, parent: IStateTreeNode | null): this["InstanceType"] {
     const array = new QuickArray<T>(this, parent, context);
     if (snapshot) {
-      array.push(...snapshot.map((element) => this.childrenType.instantiate(element, context, array)));
+      let instances = snapshot.map((element) => this.childrenType.instantiate(element, context, array));
+      if (this.childrenType instanceof SafeReferenceType && this.childrenType.options?.acceptsUndefined === false) {
+        instances = instances.filter((instance) => instance != null);
+      }
+      array.push(...instances);
     }
+
     return array as this["InstanceType"];
   }
 
