@@ -55,7 +55,7 @@ export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseT
 > {
   constructor(
     readonly targetType: IAnyComplexType,
-    options?: SafeReferenceOptions<TargetType>,
+    readonly options?: SafeReferenceOptions<TargetType>,
   ) {
     super(types.safeReference(targetType.mstType, options));
   }
@@ -85,10 +85,15 @@ export const reference = <TargetType extends IAnyComplexType>(
   return new ReferenceType(targetType, options);
 };
 
-export const safeReference = <TargetType extends IAnyComplexType>(
+export function safeReference<IT extends IAnyComplexType>(
+  subType: IT,
+  options: SafeReferenceOptions<IT> & { acceptsUndefined: false },
+): IReferenceType<IT>;
+export function safeReference<IT extends IAnyComplexType>(subType: IT, options?: SafeReferenceOptions<IT>): IMaybeType<IReferenceType<IT>>;
+export function safeReference<TargetType extends IAnyComplexType>(
   targetType: TargetType,
   options?: SafeReferenceOptions<TargetType>,
-): IMaybeType<IReferenceType<TargetType>> => {
+): IMaybeType<IReferenceType<TargetType>> {
   ensureRegistered(targetType);
   return new SafeReferenceType(targetType, options);
-};
+}

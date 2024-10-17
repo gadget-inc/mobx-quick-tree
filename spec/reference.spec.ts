@@ -4,6 +4,7 @@ import type { IAnyClassModelType, Instance, SnapshotOrInstance } from "../src";
 import { ClassModel, register, types } from "../src";
 import { TestClassModel } from "./fixtures/TestClassModel";
 import { TestModel, TestModelSnapshot } from "./fixtures/TestModel";
+import { create } from "./helpers";
 
 const Referrable = types.model("Referenced", {
   key: types.identifier,
@@ -32,23 +33,241 @@ const Root = types.model("Reference Model", {
 });
 
 describe("references", () => {
-  test("can resolve valid references", () => {
-    const root = Root.createReadOnly({
-      model: {
-        ref: "item-a",
-      },
-      refs: [
-        { key: "item-a", count: 12 },
-        { key: "item-b", count: 523 },
-      ],
+  describe.each([
+    ["read-only", true],
+    ["observable", false],
+  ])("%s", (_name, readOnly) => {
+    test("can resolve valid references", () => {
+      const root = create(
+        Root,
+        {
+          model: {
+            ref: "item-a",
+          },
+          refs: [
+            { key: "item-a", count: 12 },
+            { key: "item-b", count: 523 },
+          ],
+        },
+        readOnly,
+      );
+
+      expect(root.model.ref).toEqual(
+        expect.objectContaining({
+          key: "item-a",
+          count: 12,
+        }),
+      );
     });
 
-    expect(root.model.ref).toEqual(
-      expect.objectContaining({
-        key: "item-a",
-        count: 12,
-      }),
-    );
+    test("can resolve valid safe references", () => {
+      const root = create(
+        Root,
+        {
+          model: {
+            ref: "item-a",
+            safeRef: "item-b",
+          },
+          refs: [
+            { key: "item-a", count: 12 },
+            { key: "item-b", count: 523 },
+          ],
+        },
+        readOnly,
+      );
+
+      expect(root.model.safeRef).toEqual(
+        expect.objectContaining({
+          key: "item-b",
+          count: 523,
+        }),
+      );
+    });
+
+    test("does not throw for invalid safe references", () => {
+      const root = create(
+        Root,
+        {
+          model: {
+            ref: "item-a",
+            safeRef: "item-c",
+          },
+          refs: [
+            { key: "item-a", count: 12 },
+            { key: "item-b", count: 523 },
+          ],
+        },
+        readOnly,
+      );
+
+      expect(root.model.safeRef).toBeUndefined();
+    });
+
+    test("safe references marked with allowUndefined false are non-nullable in types-style arrays", () => {
+      const Referencer = types.model("Referencer", {
+        safeRefs: types.array(types.safeReference(Referrable, { acceptsUndefined: false })),
+      });
+
+      const Root = types.model("Reference Model", {
+        refs: types.array(Referrable),
+        model: Referencer,
+      });
+      const root = create(
+        Root,
+        {
+          refs: [
+            { key: "item-a", count: 12 },
+            { key: "item-b", count: 523 },
+          ],
+          model: {
+            safeRefs: ["item-a", "item-c"],
+          },
+        },
+        readOnly,
+      );
+
+      expect(root.model.safeRefs.map((obj) => obj.key)).toEqual(["item-a"]);
+
+      type instanceType = (typeof root.model.safeRefs)[0];
+      assert<Has<instanceType, undefined>>(false);
+      assert<Has<instanceType, null>>(false);
+    });
+
+    test("safe references marked with allowUndefined false are non-nullable in types-style maps", () => {
+      const Referencer = types.model("Referencer", {
+        safeRefs: types.map(types.safeReference(Referrable, { acceptsUndefined: false })),
+      });
+
+      const Root = types.model("Reference Model", {
+        refs: types.array(Referrable),
+        model: Referencer,
+      });
+      const root = create(
+        Root,
+        {
+          refs: [
+            { key: "item-a", count: 12 },
+            { key: "item-b", count: 523 },
+          ],
+          model: {
+            safeRefs: {
+              "item-a": "item-a",
+              "item-c": "item-c",
+            },
+          },
+        },
+        readOnly,
+      );
+
+      expect([...root.model.safeRefs.keys()]).toEqual(["item-a"]);
+    });
+
+    test("safe references marked with allowUndefined false are non-nullable in class model arrays", () => {
+      @register
+      class Referencer extends ClassModel({
+        safeRefs: types.array(types.safeReference(Referrable, { acceptsUndefined: false })),
+      }) {}
+
+      @register
+      class Root extends ClassModel({
+        refs: types.array(Referrable),
+        model: Referencer,
+      }) {}
+
+      const root = create(
+        Root,
+        {
+          refs: [
+            { key: "item-a", count: 12 },
+            { key: "item-b", count: 523 },
+          ],
+          model: {
+            safeRefs: ["item-a", "item-c"],
+          },
+        },
+        readOnly,
+      );
+
+      expect(root.model.safeRefs.map((obj) => obj.key)).toEqual(["item-a"]);
+
+      type instanceType = (typeof root.model.safeRefs)[0];
+      assert<Has<instanceType, undefined>>(false);
+      assert<Has<instanceType, null>>(false);
+    });
+
+    test("safe references marked with allowUndefined false are non-nullable in class model maps", () => {
+      @register
+      class Referencer extends ClassModel({
+        safeRefs: types.map(types.safeReference(Referrable, { acceptsUndefined: false })),
+      }) {}
+
+      @register
+      class Root extends ClassModel({
+        refs: types.array(Referrable),
+        model: Referencer,
+      }) {}
+
+      const root = create(
+        Root,
+        {
+          refs: [
+            { key: "item-a", count: 12 },
+            { key: "item-b", count: 523 },
+          ],
+          model: {
+            safeRefs: {
+              "item-a": "item-a",
+              "item-c": "item-c",
+            },
+          },
+        },
+        readOnly,
+      );
+
+      expect([...root.model.safeRefs.keys()]).toEqual(["item-a"]);
+    });
+
+    test("references are equal to the instances they refer to", () => {
+      const root = create(
+        Root,
+        {
+          model: {
+            ref: "item-a",
+            safeRef: "item-b",
+          },
+          refs: [
+            { key: "item-a", count: 12 },
+            { key: "item-b", count: 523 },
+          ],
+        },
+        readOnly,
+      );
+
+      expect(root.model.ref).toBe(root.refs[0]);
+      expect(root.model.ref).toEqual(root.refs[0]);
+      expect(root.model.ref).toStrictEqual(root.refs[0]);
+    });
+
+    test("safe references are equal to the instances they refer to", () => {
+      const root = create(
+        Root,
+        {
+          model: {
+            ref: "item-a",
+            safeRef: "item-b",
+          },
+          refs: [
+            { key: "item-a", count: 12 },
+            { key: "item-b", count: 523 },
+          ],
+        },
+        readOnly,
+      );
+
+      expect(root.model.safeRef).toBe(root.refs[1]);
+      expect(root.model.safeRef).toEqual(root.refs[1]);
+      expect(root.model.safeRef).toStrictEqual(root.refs[1]);
+    });
   });
 
   test("throws for invalid refs", () => {
@@ -64,75 +283,6 @@ describe("references", () => {
       });
 
     expect(createRoot).toThrow();
-  });
-
-  test("can resolve valid safe references", () => {
-    const root = Root.createReadOnly({
-      model: {
-        ref: "item-a",
-        safeRef: "item-b",
-      },
-      refs: [
-        { key: "item-a", count: 12 },
-        { key: "item-b", count: 523 },
-      ],
-    });
-
-    expect(root.model.safeRef).toEqual(
-      expect.objectContaining({
-        key: "item-b",
-        count: 523,
-      }),
-    );
-  });
-
-  test("does not throw for invalid safe references", () => {
-    const root = Root.createReadOnly({
-      model: {
-        ref: "item-a",
-        safeRef: "item-c",
-      },
-      refs: [
-        { key: "item-a", count: 12 },
-        { key: "item-b", count: 523 },
-      ],
-    });
-
-    expect(root.model.safeRef).toBeUndefined();
-  });
-
-  test("references are equal to the instances they refer to", () => {
-    const root = Root.createReadOnly({
-      model: {
-        ref: "item-a",
-        safeRef: "item-b",
-      },
-      refs: [
-        { key: "item-a", count: 12 },
-        { key: "item-b", count: 523 },
-      ],
-    });
-
-    expect(root.model.ref).toBe(root.refs[0]);
-    expect(root.model.ref).toEqual(root.refs[0]);
-    expect(root.model.ref).toStrictEqual(root.refs[0]);
-  });
-
-  test("safe references are equal to the instances they refer to", () => {
-    const root = Root.createReadOnly({
-      model: {
-        ref: "item-a",
-        safeRef: "item-b",
-      },
-      refs: [
-        { key: "item-a", count: 12 },
-        { key: "item-b", count: 523 },
-      ],
-    });
-
-    expect(root.model.safeRef).toBe(root.refs[1]);
-    expect(root.model.safeRef).toEqual(root.refs[1]);
-    expect(root.model.safeRef).toStrictEqual(root.refs[1]);
   });
 
   test("instances of a model reference are assignable to instances of the model", () => {

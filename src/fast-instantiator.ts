@@ -311,23 +311,27 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     `;
   }
 
-  private assignmentExpressionForMapType(key: string, _type: MapType<any>): string {
+  private assignmentExpressionForMapType(key: string, type: MapType<any>): string {
     const mapVarName = `map${key}`;
     const snapshotVarName = `snapshotValue${key}`;
+    const removeUndefineds =
+      type.childrenType instanceof SafeReferenceType && type.childrenType.options?.acceptsUndefined === false
+        ? "if (item == null) { continue; }"
+        : "";
+
     return `
       const ${mapVarName} = new QuickMap(${this.alias(`model.properties["${key}"]`)}, this, context);
       this["${key}"] = ${mapVarName};
       const ${snapshotVarName} = snapshot?.["${key}"];
       if (${snapshotVarName}) {
         for (const key in ${snapshotVarName}) {
-          ${mapVarName}.set(
-            key,
-            ${this.alias(`model.properties["${key}"].childrenType`)}.instantiate(
-              ${snapshotVarName}[key],
-              context,
-              ${mapVarName}
-            )
+          const item = ${this.alias(`model.properties["${key}"].childrenType`)}.instantiate(
+            ${snapshotVarName}[key],
+            context,
+            ${mapVarName}
           );
+          ${removeUndefineds}
+          ${mapVarName}.set(key, item);
         }
       }`;
   }

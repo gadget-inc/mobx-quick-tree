@@ -15,6 +15,7 @@ import type {
   TreeContext,
   SnapshotOut,
 } from "./types";
+import { SafeReferenceType } from "./reference";
 
 export class QuickMap<T extends IAnyType> extends Map<string, Instance<T>> implements IMSTMap<T> {
   static get [Symbol.species]() {
@@ -112,6 +113,12 @@ export class MapType<T extends IAnyType> extends BaseType<
     if (snapshot) {
       for (const key in snapshot) {
         const item = this.childrenType.instantiate(snapshot[key], context, map);
+        if (this.childrenType instanceof SafeReferenceType && this.childrenType.options?.acceptsUndefined === false) {
+          if (item == null) {
+            continue;
+          }
+        }
+
         map.set(key, item);
       }
     }
