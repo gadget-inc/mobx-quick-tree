@@ -13,7 +13,7 @@
 
 ## Why?
 
-[`mobx-state-tree`](https://mobx-state-tree.js.org/) is great for modeling data and observing changes to it, but it adds a lot of runtime overhead! Raw `mobx` itself adds substantial overhead over plain old JS objects or ES6 classes, and `mobx-state-tree` adds more on top of that. If you want to use your MST data models in a non-reactive or non-observing context, all that runtime overhead for observability is just wasted, as nothing is ever-changing.
+[`mobx-state-tree`](https://mobx-state-tree.js.org/) is great for modeling data and observing changes to it, but it adds a lot of runtime overhead! Raw `mobx` itself adds substantial overhead over plain old JS objects or ES6 classes, and `mobx-state-tree` adds more on top of that. If you want to use your MST data models in a non-reactive or non-observing context, all that runtime overhead for observability is just wasted, as nothing is changing.
 
 `mobx-quick-tree` implements the same API as MST and exposes the same useful observable instances for use in observable contexts, but adds a second option for instantiating a read-only instance that is 100x faster.
 
