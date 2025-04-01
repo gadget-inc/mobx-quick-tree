@@ -294,7 +294,7 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
     mstType = mstType.volatile((self: any) => initializeVolatiles({}, self, mstVolatiles));
   }
 
-  klass.snapshottedViews = metadatas.filter((metadata) => metadata.type == "snapshotted-view") as SnapshottedViewMetadata[];
+  klass.snapshottedViews = metadatas.filter((metadata) => metadata.type == "snapshotted-view");
   if (klass.snapshottedViews.length > 0) {
     // add a property to the MST type to track changes to a @snapshottedView when none of its model's properties changed
     mstType = mstType
@@ -465,21 +465,21 @@ function initializeVolatiles(result: Record<string, any>, node: Record<string, a
 }
 
 function bindToSelf<T extends Record<string, any>>(self: object, inputs: T): T {
-  const outputs = {} as T;
   const descriptors = Object.getOwnPropertyDescriptors(inputs);
   for (const key in descriptors) {
-    const property = descriptors[key];
-    if (typeof property.value === "function") {
-      property.value = property.value.bind(self);
+    const descriptor = descriptors[key];
+    if (typeof descriptor.value === "function") {
+      descriptor.value = descriptor.value.bind(self);
     }
-    if (typeof property.get === "function") {
-      property.get = property.get.bind(self);
+    if (typeof descriptor.get === "function") {
+      descriptor.get = descriptor.get.bind(self);
     }
-    if (typeof property.set === "function") {
-      property.set = property.set.bind(self);
+    if (typeof descriptor.set === "function") {
+      descriptor.set = descriptor.set.bind(self);
     }
-    Object.defineProperty(outputs, key, property);
   }
+  const outputs = {} as T;
+  Object.defineProperties(outputs, descriptors);
   return outputs;
 }
 
