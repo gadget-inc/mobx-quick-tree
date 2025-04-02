@@ -284,11 +284,14 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
   });
 
   // create the MST type for not-readonly versions of this using the views and actions extracted from the class
-  let mstType = mstTypes
-    .model(klass.name, mstPropsFromQuickProps(klass.properties))
-    .views((self) => bindToSelf(self, mstViews))
-    .actions((self) => bindToSelf(self, mstActions));
 
+  let mstType = mstTypes.model(klass.name, mstPropsFromQuickProps(klass.properties));
+  if (Object.keys(mstViews).length > 0) {
+    mstType = mstType.views(() => mstViews);
+  }
+  if (Object.keys(mstActions).length > 0) {
+    mstType = mstType.actions((self) => bindToSelf(self, mstActions));
+  }
   if (Object.keys(mstVolatiles).length > 0) {
     // define the volatile properties in one shot by running any passed initializers
     mstType = mstType.volatile((self: any) => initializeVolatiles({}, self, mstVolatiles));

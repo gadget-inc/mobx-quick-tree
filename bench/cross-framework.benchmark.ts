@@ -29,6 +29,9 @@ export default benchmarker(async (suite) => {
     .add("mobx-quick-tree types.model", function () {
       TestModel.createReadOnly(TestModelSnapshot);
     })
+    .add("mobx-state-tree ClassModel", function () {
+      TestClassModel.create(TestModelSnapshot);
+    })
     .add("mobx-quick-tree ClassModel", function () {
       TestClassModel.createReadOnly(TestModelSnapshot);
     })
@@ -39,5 +42,5 @@ export default benchmarker(async (suite) => {
       new TestPlainModel(TestModelSnapshot);
     });
 
-  return suite
+  return suite;
 });
