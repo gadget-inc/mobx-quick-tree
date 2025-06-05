@@ -6,6 +6,13 @@ import { hideBin } from "yargs/helpers";
 import type { Profiler } from "inspector";
 import { Session } from "inspector";
 
+export const BENCHMARK_CONFIG = {
+  iterations: 1000,
+  warmupIterations: 100,
+  warmupTime: 1000,
+  time: 5000,
+} as const;
+
 export const newInspectorSession = () => {
   const session = new Session();
   const post = (method: string, params?: Record<string, unknown>): any =>
@@ -62,7 +69,7 @@ export const asyncBench = (fn: () => Promise<void>) => {
 };
 
 /** Boot up a benchmark suite for registering new cases on */
-export const createSuite = (options: Options = { iterations: 100 }) => {
+export const createSuite = (options: Options = BENCHMARK_CONFIG) => {
   const suite = new Bench(options);
 
   suite.addEventListener("error", (event: any) => {
@@ -153,10 +160,13 @@ export const benchTable = (bench: Bench) => {
       return {
         "Task Name": t,
         "ops/sec": e.error ? "NaN" : parseInt(e.hz.toString(), 10).toLocaleString(),
-        "Average Time (ms)": e.error ? "NaN" : e.mean,
-        "p99 Time (ms)": e.error ? "NaN" : e.p99,
-        Margin: e.error ? "NaN" : `\xB1${e.rme.toFixed(2)}%`,
+        "Average Time (ms)": e.error ? "NaN" : e.mean.toFixed(4),
+        "p99 Time (ms)": e.error ? "NaN" : (e.p99 || 0).toFixed(4),
+        "p995 Time (ms)": e.error ? "NaN" : (e.p995 || 0).toFixed(4),
+        Margin: e.error ? "NaN" : `±${e.rme.toFixed(2)}%`,
         Samples: e.error ? "NaN" : e.samples.length,
+        "Min (ms)": e.error ? "NaN" : (e.min || 0).toFixed(4),
+        "Max (ms)": e.error ? "NaN" : (e.max || 0).toFixed(4),
       };
     })
   );

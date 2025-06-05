@@ -18,6 +18,18 @@ You can also run all the benchmarks with:
 pnpm x bench/all.ts
 ```
 
+## Benchmark Stability
+
+The benchmarks are configured for maximum stability and consistency:
+
+- **1000 iterations** per benchmark for statistical reliability
+- **100 warmup iterations** to ensure V8 optimization
+- **1000ms warmup time** to stabilize the runtime environment
+- **5000ms minimum runtime** to reduce timing variance
+- **Deterministic Node.js flags** via `pnpm x` command for consistent execution
+
+These settings help reduce false positive regression detections in CodSpeed.
+
 ## Profiling
 
 It's nice to use the benchmarks for profiling to identify optimization candidates.
