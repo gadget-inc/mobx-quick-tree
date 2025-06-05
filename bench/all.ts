@@ -35,6 +35,7 @@ export const runAll = async () => {
   }
 
   await suite.warmup();
+  await new Promise(resolve => setTimeout(resolve, 1000));
   await suite.run();
 
   console.table(benchTable(suite));
