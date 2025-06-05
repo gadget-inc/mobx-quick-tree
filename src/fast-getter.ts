@@ -58,7 +58,7 @@ export class FastGetBuilder {
       source = `
         (
           function build({ $readOnly, $memo, $notYetMemoized, $snapshotValue, getValue, hydrate }) {
-            return function get${property}(model, imports) {
+            return function get${property}() {
               if (!this[$readOnly]) return getValue.call(this);
               let value = this[$memo];
               if (value !== $notYetMemoized) {
@@ -84,7 +84,7 @@ export class FastGetBuilder {
       source = `
         (
           function build({ $readOnly, $memo, $notYetMemoized, getValue }) {
-            return function get${property}(model, imports) {
+            return function get${property}() {
               if (!this[$readOnly]) return getValue.call(this);
               let value = this[$memo];
               if (value !== $notYetMemoized) {
