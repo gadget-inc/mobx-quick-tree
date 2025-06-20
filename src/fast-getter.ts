@@ -28,10 +28,6 @@ export class FastGetBuilder {
 
     this.memoSymbols = new Map();
     this.snapshotSymbols = new Map();
-    for (const property of this.memoizableProperties) {
-      this.memoSymbols.set(property, Symbol.for(this.memoSymbolName(property)));
-      this.snapshotSymbols.set(property, Symbol.for(this.snapshottedViewInputSymbolName(property)));
-    }
   }
 
   memoSymbolName(property: string) {
@@ -39,7 +35,12 @@ export class FastGetBuilder {
   }
 
   getMemoSymbol(property: string) {
-    return this.memoSymbols.get(property)!;
+    let symbol = this.memoSymbols.get(property);
+    if (!symbol) {
+      symbol = Symbol.for(this.memoSymbolName(property));
+      this.memoSymbols.set(property, symbol);
+    }
+    return symbol;
   }
 
   snapshottedViewInputSymbolName(property: string) {
@@ -47,7 +48,12 @@ export class FastGetBuilder {
   }
 
   getSnapshotSymbol(property: string) {
-    return this.snapshotSymbols.get(property)!;
+    let symbol = this.snapshotSymbols.get(property);
+    if (!symbol) {
+      symbol = Symbol.for(this.snapshottedViewInputSymbolName(property));
+      this.snapshotSymbols.set(property, symbol);
+    }
+    return symbol;
   }
 
   outerClosureStatements(className: string) {
