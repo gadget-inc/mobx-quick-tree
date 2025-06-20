@@ -198,6 +198,26 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
   private assignmentExpressionForReferenceType(key: string, type: IAnyType): string {
     const varName = `identifier${key}`;
 
+    const isActualReference = type instanceof ReferenceType || type instanceof SafeReferenceType ||
+      ((type instanceof MaybeType || type instanceof MaybeNullType) &&
+        (type.type instanceof ReferenceType || type.type instanceof SafeReferenceType));
+
+    if (!isActualReference) {
+      return `
+        // setup reference for ${key} (deferred resolution for complex type)
+        const ${varName} = snapshot?.["${key}"];
+        if (${varName}) {
+          context.referencesToResolve.push(() => {
+            this["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
+              ${varName},
+              context,
+              this
+            );
+          });
+        }
+      `;
+    }
+
     let resolve;
     if (
       type instanceof SafeReferenceType ||
@@ -235,18 +255,6 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
               }
             });
           }
-        }
-      `;
-    } else {
-      resolve = `
-        if (${varName}) {
-          context.referencesToResolve.push(() => {
-            this["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
-              ${varName},
-              context,
-              this
-            );
-          });
         }
       `;
     }
