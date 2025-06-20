@@ -94,7 +94,6 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
           const context = {
             referenceCache: new Map(),
             referencesToResolve: [],
-            pendingReferences: [],
             env,
           };
 
@@ -104,18 +103,6 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
             resolver();
           }
           context.referencesToResolve = null;
-
-          if (context.pendingReferences) {
-            for (const ref of context.pendingReferences) {
-              const referencedInstance = context.referenceCache.get(ref.identifier);
-              if (referencedInstance) {
-                ref.instance[ref.property] = referencedInstance;
-              } else if (ref.isRequired) {
-                throw new Error(\`can't resolve reference for property "\${ref.property}" using identifier \${ref.identifier}\`);
-              }
-            }
-            context.pendingReferences = null;
-          }
 
           return instance;
         };
@@ -233,25 +220,46 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
       `;
     }
 
-    return `
-      // setup reference for ${key} with closure-free resolution
-      const ${varName} = snapshot?.["${key}"];
-      if (${varName}) {
-        const referencedInstance = context.referenceCache.get(${varName});
-        if (referencedInstance) {
-          this["${key}"] = referencedInstance;
-        } else {
-          if (!context.pendingReferences) {
-            context.pendingReferences = [];
+    let resolve;
+    if (isSafeReference) {
+      resolve = `
+        if (${varName}) {
+          const referencedInstance = context.referenceCache.get(${varName});
+          if (referencedInstance) {
+            this["${key}"] = referencedInstance;
+          } else {
+            context.referencesToResolve.push(() => {
+              const deferredInstance = context.referenceCache.get(${varName});
+              if (deferredInstance) {
+                this["${key}"] = deferredInstance;
+              }
+            });
           }
-          context.pendingReferences.push({
-            instance: this,
-            property: "${key}",
-            identifier: ${varName},
-            isRequired: ${isRequiredReference}
-          });
         }
-      }
+      `;
+    } else if (isRequiredReference) {
+      resolve = `
+        if (${varName}) {
+          const referencedInstance = context.referenceCache.get(${varName});
+          if (referencedInstance) {
+            this["${key}"] = referencedInstance;
+          } else {
+            context.referencesToResolve.push(() => {
+              const deferredInstance = context.referenceCache.get(${varName});
+              if (deferredInstance) {
+                this["${key}"] = deferredInstance;
+              } else {
+                throw new Error(\`can't resolve reference for property "${key}" using identifier \${${varName}}\`);
+              }
+            });
+          }
+        }
+      `;
+    }
+
+    return `
+      const ${varName} = snapshot?.["${key}"];
+      ${resolve}
     `;
   }
 
