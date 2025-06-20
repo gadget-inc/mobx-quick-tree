@@ -220,46 +220,33 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
       `;
     }
 
+    const assignReferenceChunk = `
+      if (${varName}) {
+        const referencedInstance = context.referenceCache.get(${varName});
+        if (referencedInstance) {
+          this["${key}"] = referencedInstance;
+          return;
+        }
+      }
+    `;
+
     let resolve;
     if (isSafeReference) {
       resolve = `
-        if (${varName}) {
-          const referencedInstance = context.referenceCache.get(${varName});
-          if (referencedInstance) {
-            this["${key}"] = referencedInstance;
-          } else {
-            context.referencesToResolve.push(() => {
-              const deferredInstance = context.referenceCache.get(${varName});
-              if (deferredInstance) {
-                this["${key}"] = deferredInstance;
-              }
-            });
-          }
-        }
+        ${assignReferenceChunk}
       `;
     } else if (isRequiredReference) {
       resolve = `
-        if (${varName}) {
-          const referencedInstance = context.referenceCache.get(${varName});
-          if (referencedInstance) {
-            this["${key}"] = referencedInstance;
-          } else {
-            context.referencesToResolve.push(() => {
-              const deferredInstance = context.referenceCache.get(${varName});
-              if (deferredInstance) {
-                this["${key}"] = deferredInstance;
-              } else {
-                throw new Error(\`can't resolve reference for property "${key}" using identifier \${${varName}}\`);
-              }
-            });
-          }
-        }
+        ${assignReferenceChunk}
+        throw new Error(\`can't resolve reference for property "${key}" using identifier \${${varName}}\`);
       `;
     }
 
     return `
       const ${varName} = snapshot?.["${key}"];
-      ${resolve}
+      context.referencesToResolve.push(() => {
+        ${resolve}
+      });
     `;
   }
 
