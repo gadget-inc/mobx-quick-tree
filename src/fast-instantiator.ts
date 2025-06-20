@@ -211,7 +211,8 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
   private assignmentExpressionForReferenceType(key: string, type: IAnyType): string {
     const varName = `identifier${key}`;
 
-    const isSafeReference = type instanceof SafeReferenceType ||
+    const isSafeReference =
+      type instanceof SafeReferenceType ||
       ((type instanceof MaybeType || type instanceof MaybeNullType) &&
         (type.type instanceof ReferenceType || type.type instanceof SafeReferenceType));
     const isRequiredReference = type instanceof ReferenceType;
