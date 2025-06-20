@@ -94,6 +94,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
           const context = {
             referenceCache: new Map(),
             referencesToResolve: [],
+            pendingReferences: [],
             env,
           };
 
@@ -102,7 +103,19 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
           for (const resolver of context.referencesToResolve) {
             resolver();
           }
-          context.referencesToResolve = null; // cleanup these closures, no need to retain them past construction
+          context.referencesToResolve = null;
+
+          if (context.pendingReferences) {
+            for (const ref of context.pendingReferences) {
+              const referencedInstance = context.referenceCache.get(ref.identifier);
+              if (referencedInstance) {
+                ref.instance[ref.property] = referencedInstance;
+              } else if (ref.isRequired) {
+                throw new Error(\`can't resolve reference for property "\${ref.property}" using identifier \${ref.identifier}\`);
+              }
+            }
+            context.pendingReferences = null;
+          }
 
           return instance;
         };
@@ -197,50 +210,47 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
 
   private assignmentExpressionForReferenceType(key: string, type: IAnyType): string {
     const varName = `identifier${key}`;
-    const assignReferenceChunk = `
-      if (${varName}) {
-        const referencedInstance = context.referenceCache.get(${varName});
-        if (referencedInstance) {
-          this["${key}"] = referencedInstance;
-          return;
-        }
-      }
-    `;
 
-    let resolve;
-    if (
-      type instanceof SafeReferenceType ||
+    const isSafeReference = type instanceof SafeReferenceType ||
       ((type instanceof MaybeType || type instanceof MaybeNullType) &&
-        (type.type instanceof ReferenceType || type.type instanceof SafeReferenceType))
-    ) {
-      // we're resolving a safe reference, or a maybe/maybeNull of a reference. don't error if the reference can't be resolved
-      resolve = `
-        ${assignReferenceChunk}
-        // safe reference, no error if not found
-      `;
-    } else if (type instanceof ReferenceType) {
-      // we're resolving a plain old reference -- error if the reference can't be resolved
-      resolve = `
-        ${assignReferenceChunk}
-        throw new Error(\`can't resolve reference for property "${key}" using identifier \${${varName}}\`);
-      `;
-    } else {
-      // we're resolving a type that `isReferenceType` returns true for, but that we don't have a fastpath for, like a union of a model and a reference. fall back this type's instantiate call, but do it late in a context callback so that any reference elements of the union can be resolved
-      resolve = `
-        this["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
-          ${varName},
-          context,
-          this
-        );
+        (type.type instanceof ReferenceType || type.type instanceof SafeReferenceType));
+    const isRequiredReference = type instanceof ReferenceType;
+    const isComplexReference = !isSafeReference && !isRequiredReference;
+
+    if (isComplexReference) {
+      return `
+        const ${varName} = snapshot?.["${key}"];
+        if (${varName}) {
+          context.referencesToResolve.push(() => {
+            this["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
+              ${varName},
+              context,
+              this
+            );
+          });
+        }
       `;
     }
 
     return `
-      // setup reference for ${key}
+      // setup reference for ${key} with closure-free resolution
       const ${varName} = snapshot?.["${key}"];
-      context.referencesToResolve.push(() => {
-        ${resolve}
-      });
+      if (${varName}) {
+        const referencedInstance = context.referenceCache.get(${varName});
+        if (referencedInstance) {
+          this["${key}"] = referencedInstance;
+        } else {
+          if (!context.pendingReferences) {
+            context.pendingReferences = [];
+          }
+          context.pendingReferences.push({
+            instance: this,
+            property: "${key}",
+            identifier: ${varName},
+            isRequired: ${isRequiredReference}
+          });
+        }
+      }
     `;
   }
 
