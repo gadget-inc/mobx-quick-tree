@@ -7,6 +7,8 @@ import { $notYetMemoized, $readOnly } from "./symbols";
 /** Assemble a function for getting the value of a readonly instance very quickly with static dispatch to properties */
 export class FastGetBuilder {
   memoizableProperties: string[];
+  private memoSymbols: Map<string, symbol>;
+  private snapshotSymbols: Map<string, symbol>;
 
   constructor(
     metadatas: PropertyMetadata[],
@@ -23,14 +25,29 @@ export class FastGetBuilder {
         return descriptor.get !== undefined;
       })
       .map((metadata) => metadata.property);
+
+    this.memoSymbols = new Map();
+    this.snapshotSymbols = new Map();
+    for (const property of this.memoizableProperties) {
+      this.memoSymbols.set(property, Symbol.for(this.memoSymbolName(property)));
+      this.snapshotSymbols.set(property, Symbol.for(this.snapshottedViewInputSymbolName(property)));
+    }
   }
 
   memoSymbolName(property: string) {
     return `mqt/${property}-memo`;
   }
 
+  getMemoSymbol(property: string) {
+    return this.memoSymbols.get(property)!;
+  }
+
   snapshottedViewInputSymbolName(property: string) {
     return `mqt/${property}-svi-memo`;
+  }
+
+  getSnapshotSymbol(property: string) {
+    return this.snapshotSymbols.get(property)!;
   }
 
   outerClosureStatements(className: string) {
@@ -46,13 +63,13 @@ export class FastGetBuilder {
 
   buildViewGetter(metadata: ViewMetadata | SnapshottedViewMetadata, descriptor: PropertyDescriptor) {
     const property = metadata.property;
-    const $memo = Symbol.for(this.memoSymbolName(property));
+    const $memo = this.getMemoSymbol(property);
 
     let source;
     let args;
 
     if (metadata.type === "snapshotted-view" && metadata.options.createReadOnly) {
-      const $snapshotValue = Symbol.for(this.snapshottedViewInputSymbolName(property));
+      const $snapshotValue = this.getSnapshotSymbol(property);
 
       // this snapshotted view has a hydrator, so we need a special view function for readonly instances that lazily hydrates the snapshotted value
       source = `
