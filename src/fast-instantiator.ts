@@ -197,50 +197,64 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
 
   private assignmentExpressionForReferenceType(key: string, type: IAnyType): string {
     const varName = `identifier${key}`;
-    const assignReferenceChunk = `
-      if (${varName}) {
-        const referencedInstance = context.referenceCache.get(${varName});
-        if (referencedInstance) {
-          this["${key}"] = referencedInstance;
-          return;
-        }
-      }
-    `;
-
+    
     let resolve;
     if (
       type instanceof SafeReferenceType ||
       ((type instanceof MaybeType || type instanceof MaybeNullType) &&
         (type.type instanceof ReferenceType || type.type instanceof SafeReferenceType))
     ) {
-      // we're resolving a safe reference, or a maybe/maybeNull of a reference. don't error if the reference can't be resolved
       resolve = `
-        ${assignReferenceChunk}
-        // safe reference, no error if not found
+        if (${varName}) {
+          const referencedInstance = context.referenceCache.get(${varName});
+          if (referencedInstance) {
+            this["${key}"] = referencedInstance;
+          } else {
+            context.referencesToResolve.push(() => {
+              const deferredInstance = context.referenceCache.get(${varName});
+              if (deferredInstance) {
+                this["${key}"] = deferredInstance;
+              }
+            });
+          }
+        }
       `;
     } else if (type instanceof ReferenceType) {
-      // we're resolving a plain old reference -- error if the reference can't be resolved
       resolve = `
-        ${assignReferenceChunk}
-        throw new Error(\`can't resolve reference for property "${key}" using identifier \${${varName}}\`);
+        if (${varName}) {
+          const referencedInstance = context.referenceCache.get(${varName});
+          if (referencedInstance) {
+            this["${key}"] = referencedInstance;
+          } else {
+            context.referencesToResolve.push(() => {
+              const deferredInstance = context.referenceCache.get(${varName});
+              if (deferredInstance) {
+                this["${key}"] = deferredInstance;
+              } else {
+                throw new Error(\`can't resolve reference for property "${key}" using identifier \${${varName}}\`);
+              }
+            });
+          }
+        }
       `;
     } else {
-      // we're resolving a type that `isReferenceType` returns true for, but that we don't have a fastpath for, like a union of a model and a reference. fall back this type's instantiate call, but do it late in a context callback so that any reference elements of the union can be resolved
       resolve = `
-        this["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
-          ${varName},
-          context,
-          this
-        );
+        if (${varName}) {
+          context.referencesToResolve.push(() => {
+            this["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
+              ${varName},
+              context,
+              this
+            );
+          });
+        }
       `;
     }
 
     return `
-      // setup reference for ${key}
+      // setup reference for ${key} with immediate resolution optimization
       const ${varName} = snapshot?.["${key}"];
-      context.referencesToResolve.push(() => {
-        ${resolve}
-      });
+      ${resolve}
     `;
   }
 
