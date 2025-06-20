@@ -195,16 +195,26 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     return type instanceof DateType ? `new Date(${valueExpression})` : valueExpression;
   }
 
+  private isSafeReferenceType(type: IAnyType): boolean {
+    return (
+      type instanceof SafeReferenceType ||
+      ((type instanceof MaybeType || type instanceof MaybeNullType) &&
+        (type.type instanceof ReferenceType || type.type instanceof SafeReferenceType))
+    );
+  }
+
+  private isRequiredReferenceType(type: IAnyType): boolean {
+    return type instanceof ReferenceType;
+  }
+
+  private isActualReferenceType(type: IAnyType): boolean {
+    return this.isRequiredReferenceType(type) || this.isSafeReferenceType(type);
+  }
+
   private assignmentExpressionForReferenceType(key: string, type: IAnyType): string {
     const varName = `identifier${key}`;
 
-    const isActualReference =
-      type instanceof ReferenceType ||
-      type instanceof SafeReferenceType ||
-      ((type instanceof MaybeType || type instanceof MaybeNullType) &&
-        (type.type instanceof ReferenceType || type.type instanceof SafeReferenceType));
-
-    if (!isActualReference) {
+    if (!this.isActualReferenceType(type)) {
       return `
         // setup reference for ${key} (deferred resolution for complex type)
         const ${varName} = snapshot?.["${key}"];
@@ -221,11 +231,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     }
 
     let resolve;
-    if (
-      type instanceof SafeReferenceType ||
-      ((type instanceof MaybeType || type instanceof MaybeNullType) &&
-        (type.type instanceof ReferenceType || type.type instanceof SafeReferenceType))
-    ) {
+    if (this.isSafeReferenceType(type)) {
       resolve = `
         if (${varName}) {
           const referencedInstance = context.referenceCache.get(${varName});
@@ -241,7 +247,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
           }
         }
       `;
-    } else if (type instanceof ReferenceType) {
+    } else if (this.isRequiredReferenceType(type)) {
       resolve = `
         if (${varName}) {
           const referencedInstance = context.referenceCache.get(${varName});
