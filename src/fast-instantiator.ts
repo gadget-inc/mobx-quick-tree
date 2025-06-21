@@ -311,7 +311,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
         ${this.alias(`model.properties["${key}"]`)},
         this,
         context,
-        ...(snapshot?.["${key}"] ?? [])
+        snapshot?.["${key}"] ?? []
       );
     `;
   }

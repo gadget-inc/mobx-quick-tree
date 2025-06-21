@@ -18,11 +18,14 @@ export class QuickArray<T extends IAnyType> extends Array<Instance<T>> implement
   /** @hidden */
   readonly [$type]: [this] | [any];
 
-  constructor(type: any, parent: IStateTreeNode | null, context: TreeContext, ...items: Instance<T>[]) {
-    super(...items);
+  constructor(type: any, parent: IStateTreeNode | null, context: TreeContext, items?: Instance<T>[]) {
+    super();
     this[$type] = type;
     this[$parent] = parent;
     this[$context] = context;
+    if (items) {
+      this.push(...items);
+    }
   }
 
   get [Symbol.toStringTag]() {
