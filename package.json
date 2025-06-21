@@ -23,7 +23,7 @@
     "prepublishOnly": "pnpm run build",
     "prerelease": "gitpkg publish",
     "clean": "rm -rf *.0x *-v8.log",
-    "x": "node --require ts-node/register/transpile-only --hash-seed=1 --random-seed=1 --no-opt --predictable --predictable-gc-schedule --interpreted-frames-native-stack"
+    "x": "node --expose-gc --require ts-node/register/transpile-only --hash-seed=1 --random-seed=1 --no-opt --predictable --predictable-gc-schedule --interpreted-frames-native-stack"
   },
   "dependencies": {
     "lodash.memoize": "^4.1.2",
