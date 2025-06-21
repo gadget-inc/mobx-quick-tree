@@ -99,10 +99,21 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
 
           const instance = new ${className}(snapshot, context, null);
 
-          for (const resolver of context.referencesToResolve) {
-            resolver();
+          // resolve any references that were deferred
+          for (const { owner, identifier, property, required, instantiateUsing } of context.referencesToResolve) {
+            if (instantiateUsing) {
+              owner[property] = instantiateUsing.instantiate(identifier, context, owner);
+            } else {
+              const target = context.referenceCache.get(identifier);
+              if (target) {
+                owner[property] = target;
+              } else if (required) {
+                throw new Error(\`can't resolve reference for property "\${property}" using identifier \${identifier}\`);
+              }
+            }
           }
-          context.referencesToResolve = null; // cleanup these closures, no need to retain them past construction
+
+          context.referencesToResolve = null; // cleanup the list of references to resolve, no need to retain them past construction
 
           return instance;
         };
@@ -196,51 +207,45 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
   }
 
   private assignmentExpressionForReferenceType(key: string, type: IAnyType): string {
-    const varName = `identifier${key}`;
-    const assignReferenceChunk = `
-      if (${varName}) {
-        const referencedInstance = context.referenceCache.get(${varName});
-        if (referencedInstance) {
-          this["${key}"] = referencedInstance;
-          return;
-        }
-      }
-    `;
+    const identifierVarName = `identifier${key}`;
+    const instanceVarName = `instance${key}`;
 
-    let resolve;
+    let required: boolean;
+    let instantiateUsing: string | null = null;
     if (
       type instanceof SafeReferenceType ||
       ((type instanceof MaybeType || type instanceof MaybeNullType) &&
         (type.type instanceof ReferenceType || type.type instanceof SafeReferenceType))
     ) {
       // we're resolving a safe reference, or a maybe/maybeNull of a reference. don't error if the reference can't be resolved
-      resolve = `
-        ${assignReferenceChunk}
-        // safe reference, no error if not found
-      `;
+      required = false;
     } else if (type instanceof ReferenceType) {
       // we're resolving a plain old reference -- error if the reference can't be resolved
-      resolve = `
-        ${assignReferenceChunk}
-        throw new Error(\`can't resolve reference for property "${key}" using identifier \${${varName}}\`);
-      `;
+      required = true;
     } else {
       // we're resolving a type that `isReferenceType` returns true for, but that we don't have a fastpath for, like a union of a model and a reference. fall back this type's instantiate call, but do it late in a context callback so that any reference elements of the union can be resolved
-      resolve = `
-        this["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
-          ${varName},
-          context,
-          this
-        );
-      `;
+      required = false;
+      instantiateUsing = this.alias(`model.properties["${key}"]`);
     }
 
     return `
       // setup reference for ${key}
-      const ${varName} = snapshot?.["${key}"];
-      context.referencesToResolve.push(() => {
-        ${resolve}
-      });
+      const ${identifierVarName} = snapshot?.["${key}"];
+
+      // eager resolve path: check the reference cache immediately for the identifier
+      const ${instanceVarName} = context.referenceCache.get(${identifierVarName});
+      if (${instanceVarName}) {
+        ${instantiateUsing ? `this["${key}"] = ${instantiateUsing}.instantiate(${identifierVarName}, context, this);` : `this["${key}"] = ${instanceVarName};`}
+      } else {
+        // late resolve path: add a descriptor to the context to resolve the reference later
+        context.referencesToResolve.push({
+          owner: this,
+          identifier: ${identifierVarName},
+          property: "${key}",
+          required: ${required},
+          instantiateUsing: ${instantiateUsing}
+        });
+      }
     `;
   }
 
