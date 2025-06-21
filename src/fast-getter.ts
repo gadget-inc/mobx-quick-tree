@@ -1,8 +1,7 @@
-import { snapshotProcessor } from "mobx-state-tree/dist/internal";
 import type { PropertyMetadata, SnapshottedViewMetadata, ViewMetadata } from "./class-model";
 import { getPropertyDescriptor } from "./class-model";
 import { RegistrationError } from "./errors";
-import { $notYetMemoized, $readOnly } from "./symbols";
+import { $readOnly } from "./symbols";
 
 /** Assemble a function for getting the value of a readonly instance very quickly with static dispatch to properties */
 export class FastGetBuilder {
@@ -34,14 +33,7 @@ export class FastGetBuilder {
   }
 
   outerClosureStatements(className: string) {
-    return this.memoizableProperties
-      .map(
-        (property) => `
-          const ${property}Memo = Symbol.for("${this.memoSymbolName(property)}");
-          ${className}.prototype[${property}Memo] = $notYetMemoized;
-        `,
-      )
-      .join("\n");
+    return "";
   }
 
   buildViewGetter(metadata: ViewMetadata | SnapshottedViewMetadata, descriptor: PropertyDescriptor) {
@@ -57,15 +49,15 @@ export class FastGetBuilder {
       // this snapshotted view has a hydrator, so we need a special view function for readonly instances that lazily hydrates the snapshotted value
       source = `
         (
-          function build({ $readOnly, $memo, $notYetMemoized, $snapshotValue, getValue, hydrate }) {
-            return function get${property}(model, imports) {
+          function build({ $readOnly, $memo, $snapshotValue, getValue, hydrate }) {
+            return function get${property}() {
               if (!this[$readOnly]) return getValue.call(this);
-              let value = this[$memo];
-              if (value !== $notYetMemoized) {
-                return value;
+              if ($memo in this) {
+                return this[$memo];
               }
 
               const dehydratedValue = this[$snapshotValue];
+              let value;
               if (typeof dehydratedValue !== "undefined") {
                 value = hydrate(dehydratedValue, this);
               } else {
@@ -79,19 +71,18 @@ export class FastGetBuilder {
         )
         //# sourceURL=mqt-eval/dynamic/${this.klass.name}-${property}-get.js
       `;
-      args = { $readOnly, $memo, $snapshotValue, $notYetMemoized, hydrate: metadata.options.createReadOnly, getValue: descriptor.get };
+      args = { $readOnly, $memo, $snapshotValue, hydrate: metadata.options.createReadOnly, getValue: descriptor.get };
     } else {
       source = `
         (
-          function build({ $readOnly, $memo, $notYetMemoized, getValue }) {
-            return function get${property}(model, imports) {
+          function build({ $readOnly, $memo, getValue }) {
+            return function get${property}() {
               if (!this[$readOnly]) return getValue.call(this);
-              let value = this[$memo];
-              if (value !== $notYetMemoized) {
-                return value;
+              if ($memo in this) {
+                return this[$memo];
               }
 
-              value = getValue.call(this);
+              const value = getValue.call(this);
               this[$memo] = value;
               return value;
             }
@@ -99,7 +90,7 @@ export class FastGetBuilder {
         )
         //# sourceURL=mqt-eval/dynamic/${this.klass.name}-${property}-get.js
       `;
-      args = { $readOnly, $memo, $notYetMemoized, getValue: descriptor.get };
+      args = { $readOnly, $memo, getValue: descriptor.get };
     }
 
     try {

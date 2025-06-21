@@ -36,9 +36,3 @@ export const $registered = Symbol.for("MQT_registered");
  * @hidden
  **/
 export const $volatileDefiner = Symbol.for("MQT_volatileDefiner");
-
-/**
- * The value we use in the memos map when we haven't populated the memo yet
- * @hidden
- **/
-export const $notYetMemoized = Symbol.for("mqt:not-yet-memoized");

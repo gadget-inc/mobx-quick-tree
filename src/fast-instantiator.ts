@@ -9,7 +9,7 @@ import { MaybeNullType, MaybeType } from "./maybe";
 import { OptionalType } from "./optional";
 import { ReferenceType, SafeReferenceType } from "./reference";
 import { DateType, IntegerType, LiteralType, SimpleType } from "./simple";
-import { $context, $identifier, $notYetMemoized, $parent, $readOnly, $type } from "./symbols";
+import { $context, $identifier, $parent, $readOnly, $type } from "./symbols";
 import type { IAnyType, IClassModelType, ValidOptionalValue } from "./types";
 
 type DirectlyAssignableType = SimpleType<any> | IntegerType | LiteralType<any> | DateType;
@@ -155,7 +155,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     `;
 
     const aliasFuncBody = `
-    const { QuickMap, QuickArray, $identifier, $context, $parent, $notYetMemoized, $readOnly, $type, snapshottedViews } = imports;
+    const { QuickMap, QuickArray, $identifier, $context, $parent, $readOnly, $type, snapshottedViews } = imports;
 
     ${Array.from(this.aliases.entries())
       .map(([expression, alias]) => `const ${alias} = ${expression};`)
@@ -190,7 +190,6 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
         $parent,
         $readOnly,
         $type,
-        $notYetMemoized,
         QuickMap,
         QuickArray,
         snapshottedViews: this.model.snapshottedViews,
