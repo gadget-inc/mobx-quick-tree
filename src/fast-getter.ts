@@ -7,6 +7,7 @@ import { $notYetMemoized, $readOnly } from "./symbols";
 /** Assemble a function for getting the value of a readonly instance very quickly with static dispatch to properties */
 export class FastGetBuilder {
   memoizableProperties: string[];
+  private symbolCache: Map<string, symbol> = new Map();
 
   constructor(
     metadatas: PropertyMetadata[],
@@ -33,6 +34,22 @@ export class FastGetBuilder {
     return `mqt/${property}-svi-memo`;
   }
 
+  getMemoSymbol(property: string): symbol {
+    const key = `memo-${property}`;
+    if (!this.symbolCache.has(key)) {
+      this.symbolCache.set(key, Symbol.for(this.memoSymbolName(property)));
+    }
+    return this.symbolCache.get(key)!;
+  }
+
+  getSnapshottedViewInputSymbol(property: string): symbol {
+    const key = `svi-${property}`;
+    if (!this.symbolCache.has(key)) {
+      this.symbolCache.set(key, Symbol.for(this.snapshottedViewInputSymbolName(property)));
+    }
+    return this.symbolCache.get(key)!;
+  }
+
   outerClosureStatements(className: string) {
     return this.memoizableProperties
       .map(
@@ -46,13 +63,13 @@ export class FastGetBuilder {
 
   buildViewGetter(metadata: ViewMetadata | SnapshottedViewMetadata, descriptor: PropertyDescriptor) {
     const property = metadata.property;
-    const $memo = Symbol.for(this.memoSymbolName(property));
+    const $memo = this.getMemoSymbol(property);
 
     let source;
     let args;
 
     if (metadata.type === "snapshotted-view" && metadata.options.createReadOnly) {
-      const $snapshotValue = Symbol.for(this.snapshottedViewInputSymbolName(property));
+      const $snapshotValue = this.getSnapshottedViewInputSymbol(property);
 
       // this snapshotted view has a hydrator, so we need a special view function for readonly instances that lazily hydrates the snapshotted value
       source = `
