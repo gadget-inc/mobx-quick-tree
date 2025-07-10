@@ -7,8 +7,8 @@ export class MsgpackrInstantiatorBuilder<T extends IClassModelType<Record<string
   build(): T & { createReadOnlyFromMsgpack: (buffer: Uint8Array) => InstanceType<T> } {
     const originalModel = this.model;
     const enhancedModel = originalModel as any;
-    
-    enhancedModel.createReadOnlyFromMsgpack = function(buffer: Uint8Array) {
+
+    enhancedModel.createReadOnlyFromMsgpack = function (buffer: Uint8Array) {
       const data = unpack(buffer);
       return originalModel.createReadOnly(data);
     };
@@ -17,7 +17,7 @@ export class MsgpackrInstantiatorBuilder<T extends IClassModelType<Record<string
   }
 
   static createFusedInstantiator<T extends IClassModelType<Record<string, IAnyType>, any, any>>(
-    model: T
+    model: T,
   ): T & { createReadOnlyFromMsgpack: (buffer: Uint8Array) => InstanceType<T> } {
     const builder = new MsgpackrInstantiatorBuilder(model);
     return builder.build();
@@ -25,7 +25,7 @@ export class MsgpackrInstantiatorBuilder<T extends IClassModelType<Record<string
 }
 
 export function enableMsgpackrIntegration<T extends IClassModelType<Record<string, IAnyType>, any, any>>(
-  model: T
+  model: T,
 ): T & { createReadOnlyFromMsgpack: (buffer: Uint8Array) => InstanceType<T> } {
   return MsgpackrInstantiatorBuilder.createFusedInstantiator(model);
 }
