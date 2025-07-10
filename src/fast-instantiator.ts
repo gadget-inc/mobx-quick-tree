@@ -333,12 +333,21 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     // Directly assignable types are primitives so we don't need to worry about setting parent/env/etc. Hence, we just
     // pass the snapshot straight through to the constructor.
     return `
-      this["${key}"] = new QuickArray(
-        ${this.alias(`model.properties["${key}"]`)},
-        this,
-        context,
-        ...(snapshot?.["${key}"] ?? [])
-      );
+      const snapshotData = snapshot?.["${key}"];
+      if (snapshotData && snapshotData.length > 0) {
+        this["${key}"] = new QuickArray(
+          ${this.alias(`model.properties["${key}"]`)},
+          this,
+          context,
+          ...snapshotData
+        );
+      } else {
+        this["${key}"] = new QuickArray(
+          ${this.alias(`model.properties["${key}"]`)},
+          this,
+          context
+        );
+      }
     `;
   }
 
