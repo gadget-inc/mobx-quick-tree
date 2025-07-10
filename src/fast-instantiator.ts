@@ -115,7 +115,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
         segments.push(`
           // instantiate fallback for ${key} of type ${safeTypeName(type)}
           this${propertyAccess(key)} = ${this.alias(`model.properties["${key}"]`)}.instantiate(
-            snapshot?${propertyAccess(key)},
+            snapshot?.${propertyAccess(key).substring(1)},
             context,
             this
           );
@@ -262,7 +262,11 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     }
   }
 
-  private expressionForDirectlyAssignableType(key: string, type: DirectlyAssignableType, valueExpression = `snapshot?${propertyAccess(key)}`) {
+  private expressionForDirectlyAssignableType(
+    key: string,
+    type: DirectlyAssignableType,
+    valueExpression = `snapshot${propertyAccess(key)}`,
+  ) {
     return type instanceof DateType ? `new Date(${valueExpression})` : valueExpression;
   }
 
@@ -290,7 +294,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
 
     return `
       // setup reference for ${key}
-      const ${identifierVarName} = snapshot?${propertyAccess(key)};
+      const ${identifierVarName} = snapshot?.${propertyAccess(key).substring(1)};
 
       // eager resolve path: check the reference cache immediately for the identifier
       const ${instanceVarName} = context.referenceCache.get(${identifierVarName});
@@ -344,7 +348,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
 
     return `
       // optional type for ${key}
-      let ${varName} = snapshot?${propertyAccess(key)};
+      let ${varName} = snapshot?.${propertyAccess(key).substring(1)};
       if (${comparisonsToUndefinedValues.join(" || ")}) {
         ${varName} = ${defaultValueExpression}
       }
@@ -357,7 +361,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
       return `
         // instantiate fallback for ${key} of type ${safeTypeName(type)}
         this${propertyAccess(key)} = ${this.alias(`model.properties["${key}"]`)}.instantiate(
-          snapshot?${propertyAccess(key)},
+          snapshot?.${propertyAccess(key).substring(1)},
           context,
           this
         );
@@ -367,7 +371,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     // Directly assignable types are primitives so we don't need to worry about setting parent/env/etc. Hence, we just
     // pass the snapshot straight through to the constructor.
     return `
-      const arrayData = snapshot?${propertyAccess(key)};
+      const arrayData = snapshot?.${propertyAccess(key).substring(1)};
       if (arrayData && arrayData.length > 0) {
         this${propertyAccess(key)} = new QuickArray(
           ${this.alias(`model.properties["${key}"]`)},
@@ -396,7 +400,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     return `
       const ${mapVarName} = new QuickMap(${this.alias(`model.properties["${key}"]`)}, this, context);
       this${propertyAccess(key)} = ${mapVarName};
-      const ${snapshotVarName} = snapshot?${propertyAccess(key)};
+      const ${snapshotVarName} = snapshot?.${propertyAccess(key).substring(1)};
       if (${snapshotVarName}) {
         for (const key in ${snapshotVarName}) {
           const item = ${this.alias(`model.properties["${key}"].childrenType`)}.instantiate(
@@ -422,7 +426,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
       destinationProp = this.alias(`Symbol.for("${this.getters.memoSymbolName(snapshottedView.property)}")`);
     }
 
-    const valueExpression = `snapshot?${propertyAccess(snapshottedView.property)}`;
+    const valueExpression = `snapshot?.${propertyAccess(snapshottedView.property).substring(1)}`;
     return `
       // setup snapshotted view for ${snapshottedView.property}
       const ${varName} = ${valueExpression};
