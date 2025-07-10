@@ -294,6 +294,32 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
 
   private assignmentExpressionForArrayType(key: string, type: ArrayType<any>): string {
     if (!isDirectlyAssignableType(type.childrenType) || type.childrenType instanceof DateType) {
+      if ("instantiate" in type.childrenType && typeof type.childrenType.instantiate === "function") {
+        const arrayVarName = `array${key}`;
+        const snapshotVarName = `snapshotValue${key}`;
+        const removeUndefineds =
+          type.childrenType instanceof SafeReferenceType && type.childrenType.options?.acceptsUndefined === false
+            ? "if (item == null) { continue; }"
+            : "";
+
+        return `
+          const ${arrayVarName} = new QuickArray(${this.alias(`model.properties["${key}"]`)}, this, context);
+          this["${key}"] = ${arrayVarName};
+          const ${snapshotVarName} = snapshot?.["${key}"];
+          if (${snapshotVarName}) {
+            for (let i = 0; i < ${snapshotVarName}.length; i++) {
+              const item = ${this.alias(`model.properties["${key}"].childrenType`)}.instantiate(
+                ${snapshotVarName}[i],
+                context,
+                ${arrayVarName}
+              );
+              ${removeUndefineds}
+              ${arrayVarName}.push(item);
+            }
+          }
+        `;
+      }
+
       return `
         // instantiate fallback for ${key} of type ${safeTypeName(type)}
         this["${key}"] = ${this.alias(`model.properties["${key}"]`)}.instantiate(
