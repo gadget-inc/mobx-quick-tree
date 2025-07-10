@@ -65,11 +65,11 @@ export const mstPropsFromQuickProps = <Props extends ModelProperties>(props: Pro
 const assignProps = (target: any, source: any) => {
   if (target && source) {
     for (const name in source) {
-      if (source.hasOwnProperty(name)) {
+      if (Object.prototype.hasOwnProperty.call(source, name)) {
         const value = source[name];
         const descriptor = Object.getOwnPropertyDescriptor(source, name);
         const getter = descriptor?.get;
-        
+
         if (getter) {
           let cached = false;
           let cachedValue: unknown;

@@ -29,7 +29,7 @@ describe("Identifier validation in generated code", () => {
       "with spaces": types.boolean,
       "kebab-case": types.string,
       "dot.notation": types.string,
-      "class": types.string,
+      class: types.string,
     });
 
     const instance = TestModel.createReadOnly({
@@ -38,7 +38,7 @@ describe("Identifier validation in generated code", () => {
       "with spaces": true,
       "kebab-case": "safe",
       "dot.notation": "safe",
-      "class": "safe",
+      class: "safe",
     });
 
     expect(instance["invalid-prop"]).toBe("test");
@@ -75,23 +75,23 @@ describe("Identifier validation in generated code", () => {
 
   it("should handle reserved JavaScript keywords", () => {
     const TestModel = types.model("TestModel", {
-      "if": types.string,
-      "for": types.string,
-      "while": types.string,
-      "function": types.string,
-      "var": types.string,
-      "let": types.string,
-      "const": types.string,
+      if: types.string,
+      for: types.string,
+      while: types.string,
+      function: types.string,
+      var: types.string,
+      let: types.string,
+      const: types.string,
     });
 
     const instance = TestModel.createReadOnly({
-      "if": "conditional",
-      "for": "loop",
-      "while": "iteration",
-      "function": "callable",
-      "var": "variable",
-      "let": "binding",
-      "const": "constant",
+      if: "conditional",
+      for: "loop",
+      while: "iteration",
+      function: "callable",
+      var: "variable",
+      let: "binding",
+      const: "constant",
     });
 
     expect(instance["if"]).toBe("conditional");

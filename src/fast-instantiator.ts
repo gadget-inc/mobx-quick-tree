@@ -16,9 +16,60 @@ import type { IAnyType, IClassModelType, ValidOptionalValue } from "./types";
  * Validates if a string is a valid JavaScript identifier that can be used with dot notation
  */
 const isValidIdentifier = (name: string): boolean => {
-  return /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name) && 
-         !['constructor', 'prototype', '__proto__', 'hasOwnProperty', 'valueOf', 'toString'].includes(name) &&
-         !['break', 'case', 'catch', 'class', 'const', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'export', 'extends', 'finally', 'for', 'function', 'if', 'import', 'in', 'instanceof', 'new', 'return', 'super', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'yield', 'let', 'static', 'enum', 'implements', 'package', 'protected', 'interface', 'private', 'public'].includes(name);
+  return (
+    /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name) &&
+    !["constructor", "prototype", "__proto__", "hasOwnProperty", "valueOf", "toString"].includes(name) &&
+    ![
+      "break",
+      "case",
+      "catch",
+      "class",
+      "const",
+      "continue",
+      "debugger",
+      "default",
+      "delete",
+      "do",
+      "else",
+      "export",
+      "extends",
+      "finally",
+      "for",
+      "function",
+      "if",
+      "import",
+      "in",
+      "instanceof",
+      "new",
+      "return",
+      "super",
+      "switch",
+      "this",
+      "throw",
+      "try",
+      "typeof",
+      "var",
+      "void",
+      "while",
+      "with",
+      "yield",
+      "let",
+      "static",
+      "enum",
+      "implements",
+      "package",
+      "protected",
+      "interface",
+      "private",
+      "public",
+    ].includes(name)
+  );
+};
+/**
+ * Generates the appropriate property access syntax for a given key
+ */
+const propertyAccess = (key: string): string => {
+  return isValidIdentifier(key) ? `.${key}` : `["${key}"]`;
 };
 
 type DirectlyAssignableType = SimpleType<any> | IntegerType | LiteralType<any> | DateType;
@@ -50,7 +101,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
       if (isDirectlyAssignableType(type)) {
         segments.push(`
           // simple type for ${key}
-          this${isValidIdentifier(key) ? `.${key}` : `["${key}"]`} = ${this.expressionForDirectlyAssignableType(key, type)};
+          this${propertyAccess(key)} = ${this.expressionForDirectlyAssignableType(key, type)};
       `);
       } else if (type instanceof OptionalType) {
         segments.push(this.assignmentExpressionForOptionalType(key, type));
@@ -63,7 +114,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
       } else {
         segments.push(`
           // instantiate fallback for ${key} of type ${safeTypeName(type)}
-          this${isValidIdentifier(key) ? `.${key}` : `["${key}"]`} = ${this.alias(`model.properties["${key}"]`)}.instantiate(
+          this${propertyAccess(key)} = ${this.alias(`model.properties["${key}"]`)}.instantiate(
             snapshot?.["${key}"],
             context,
             this
@@ -74,7 +125,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
 
     for (const [key, _metadata] of Object.entries(this.model.volatiles)) {
       segments.push(`
-      this${isValidIdentifier(key) ? `.${key}` : `["${key}"]`} = ${this.alias(`model.volatiles["${key}"]`)}.initializer(this);
+      this${propertyAccess(key)} = ${this.alias(`model.volatiles["${key}"]`)}.initializer(this);
     `);
     }
 
@@ -82,7 +133,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     const identifierProp = modelType?.identifierAttribute;
     if (identifierProp) {
       segments.push(`
-      const id = this${isValidIdentifier(identifierProp) ? `.${identifierProp}` : `["${identifierProp}"]`};
+      const id = this${propertyAccess(identifierProp)};
       this[$identifier] = id;
       context.referenceCache.set(id, this);
     `);
@@ -244,7 +295,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
       // eager resolve path: check the reference cache immediately for the identifier
       const ${instanceVarName} = context.referenceCache.get(${identifierVarName});
       if (${instanceVarName}) {
-        ${instantiateUsing ? `this${isValidIdentifier(key) ? `.${key}` : `["${key}"]`} = ${instantiateUsing}.instantiate(${identifierVarName}, context, this);` : `this${isValidIdentifier(key) ? `.${key}` : `["${key}"]`} = ${instanceVarName};`}
+        ${instantiateUsing ? `this${propertyAccess(key)} = ${instantiateUsing}.instantiate(${identifierVarName}, context, this);` : `this${propertyAccess(key)} = ${instanceVarName};`}
       } else {
         // late resolve path: add a descriptor to the context to resolve the reference later
         context.referencesToResolve.push({
@@ -271,11 +322,11 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     let createExpression;
     if (isDirectlyAssignableType(type.type)) {
       createExpression = `
-      this${isValidIdentifier(key) ? `.${key}` : `["${key}"]`} = ${this.expressionForDirectlyAssignableType(key, type.type, varName)};
+      this${propertyAccess(key)} = ${this.expressionForDirectlyAssignableType(key, type.type, varName)};
       `;
     } else {
       createExpression = `
-      this${isValidIdentifier(key) ? `.${key}` : `["${key}"]`} = ${this.alias(`model.properties["${key}"].type`)}.instantiate(
+      this${propertyAccess(key)} = ${this.alias(`model.properties["${key}"].type`)}.instantiate(
         ${varName},
         context,
         this
@@ -305,7 +356,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     if (!isDirectlyAssignableType(type.childrenType) || type.childrenType instanceof DateType) {
       return `
         // instantiate fallback for ${key} of type ${safeTypeName(type)}
-        this${isValidIdentifier(key) ? `.${key}` : `["${key}"]`} = ${this.alias(`model.properties["${key}"]`)}.instantiate(
+        this${propertyAccess(key)} = ${this.alias(`model.properties["${key}"]`)}.instantiate(
           snapshot?.["${key}"],
           context,
           this
@@ -318,14 +369,14 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     return `
       const arrayData = snapshot?.["${key}"];
       if (arrayData && arrayData.length > 0) {
-        this${isValidIdentifier(key) ? `.${key}` : `["${key}"]`} = new QuickArray(
+        this${propertyAccess(key)} = new QuickArray(
           ${this.alias(`model.properties["${key}"]`)},
           this,
           context,
           ...arrayData
         );
       } else {
-        this${isValidIdentifier(key) ? `.${key}` : `["${key}"]`} = new QuickArray(
+        this${propertyAccess(key)} = new QuickArray(
           ${this.alias(`model.properties["${key}"]`)},
           this,
           context
@@ -344,7 +395,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
 
     return `
       const ${mapVarName} = new QuickMap(${this.alias(`model.properties["${key}"]`)}, this, context);
-      this${isValidIdentifier(key) ? `.${key}` : `["${key}"]`} = ${mapVarName};
+      this${propertyAccess(key)} = ${mapVarName};
       const ${snapshotVarName} = snapshot?.["${key}"];
       if (${snapshotVarName}) {
         for (const key in ${snapshotVarName}) {
