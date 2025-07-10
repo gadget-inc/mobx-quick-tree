@@ -1,4 +1,3 @@
-import { unpack } from "msgpackr";
 import type { IClassModelType, IAnyType } from "./types";
 
 export class MsgpackrInstantiatorBuilder<T extends IClassModelType<Record<string, IAnyType>, any, any>> {
@@ -9,6 +8,7 @@ export class MsgpackrInstantiatorBuilder<T extends IClassModelType<Record<string
     const enhancedModel = originalModel as any;
 
     enhancedModel.createReadOnlyFromMsgpack = function (buffer: Uint8Array) {
+      const { unpack } = require("msgpackr");
       const data = unpack(buffer);
       return originalModel.createReadOnly(data);
     };

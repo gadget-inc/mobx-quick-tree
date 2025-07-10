@@ -1,6 +1,5 @@
 import findRoot from "find-root";
 import fs from "fs";
-import { pack, unpack } from "msgpackr";
 import { LargeRoot } from "../spec/fixtures/LargeRoot";
 import { TestClassModel } from "../spec/fixtures/TestClassModel";
 import { BigTestModelSnapshot } from "../spec/fixtures/TestModel";
@@ -9,6 +8,7 @@ import { enableMsgpackrIntegration } from "../src/msgpackr-instantiator";
 import { benchmarker } from "./benchmark";
 
 const largeRootSnapshot = JSON.parse(fs.readFileSync(findRoot(__dirname) + "/spec/fixtures/large-root-snapshot.json", "utf8"));
+const { pack, unpack } = require("msgpackr");
 const largeRootMsgpack = pack(largeRootSnapshot);
 
 const bigTestModelMsgpack = pack(BigTestModelSnapshot);
