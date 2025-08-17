@@ -7,6 +7,7 @@ const snapshot = JSON.parse(fs.readFileSync(findRoot(__dirname) + "/spec/fixture
 
 const roots: any[] = [];
 const key = Date.now();
+let wrote = false;
 
 export default benchmarker(
   async (suite) => {
@@ -24,33 +25,39 @@ export default benchmarker(
         if ((globalThis as any).gc) (globalThis as any).gc();
         const after = process.memoryUsage().heapUsed;
 
-        const jsonPath = `./bench-LargeRoot-${key}.json`;
-        fs.writeFileSync(
-          jsonPath,
-          JSON.stringify({ N, before, after, delta: after - before }, null, 2),
-          "utf8"
-        );
-        console.log(`Wrote ${jsonPath}`);
+        if (!wrote) {
+          wrote = true;
 
-        try {
-          const { session, post } = newInspectorSession();
-          const chunks: string[] = [];
-          session.on("HeapProfiler.addHeapSnapshotChunk", (m: any) => chunks.push(m.params.chunk));
-          post("HeapProfiler.enable")
-            .then(() => post("HeapProfiler.takeHeapSnapshot", { reportProgress: false }))
-            .then(() => {
-              const hsPath = `./bench-LargeRoot-${key}.heapsnapshot`;
-              fs.writeFileSync(hsPath, chunks.join(""), "utf8");
-              console.log(`Wrote ${hsPath}`);
-            })
-            .finally(() => {
-              void post("HeapProfiler.disable").catch(() => {});
-            })
-            .catch((e: any) => {
-              console.error("Heap snapshot error", e?.message || e);
-            });
-        } catch (e: any) {
-          console.error("Inspector session error", e?.message || e);
+          const jsonPath = `./bench-LargeRoot-${key}.json`;
+          fs.writeFileSync(
+            jsonPath,
+            JSON.stringify({ N, before, after, delta: after - before }, null, 2),
+            "utf8"
+          );
+          console.log(`Wrote ${jsonPath}`);
+
+          if (!(process.env.CI || process.env.CODSPEED || process.env.MQT_MEMORY_HEAPSNAP === "0")) {
+            try {
+              const { session, post } = newInspectorSession();
+              const chunks: string[] = [];
+              session.on("HeapProfiler.addHeapSnapshotChunk", (m: any) => chunks.push(m.params.chunk));
+              post("HeapProfiler.enable")
+                .then(() => post("HeapProfiler.takeHeapSnapshot", { reportProgress: false }))
+                .then(() => {
+                  const hsPath = `./bench-LargeRoot-${key}.heapsnapshot`;
+                  fs.writeFileSync(hsPath, chunks.join(""), "utf8");
+                  console.log(`Wrote ${hsPath}`);
+                })
+                .finally(() => {
+                  void post("HeapProfiler.disable").catch(() => {});
+                })
+                .catch((e: any) => {
+                  console.error("Heap snapshot error", e?.message || e);
+                });
+            } catch (e: any) {
+              console.error("Inspector session error", e?.message || e);
+            }
+          }
         }
       } catch (e: any) {
         console.error("Memory benchmark task error", e?.message || e);
