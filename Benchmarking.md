@@ -74,3 +74,24 @@ You can also use the profiler built into VSCode for executing scripts and profil
 pnpm build
 pnpm deoptigate dist/bench/create-many-model-class.js
 ```
+
+## Memory benchmarking
+
+A memory benchmark for retained heap usage of LargeRoot instantiation is available.
+
+Run it with:
+
+```sh
+# default N=10 instances
+pnpm x bench/memory-large-root.benchmark.ts
+
+# with GC exposed for cleaner readings
+node --expose-gc -r ts-node/register/transpile-only bench/memory-large-root.benchmark.ts
+
+# control number of instances retained
+MQT_MEMORY_N=20 pnpm x bench/memory-large-root.benchmark.ts
+```
+
+Artifacts are written to the repo root:
+- bench-LargeRoot-&lt;timestamp&gt;.json with before, after, and delta heap usage
+- bench-LargeRoot-&lt;timestamp&gt;.heapsnapshot for analysis in Chrome DevTools (Memory tab)

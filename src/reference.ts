@@ -32,10 +32,11 @@ export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
   }
 
   instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, _parent: IStateTreeNode | null): this["InstanceType"] {
-    if (!snapshot || !context.referenceCache.has(snapshot)) {
+    const cache = context.referenceCache;
+    if (!snapshot || !cache || !cache.has(snapshot)) {
       throw new Error(`can't resolve reference ${snapshot}`);
     }
-    return context.referenceCache.get(snapshot);
+    return cache.get(snapshot);
   }
 
   is(value: any): value is this["InstanceType"];
@@ -61,10 +62,11 @@ export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseT
   }
 
   instantiate(snapshot: string | undefined, context: TreeContext, _parent: IStateTreeNode | null): this["InstanceType"] {
-    if (!snapshot || !context.referenceCache.has(snapshot)) {
+    const cache = context.referenceCache;
+    if (!snapshot || !cache || !cache.has(snapshot)) {
       return undefined as this["InstanceType"];
     }
-    return context.referenceCache.get(snapshot);
+    return cache.get(snapshot);
   }
 
   is(value: any): value is this["InstanceType"];

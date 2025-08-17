@@ -114,6 +114,12 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
           }
 
           context.referencesToResolve = null; // cleanup the list of references to resolve, no need to retain them past construction
+          if (!(process && process.env && process.env.MQT_KEEP_REF_CACHE)) {
+            if (context.referenceCache && typeof context.referenceCache.clear === "function") {
+              context.referenceCache.clear();
+            }
+            context.referenceCache = null;
+          }
 
           return instance;
         };
