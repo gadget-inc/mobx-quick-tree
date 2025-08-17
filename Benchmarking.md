@@ -91,6 +91,7 @@ node --expose-gc -r ts-node/register/transpile-only bench/memory-large-root.benc
 # control number of instances retained
 MQT_MEMORY_N=20 pnpm x bench/memory-large-root.benchmark.ts
 ```
+
 Notes:
 - In CI (CI=true) and CodSpeed runs, heap snapshots are disabled automatically to avoid environment limitations. Override locally with MQT_MEMORY_HEAPSNAP=1 if needed.
 

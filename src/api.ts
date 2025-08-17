@@ -27,7 +27,7 @@ import {
 } from "mobx-state-tree";
 import type { FlowReturn } from "mobx-state-tree/dist/internal";
 import { CantRunActionError } from "./errors";
-import { $context, $parent, $quickType, $readOnly, $type, $identifier } from "./symbols";
+import { $context, $parent, $quickType, $readOnly, $type } from "./symbols";
 import type {
   CreateTypes,
   IAnyComplexType,
@@ -236,57 +236,7 @@ export function resolveIdentifier<T extends IAnyModelType>(
   if (!context) {
     throw new Error("can't resolve references in a readonly tree with no context");
   }
-  const cache = (context as any).referenceCache;
-  if (cache && typeof cache.get === "function") {
-    return cache.get(identifier) as Instance<T> | undefined;
-  }
-  const root: any = getRoot<IAnyType>(target);
-  const visited = new Set<any>();
-  const isTargetType = (node: any): boolean => {
-    try {
-      return (isType(type) ? type : (type as any)).is(node);
-    } catch {
-      return false;
-    }
-  };
-  const stack: any[] = [root];
-  while (stack.length) {
-    const node = stack.pop();
-    if (!node || typeof node !== "object" || visited.has(node)) continue;
-    visited.add(node);
-    if ($readOnly in node) {
-      const id = node[$identifier];
-      if (id === identifier && isTargetType(node)) {
-        return node as Instance<T>;
-      }
-      for (const key of Object.keys(node)) {
-        const val = node[key];
-        if (val && typeof val === "object") {
-          stack.push(val);
-        }
-      }
-      if (Array.isArray(node)) {
-        for (const val of node) stack.push(val);
-      }
-      if (node instanceof Map) {
-        for (const val of node.values()) stack.push(val);
-      }
-    } else {
-      for (const key of Object.keys(node)) {
-        const val = node[key];
-        if (val && typeof val === "object") {
-          stack.push(val);
-        }
-      }
-      if (Array.isArray(node)) {
-        for (const val of node) stack.push(val);
-      }
-      if (node instanceof Map) {
-        for (const val of node.values()) stack.push(val);
-      }
-    }
-  }
-  return undefined as Instance<T> | undefined;
+  return context.referenceCache.get(identifier) as Instance<T> | undefined;
 }
 
 export const applySnapshot = <T extends IAnyType>(target: IStateTreeNode<T>, snapshot: SnapshotIn<T>): void => {
