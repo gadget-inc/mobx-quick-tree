@@ -113,7 +113,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
             }
           }
 
-          context.referencesToResolve = null;
+          context.referencesToResolve = null; // cleanup the list of references to resolve, no need to retain them past construction
 
           return instance;
         };

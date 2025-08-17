@@ -16,9 +16,6 @@ export const runAll = async () => {
 
   let benchmarkFiles = await globby(__dirname + "/**/*.benchmark.ts");
 
-  if (process.env.CI) {
-    benchmarkFiles = benchmarkFiles.filter((file) => !file.includes("memory-large-root.benchmark.ts"));
-  }
 
   let suite = createSuite();
 

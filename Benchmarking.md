@@ -83,13 +83,13 @@ Run it with:
 
 ```sh
 # default N=10 instances
-pnpm x bench/memory-large-root.benchmark.ts
+pnpm x bench/memory-large-root.mem.ts
 
 # with GC exposed for cleaner readings
-node --expose-gc -r ts-node/register/transpile-only bench/memory-large-root.benchmark.ts
+node --expose-gc -r ts-node/register/transpile-only bench/memory-large-root.mem.ts
 
 # control number of instances retained
-MQT_MEMORY_N=20 pnpm x bench/memory-large-root.benchmark.ts
+MQT_MEMORY_N=20 pnpm x bench/memory-large-root.mem.ts
 ```
 
 Notes:
