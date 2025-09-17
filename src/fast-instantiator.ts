@@ -77,7 +77,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
       const id = this["${identifierProp}"];
       this[$identifier] = id;
 
-      // Cache this instance in the reference cache if this type is referenced anywhere in the type tree
+      // Cache this instance in the reference cache if this type is actually referenced anywhere in the type tree
       if (${this.alias("shouldTrackInReferenceCache")}(context.rootType || ${this.alias("model")}, ${this.alias("model")})) {
         context.referenceCache.set(id, this);
       }
@@ -105,7 +105,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
             referenceCache: new Map(),
             referencesToResolve: [],
             env,
-            rootType: ${className},
+            rootType: model,
           };
 
           const instance = new ${className}(snapshot, context, null);
@@ -160,7 +160,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
         }
 
         get [$type]() {
-          return this.constructor;
+          return model;
         }
       }
     `;

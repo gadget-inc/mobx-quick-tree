@@ -740,9 +740,19 @@ export function shouldTrackInReferenceCache(classModel: IAnyType, typeToCheck: I
     (classModel as any)._referencedTypes = referencedTypes;
   }
 
-  // Use schema hash for comparison
-  const typeToCheckHash = typeToCheck.schemaHash();
-  return referencedTypes.has(typeToCheckHash);
+  // Fast path: if no types are referenced, don't cache
+  if (referencedTypes.size === 0) {
+    return false;
+  }
+
+  // Use schema hash for comparison - cache the hash to avoid recomputation
+  let typeHash = (typeToCheck as any)._cachedSchemaHash;
+  if (!typeHash) {
+    typeHash = typeToCheck.schemaHash();
+    (typeToCheck as any)._cachedSchemaHash = typeHash;
+  }
+
+  return referencedTypes.has(typeHash);
 }
 
 let defaultShouldEmitPatchOnChange = false;
