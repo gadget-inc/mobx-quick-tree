@@ -382,10 +382,10 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     let destinationProp;
     if (snapshottedView.options.createReadOnly) {
       // we're using a hydrator, so we don't store it right at the memo, and instead stash it where we'll lazily hydrate it in the getter
-      destinationProp = this.alias(`Symbol.for("${this.getters.snapshottedViewInputSymbolName(snapshottedView.property)}")`);
+      destinationProp = `"_${snapshottedView.property}_snapshot"`;
     } else {
       // we're not using a hydrator, so we can stash the snapshotted value right into the memoized spot
-      destinationProp = this.alias(`Symbol.for("${this.getters.memoSymbolName(snapshottedView.property)}")`);
+      destinationProp = `"_${snapshottedView.property}_memo"`;
     }
 
     const valueExpression = `snapshot?.["${snapshottedView.property}"]`;
