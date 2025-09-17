@@ -19,8 +19,8 @@ export type SafeReferenceOptions<T extends IAnyComplexType> = (ReferenceOptionsG
   onInvalidated?: OnReferenceInvalidated<ReferenceT<T["mstType"]>>;
 };
 
-const referenceSchemaHash = async (type: string, targetType: IAnyType) => {
-  return `${type}:${await targetType.schemaHash()}`;
+const referenceSchemaHash = (type: string, targetType: IAnyType) => {
+  return `${type}:${targetType.schemaHash()}`;
 };
 
 export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<string, string, InstanceWithoutSTNTypeForType<TargetType>> {
@@ -43,8 +43,8 @@ export class ReferenceType<TargetType extends IAnyComplexType> extends BaseType<
     return typeof value == "string";
   }
 
-  schemaHash: () => Promise<string> = memoize(async () => {
-    return await referenceSchemaHash("reference", this.targetType);
+  schemaHash: () => string = memoize(() => {
+    return referenceSchemaHash("reference", this.targetType);
   });
 }
 
@@ -72,8 +72,8 @@ export class SafeReferenceType<TargetType extends IAnyComplexType> extends BaseT
     return typeof value == "string";
   }
 
-  schemaHash: () => Promise<string> = memoize(async () => {
-    return await referenceSchemaHash("safe-reference", this.targetType);
+  schemaHash: () => string = memoize(() => {
+    return referenceSchemaHash("safe-reference", this.targetType);
   });
 }
 

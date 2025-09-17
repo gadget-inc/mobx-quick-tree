@@ -1,50 +1,44 @@
 import { ClassModel, register, types } from "../src";
 
 describe("schemaHash", () => {
-  test("is the same for simple types of the same type", async () => {
-    expect(await types.number.schemaHash()).toEqual(await types.number.schemaHash());
-    expect(await types.number.schemaHash()).not.toEqual(await types.string.schemaHash());
+  test("is the same for simple types of the same type", () => {
+    expect(types.number.schemaHash()).toEqual(types.number.schemaHash());
+    expect(types.number.schemaHash()).not.toEqual(types.string.schemaHash());
   });
 
-  test("is not the same for late types of types", async () => {
-    expect(await types.late(() => types.number).schemaHash()).toEqual(await types.late(() => types.number).schemaHash());
-    expect(await types.number.schemaHash()).not.toEqual(await types.late(() => types.number).schemaHash());
-    expect(await types.string.schemaHash()).not.toEqual(await types.late(() => types.number).schemaHash());
+  test("is not the same for late types of types", () => {
+    expect(types.late(() => types.number).schemaHash()).toEqual(types.late(() => types.number).schemaHash());
+    expect(types.number.schemaHash()).not.toEqual(types.late(() => types.number).schemaHash());
+    expect(types.string.schemaHash()).not.toEqual(types.late(() => types.number).schemaHash());
   });
 
-  test("is the same for enums with the same options", async () => {
-    expect(await types.enumeration("whatever", ["foo", "bar"]).schemaHash()).toEqual(
-      await types.enumeration("other", ["foo", "bar"]).schemaHash(),
-    );
-    expect(await types.enumeration("whatever", ["foo", "bar"]).schemaHash()).not.toEqual(
-      await types.enumeration("other", ["foo", "bar", "baz"]).schemaHash(),
+  test("is the same for enums with the same options", () => {
+    expect(types.enumeration("whatever", ["foo", "bar"]).schemaHash()).toEqual(types.enumeration("other", ["foo", "bar"]).schemaHash());
+    expect(types.enumeration("whatever", ["foo", "bar"]).schemaHash()).not.toEqual(
+      types.enumeration("other", ["foo", "bar", "baz"]).schemaHash(),
     );
   });
 
-  test("is the same for maps of the same type", async () => {
-    expect(await types.map(types.number).schemaHash()).toEqual(await types.map(types.number).schemaHash());
-    expect(await types.map(types.number).schemaHash()).not.toEqual(await types.map(types.string).schemaHash());
+  test("is the same for maps of the same type", () => {
+    expect(types.map(types.number).schemaHash()).toEqual(types.map(types.number).schemaHash());
+    expect(types.map(types.number).schemaHash()).not.toEqual(types.map(types.string).schemaHash());
   });
 
-  test("is the same for arrays of the same type", async () => {
-    expect(await types.array(types.number).schemaHash()).toEqual(await types.array(types.number).schemaHash());
-    expect(await types.array(types.number).schemaHash()).not.toEqual(await types.array(types.string).schemaHash());
+  test("is the same for arrays of the same type", () => {
+    expect(types.array(types.number).schemaHash()).toEqual(types.array(types.number).schemaHash());
+    expect(types.array(types.number).schemaHash()).not.toEqual(types.array(types.string).schemaHash());
   });
 
-  test("is the same for refinements of a same type", async () => {
-    expect(await types.refinement(types.number, () => true).schemaHash()).toEqual(
-      await types.refinement(types.number, () => true).schemaHash(),
-    );
-    expect(await types.refinement(types.number, () => true).schemaHash()).not.toEqual(
-      await types.refinement(types.string, () => true).schemaHash(),
-    );
+  test("is the same for refinements of a same type", () => {
+    expect(types.refinement(types.number, () => true).schemaHash()).toEqual(types.refinement(types.number, () => true).schemaHash());
+    expect(types.refinement(types.number, () => true).schemaHash()).not.toEqual(types.refinement(types.string, () => true).schemaHash());
   });
 
-  test("is the same for all frozens", async () => {
-    expect(await types.frozen().schemaHash()).toEqual(await types.frozen().schemaHash());
+  test("is the same for all frozens", () => {
+    expect(types.frozen().schemaHash()).toEqual(types.frozen().schemaHash());
   });
 
-  test("is the same the same custom type, but different for different custom types", async () => {
+  test("is the same the same custom type, but different for different custom types", () => {
     const customA = types.custom({
       name: "testB",
       fromSnapshot: () => "foo",
@@ -61,28 +55,28 @@ describe("schemaHash", () => {
       getValidationMessage: () => "",
     });
 
-    expect(await customA.schemaHash()).toEqual(await customA.schemaHash());
-    expect(await customA.schemaHash()).not.toEqual(await customB.schemaHash());
+    expect(customA.schemaHash()).toEqual(customA.schemaHash());
+    expect(customA.schemaHash()).not.toEqual(customB.schemaHash());
   });
 
   describe("maybe", () => {
-    test("is the same for maybes of the same type", async () => {
-      expect(await types.maybe(types.string).schemaHash()).toEqual(await types.maybe(types.string).schemaHash());
-      expect(await types.maybe(types.string).schemaHash()).not.toEqual(await types.maybe(types.number).schemaHash());
+    test("is the same for maybes of the same type", () => {
+      expect(types.maybe(types.string).schemaHash()).toEqual(types.maybe(types.string).schemaHash());
+      expect(types.maybe(types.string).schemaHash()).not.toEqual(types.maybe(types.number).schemaHash());
     });
 
-    test("is the same for maybeNulls of the same type", async () => {
-      expect(await types.maybeNull(types.string).schemaHash()).toEqual(await types.maybeNull(types.string).schemaHash());
-      expect(await types.maybeNull(types.string).schemaHash()).not.toEqual(await types.maybeNull(types.number).schemaHash());
+    test("is the same for maybeNulls of the same type", () => {
+      expect(types.maybeNull(types.string).schemaHash()).toEqual(types.maybeNull(types.string).schemaHash());
+      expect(types.maybeNull(types.string).schemaHash()).not.toEqual(types.maybeNull(types.number).schemaHash());
     });
 
-    test("is not the same for maybe and maybeNulls", async () => {
-      expect(await types.maybe(types.string).schemaHash()).not.toEqual(await types.maybeNull(types.string).schemaHash());
+    test("is not the same for maybe and maybeNulls", () => {
+      expect(types.maybe(types.string).schemaHash()).not.toEqual(types.maybeNull(types.string).schemaHash());
     });
   });
 
   describe("union", () => {
-    test("is the same for unions of the same types", async () => {
+    test("is the same for unions of the same types", () => {
       const modelA = types.model({
         foo: types.string,
         bar: types.number,
@@ -93,12 +87,12 @@ describe("schemaHash", () => {
         bar: types.string,
       });
 
-      expect(await types.union(modelA, modelB).schemaHash()).toEqual(await types.union(modelA, modelB).schemaHash());
-      expect(await types.union(modelA).schemaHash()).not.toEqual(await types.union(modelA, modelB).schemaHash());
-      expect(await types.union(modelB).schemaHash()).not.toEqual(await types.union(modelA, modelB).schemaHash());
+      expect(types.union(modelA, modelB).schemaHash()).toEqual(types.union(modelA, modelB).schemaHash());
+      expect(types.union(modelA).schemaHash()).not.toEqual(types.union(modelA, modelB).schemaHash());
+      expect(types.union(modelB).schemaHash()).not.toEqual(types.union(modelA, modelB).schemaHash());
     });
 
-    test("is the same for unions of the different types with the same hash", async () => {
+    test("is the same for unions of the different types with the same hash", () => {
       const modelA = types.model({
         foo: types.string,
         bar: types.number,
@@ -109,24 +103,24 @@ describe("schemaHash", () => {
         bar: types.number,
       });
 
-      expect(await types.union(modelA, modelB).schemaHash()).toEqual(await types.union(modelA, modelB).schemaHash());
-      expect(await types.union(modelA, modelA).schemaHash()).toEqual(await types.union(modelA, modelA).schemaHash());
-      expect(await types.union(modelA).schemaHash()).toEqual(await types.union(modelB).schemaHash());
+      expect(types.union(modelA, modelB).schemaHash()).toEqual(types.union(modelA, modelB).schemaHash());
+      expect(types.union(modelA, modelA).schemaHash()).toEqual(types.union(modelA, modelA).schemaHash());
+      expect(types.union(modelA).schemaHash()).toEqual(types.union(modelB).schemaHash());
     });
   });
 
   describe("references", () => {
-    test("is the same for the same references to the same type", async () => {
+    test("is the same for the same references to the same type", () => {
       const modelA = types.model({
         foo: types.string,
         bar: types.number,
       });
 
       const type = types.reference(modelA);
-      expect(await type.schemaHash()).toEqual(await type.schemaHash());
+      expect(type.schemaHash()).toEqual(type.schemaHash());
     });
 
-    test("is the same for references to the same type", async () => {
+    test("is the same for references to the same type", () => {
       const modelA = types.model({
         foo: types.string,
         bar: types.number,
@@ -137,11 +131,11 @@ describe("schemaHash", () => {
         bar: types.string,
       });
 
-      expect(await types.reference(modelA).schemaHash()).toEqual(await types.reference(modelA).schemaHash());
-      expect(await types.reference(modelA).schemaHash()).not.toEqual(await types.reference(modelB).schemaHash());
+      expect(types.reference(modelA).schemaHash()).toEqual(types.reference(modelA).schemaHash());
+      expect(types.reference(modelA).schemaHash()).not.toEqual(types.reference(modelB).schemaHash());
     });
 
-    test("is not the same for references to two different types with the same hash themselves", async () => {
+    test("is not the same for references to two different types with the same hash themselves", () => {
       const modelA = types.model("ModelA", {
         foo: types.string,
         bar: types.number,
@@ -152,12 +146,12 @@ describe("schemaHash", () => {
         bar: types.number,
       });
 
-      expect(await types.reference(modelA).schemaHash()).not.toEqual(await types.reference(modelB).schemaHash());
+      expect(types.reference(modelA).schemaHash()).not.toEqual(types.reference(modelB).schemaHash());
     });
   });
 
   describe("models", () => {
-    test("is the same for models with the same properties", async () => {
+    test("is the same for models with the same properties", () => {
       const modelA = types.model({
         foo: types.string,
         bar: types.number,
@@ -166,10 +160,10 @@ describe("schemaHash", () => {
         foo: types.string,
         bar: types.number,
       });
-      expect(await modelA.schemaHash()).toEqual(await modelB.schemaHash());
+      expect(modelA.schemaHash()).toEqual(modelB.schemaHash());
     });
 
-    test("is the same for models with the same nested properties", async () => {
+    test("is the same for models with the same nested properties", () => {
       const modelA = types.model({
         foo: types.string,
         bar: types.model({
@@ -182,10 +176,10 @@ describe("schemaHash", () => {
           baz: types.number,
         }),
       });
-      expect(await modelA.schemaHash()).toEqual(await modelB.schemaHash());
+      expect(modelA.schemaHash()).toEqual(modelB.schemaHash());
     });
 
-    test("is different for models with the same properties but different types", async () => {
+    test("is different for models with the same properties but different types", () => {
       const modelA = types.model({
         foo: types.string,
         bar: types.number,
@@ -194,10 +188,10 @@ describe("schemaHash", () => {
         foo: types.string,
         bar: types.boolean,
       });
-      expect(await modelA.schemaHash()).not.toEqual(await modelB.schemaHash());
+      expect(modelA.schemaHash()).not.toEqual(modelB.schemaHash());
     });
 
-    test("is different for models with different properties", async () => {
+    test("is different for models with different properties", () => {
       const modelA = types.model({
         foo: types.string,
         bar: types.number,
@@ -205,10 +199,10 @@ describe("schemaHash", () => {
       const modelB = types.model({
         foo: types.string,
       });
-      expect(await modelA.schemaHash()).not.toEqual(await modelB.schemaHash());
+      expect(modelA.schemaHash()).not.toEqual(modelB.schemaHash());
     });
 
-    test("is different for models with different nested properties", async () => {
+    test("is different for models with different nested properties", () => {
       const modelA = types.model({
         foo: types.string,
         bar: types.model({
@@ -221,7 +215,7 @@ describe("schemaHash", () => {
           baz: types.number,
         }),
       });
-      expect(await modelA.schemaHash()).not.toEqual(await modelB.schemaHash());
+      expect(modelA.schemaHash()).not.toEqual(modelB.schemaHash());
 
       const modelC = types.model({
         foo: types.string,
@@ -233,12 +227,12 @@ describe("schemaHash", () => {
           baz: types.number,
         }),
       });
-      expect(await modelC.schemaHash()).not.toEqual(await modelD.schemaHash());
+      expect(modelC.schemaHash()).not.toEqual(modelD.schemaHash());
     });
   });
 
   describe("class models", () => {
-    test("is the same for models with the same properties", async () => {
+    test("is the same for models with the same properties", () => {
       const a = register(
         class extends ClassModel({
           foo: types.string,
@@ -253,10 +247,10 @@ describe("schemaHash", () => {
         }) {},
       );
 
-      expect(await a.schemaHash()).toEqual(await b.schemaHash());
+      expect(a.schemaHash()).toEqual(b.schemaHash());
     });
 
-    test("is the same for models with the same nested properties", async () => {
+    test("is the same for models with the same nested properties", () => {
       @register
       class SubModel extends ClassModel({
         baz: types.number,
@@ -276,10 +270,10 @@ describe("schemaHash", () => {
         }) {},
       );
 
-      expect(await a.schemaHash()).toEqual(await b.schemaHash());
+      expect(a.schemaHash()).toEqual(b.schemaHash());
     });
 
-    test("is different for models with the same properties but different types", async () => {
+    test("is different for models with the same properties but different types", () => {
       @register
       class ModelA extends ClassModel({
         foo: types.string,
@@ -291,10 +285,10 @@ describe("schemaHash", () => {
         foo: types.string,
         bar: types.boolean,
       }) {}
-      expect(await ModelA.schemaHash()).not.toEqual(await ModelB.schemaHash());
+      expect(ModelA.schemaHash()).not.toEqual(ModelB.schemaHash());
     });
 
-    test("is different for models with different properties", async () => {
+    test("is different for models with different properties", () => {
       @register
       class ModelA extends ClassModel({
         foo: types.string,
@@ -305,10 +299,10 @@ describe("schemaHash", () => {
       class ModelB extends ClassModel({
         foo: types.string,
       }) {}
-      expect(await ModelA.schemaHash()).not.toEqual(await ModelB.schemaHash());
+      expect(ModelA.schemaHash()).not.toEqual(ModelB.schemaHash());
     });
 
-    test("is different for models with different nested properties", async () => {
+    test("is different for models with different nested properties", () => {
       @register
       class SubModelA extends ClassModel({
         baz: types.number,
@@ -330,21 +324,21 @@ describe("schemaHash", () => {
         foo: types.string,
         bar: SubModelB,
       }) {}
-      expect(await ModelA.schemaHash()).not.toEqual(await ModelB.schemaHash());
+      expect(ModelA.schemaHash()).not.toEqual(ModelB.schemaHash());
     });
   });
 
-  test("can hash models with circular references", async () => {
+  test("can hash models with circular references", () => {
     @register
     class ModelA extends ClassModel({
       foo: types.string,
       bar: types.late((): any => ModelA),
     }) {}
 
-    expect(await ModelA.schemaHash()).toEqual(await ModelA.schemaHash());
+    expect(ModelA.schemaHash()).toEqual(ModelA.schemaHash());
   });
 
-  test("can hash models with mutually recursive references", async () => {
+  test("can hash models with mutually recursive references", () => {
     @register
     class State extends ClassModel({
       transitions: types.array(types.late((): any => Transition)),
@@ -355,8 +349,8 @@ describe("schemaHash", () => {
       toState: types.reference(State),
     }) {}
 
-    expect(await State.schemaHash()).toEqual(await State.schemaHash());
-    expect(await Transition.schemaHash()).toEqual(await Transition.schemaHash());
-    expect(await State.schemaHash()).not.toEqual(await Transition.schemaHash());
+    expect(State.schemaHash()).toEqual(State.schemaHash());
+    expect(Transition.schemaHash()).toEqual(Transition.schemaHash());
+    expect(State.schemaHash()).not.toEqual(Transition.schemaHash());
   });
 });

@@ -20,7 +20,7 @@ export class FrozenType<T> extends BaseType<T, T, T> {
     return typeof value !== "function";
   }
 
-  async schemaHash() {
+  schemaHash() {
     return "frozen";
   }
 }

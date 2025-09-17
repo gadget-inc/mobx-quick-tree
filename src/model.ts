@@ -289,9 +289,9 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
     return instance as this["InstanceType"];
   }
 
-  schemaHash: () => Promise<string> = memoize(async () => {
+  schemaHash: () => string = memoize(() => {
     const props = Object.entries(this.properties).sort(([key1], [key2]) => key1.localeCompare(key2));
-    const propHashes = await Promise.all(props.map(async ([key, prop]) => `${key}:${await prop.schemaHash()}`));
+    const propHashes = props.map(([key, prop]) => `${key}:${prop.schemaHash()}`);
     return `model:${this.name}:${cyrb53(propHashes.join("|"))}`;
   });
 }

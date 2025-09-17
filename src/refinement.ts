@@ -24,8 +24,8 @@ class RefinementType<T extends IAnyType> extends BaseType<T["InputType"], T["Out
     return this.type.is(value) && this.predicate(value);
   }
 
-  async schemaHash() {
-    return `refinement:${await this.type.schemaHash()}`;
+  schemaHash() {
+    return `refinement:${this.type.schemaHash()}`;
   }
 }
 

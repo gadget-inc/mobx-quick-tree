@@ -34,8 +34,8 @@ export class MaybeType<Type extends IAnyType> extends BaseType<
     return this.type.is(value);
   }
 
-  async schemaHash() {
-    return `maybe:${await this.type.schemaHash()}`;
+  schemaHash() {
+    return `maybe:${this.type.schemaHash()}`;
   }
 }
 
@@ -68,8 +68,8 @@ export class MaybeNullType<Type extends IAnyType> extends BaseType<
     return this.type.is(value);
   }
 
-  async schemaHash() {
-    return `maybeNull:${await this.type.schemaHash()}`;
+  schemaHash() {
+    return `maybeNull:${this.type.schemaHash()}`;
   }
 }
 

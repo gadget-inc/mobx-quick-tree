@@ -140,8 +140,8 @@ class UnionType<Types extends IAnyType[]> extends BaseType<
     return this.types.some((type) => type.is(value));
   }
 
-  schemaHash = memoize(async () => {
-    return cyrb53(`union:${(await Promise.all(this.types.map((type) => type.schemaHash()))).join("|")}`).toString();
+  schemaHash = memoize(() => {
+    return cyrb53(`union:${this.types.map((type) => type.schemaHash()).join("|")}`).toString();
   });
 }
 

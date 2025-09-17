@@ -29,7 +29,7 @@ export class SimpleType<T> extends BaseType<T, T, T> {
     return typeof value == this.expectedType;
   }
 
-  async schemaHash() {
+  schemaHash() {
     return `simple:${this.expectedType}`;
   }
 }
@@ -48,7 +48,7 @@ export class DateType extends BaseType<Date | number, number, Date> {
     return typeof value == "number" || value instanceof Date;
   }
 
-  async schemaHash() {
+  schemaHash() {
     return `date`;
   }
 }
@@ -71,7 +71,7 @@ export class IntegerType extends BaseType<number, number, number> {
     return Number.isInteger(value);
   }
 
-  async schemaHash() {
+  schemaHash() {
     return `integer`;
   }
 }
@@ -94,7 +94,7 @@ export class NullType extends BaseType<null, null, null> {
     return value === null;
   }
 
-  async schemaHash() {
+  schemaHash() {
     return `null`;
   }
 }
