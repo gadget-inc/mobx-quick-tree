@@ -5,6 +5,7 @@ import { types } from ".";
 import { BaseType } from "./base";
 import { ensureRegistered } from "./class-model";
 import { CantRunActionError } from "./errors";
+import { shouldTrackInReferenceCache } from "./class-model";
 import { $context, $identifier, $originalDescriptor, $parent, $readOnly, $type } from "./symbols";
 import type {
   IAnyStateTreeNode,
@@ -93,6 +94,7 @@ export const instantiateInstanceFromProperties = (
   properties: ModelProperties,
   identifierProp: string | undefined,
   context: TreeContext,
+  typeObject?: IAnyType, // Add optional type parameter
 ) => {
   for (const propName in properties) {
     const propType = properties[propName];
@@ -109,7 +111,13 @@ export const instantiateInstanceFromProperties = (
   if (identifierProp) {
     const id = instance[identifierProp];
     instance[$identifier] = id;
-    context.referenceCache.set(id, instance);
+    // Only cache in reference cache if this type is actually referenced
+    // Use the type object passed in, or try to get it from the instance
+    const actualType = typeObject || instance[$type];
+    const rootType = context.rootType || actualType;
+    if (actualType && shouldTrackInReferenceCache(rootType, actualType)) {
+      context.referenceCache.set(id, instance);
+    }
   }
 };
 
@@ -281,7 +289,7 @@ export class ModelType<Props extends ModelProperties, Others> extends BaseType<
       },
     });
 
-    instantiateInstanceFromProperties(instance, snapshot, this.properties, this.identifierProp, context);
+    instantiateInstanceFromProperties(instance, snapshot, this.properties, this.identifierProp, context, this);
     for (let index = 0; index < this.initializers.length; index++) {
       this.initializers[index](instance);
     }

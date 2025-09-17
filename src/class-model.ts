@@ -2,11 +2,16 @@ import "reflect-metadata";
 
 import memoize from "lodash.memoize";
 import type { Instance, IModelType as MSTIModelType, ModelActions } from "mobx-state-tree";
-import { types as mstTypes } from "mobx-state-tree";
+import { isReferenceType, types as mstTypes } from "mobx-state-tree";
+import { ArrayType } from "./array";
 import { RegistrationError } from "./errors";
 import { InstantiatorBuilder } from "./fast-instantiator";
 import { FastGetBuilder } from "./fast-getter";
+import { MapType } from "./map";
+import { MaybeType, MaybeNullType } from "./maybe";
 import { defaultThrowAction, mstPropsFromQuickProps, propsFromModelPropsDeclaration } from "./model";
+import { OptionalType } from "./optional";
+import { ReferenceType, SafeReferenceType } from "./reference";
 import {
   $context,
   $identifier,
@@ -23,6 +28,8 @@ import type {
   Constructor,
   ExtendedClassModel,
   IAnyClassModelType,
+  IAnyComplexType,
+  IAnyModelType,
   IAnyType,
   IClassModelType,
   IStateTreeNode,
@@ -142,6 +149,148 @@ export const ClassModel = <PropsDeclaration extends ModelPropertiesDeclaration>(
     static properties = props;
   } as any;
 };
+
+/**
+ * Compute which types are referenced by this class model.
+ * This enables optimization where only instances of referenced types are cached.
+ * Uses schema hash for reliable type identification.
+ */
+export function computeReferencedTypes(klass: IClassModelType<any>): Map<string, IAnyComplexType> {
+  const referencedTypes = new Map<string, IAnyComplexType>();
+  const visited = new Set<IAnyType>();
+
+  function traverseType(type: IAnyType): void {
+    if (visited.has(type)) {
+      return; // Avoid infinite recursion
+    }
+    visited.add(type);
+
+    // Handle reference types - these are the types we want to track
+    if (type instanceof ReferenceType || type instanceof SafeReferenceType) {
+      const targetType = type.targetType;
+      const hash = targetType.schemaHash();
+      referencedTypes.set(hash, targetType);
+      // Also traverse the target type in case it has nested references
+      traverseType(targetType);
+      return;
+    }
+
+    // Handle MST reference types that aren't wrapped in our types
+    if (isReferenceType(type.mstType)) {
+      // For MST reference types, we can't easily get the target type,
+      // so we'll be conservative and mark all complex types as potentially referenced
+      // This maintains backward compatibility
+      return;
+    }
+
+    // Handle container types
+    if (type instanceof ArrayType) {
+      traverseType(type.childrenType);
+    } else if (type instanceof MapType) {
+      traverseType(type.childrenType);
+    } else if (type instanceof OptionalType) {
+      traverseType(type.type);
+    } else if (type instanceof MaybeType || type instanceof MaybeNullType) {
+      traverseType(type.type);
+    } else if (isUnionType(type)) {
+      // Handle union types via duck typing
+      const types = (type as any).types;
+      if (Array.isArray(types)) {
+        for (const unionType of types) {
+          traverseType(unionType);
+        }
+      }
+    } else if (isLateType(type)) {
+      // For late types, we need to resolve them to traverse their contents
+      try {
+        const resolvedType = resolveLateType(type);
+        if (resolvedType) {
+          traverseType(resolvedType);
+        }
+        // If late type couldn't be resolved, skip it - this preserves lazy evaluation
+      } catch {
+        // If we can't resolve the late type yet, skip it - this preserves lazy evaluation
+      }
+    } else if (isClassModel(type) || isModelType(type)) {
+      // Traverse model properties
+      for (const propType of Object.values(type.properties)) {
+        traverseType(propType as IAnyType);
+      }
+    }
+  }
+
+  // Start traversal from this class model
+  traverseType(klass);
+
+  return referencedTypes;
+}
+
+/**
+ * Check if a type is a union type (duck typing)
+ */
+function isUnionType(type: IAnyType): boolean {
+  return type.constructor.name === "UnionType" || (Array.isArray((type as any).types) && (type as any).dispatcher !== undefined);
+}
+
+/**
+ * Check if a type is a late type (duck typing)
+ */
+function isLateType(type: IAnyType): boolean {
+  return type.constructor.name === "LateType" || (type as any).cachedType !== undefined || type.mstType?.name?.startsWith("late(");
+}
+
+/**
+ * Resolve a late type to get its actual type
+ */
+function resolveLateType(type: IAnyType): IAnyType | null {
+  try {
+    // For LateType instances, access the type getter which will trigger resolution
+    if (type.constructor.name === "LateType") {
+      const lateType = type as any;
+      // Access the type getter to trigger lazy resolution
+      return lateType.type;
+    }
+
+    // Fallback: try to access a type property
+    if ("type" in type && typeof (type as any).type === "object") {
+      return (type as any).type;
+    }
+  } catch {
+    // Late type not ready for resolution or circular dependency
+  }
+  return null;
+}
+
+/**
+ * Check if a type is a model type (class model or node model)
+ */
+function isModelType(type: IAnyType): type is IAnyModelType {
+  return "properties" in type && typeof type.properties === "object";
+}
+
+/**
+ * Check if a type has an identifier property
+ */
+function hasIdentifier(type: IAnyType): boolean {
+  // For class models, check if any property is an identifier
+  if (isClassModel(type)) {
+    for (const propType of Object.values(type.properties)) {
+      const prop = propType as IAnyType;
+      // Check if this property is an identifier type
+      if (prop.mstType && prop.mstType.name === "identifier") {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // For MST model types, check if they have an identifierAttribute
+  if (type.mstType && "identifierAttribute" in type.mstType) {
+    return !!(type.mstType as any).identifierAttribute;
+  }
+
+  return false;
+}
 
 /**
  * Class decorator for registering MQT class models as setup.
@@ -342,6 +491,10 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
 
   klass.mstType = mstType;
   (klass as any)[$registered] = true;
+
+  // Don't compute referenced types at registration time - do it lazily on first instantiation
+  // to handle circular late type references properly
+  (klass as any)._referencedTypes = null;
 
   // define the class constructor and the following hot path functions dynamically
   //   - .createReadOnly
@@ -562,6 +715,35 @@ export function getPropertyDescriptor(obj: any, property: string) {
 export const isClassModel = (type: IAnyType): type is IClassModelType<any, any, any> => {
   return (type as any).isMQTClassModel;
 };
+
+/**
+ * Check if a type should be tracked in the reference cache for a given class model.
+ * Only applies to class models - other types will always return true to maintain compatibility.
+ */
+export function shouldTrackInReferenceCache(classModel: IAnyType, typeToCheck: IAnyComplexType): boolean {
+  // Only apply optimization to class models
+  if (!isClassModel(classModel)) {
+    return true; // Always track for non-class models
+  }
+
+  // Always cache types that have identifiers, regardless of whether they're referenced,
+  // because they might be looked up via resolveIdentifier() API calls
+  if (hasIdentifier(typeToCheck)) {
+    return true;
+  }
+
+  // For types without identifiers, only cache them if they're actually referenced
+  // Lazily compute referenced types on first access to handle circular late type references
+  let referencedTypes = (classModel as any)._referencedTypes as Map<string, IAnyComplexType> | null;
+  if (referencedTypes === null) {
+    referencedTypes = computeReferencedTypes(classModel);
+    (classModel as any)._referencedTypes = referencedTypes;
+  }
+
+  // Use schema hash for comparison
+  const typeToCheckHash = typeToCheck.schemaHash();
+  return referencedTypes.has(typeToCheckHash);
+}
 
 let defaultShouldEmitPatchOnChange = false;
 

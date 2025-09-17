@@ -8,6 +8,7 @@ import { MapType, QuickMap } from "./map";
 import { MaybeNullType, MaybeType } from "./maybe";
 import { OptionalType } from "./optional";
 import { ReferenceType, SafeReferenceType } from "./reference";
+import { shouldTrackInReferenceCache, computeReferencedTypes } from "./class-model";
 import { DateType, IntegerType, LiteralType, SimpleType } from "./simple";
 import { $context, $identifier, $notYetMemoized, $parent, $readOnly, $type } from "./symbols";
 import type { IAnyType, IClassModelType, ValidOptionalValue } from "./types";
@@ -75,7 +76,11 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
       segments.push(`
       const id = this["${identifierProp}"];
       this[$identifier] = id;
-      context.referenceCache.set(id, this);
+
+      // Cache this instance in the reference cache if this type is referenced anywhere in the type tree
+      if (${this.alias("shouldTrackInReferenceCache")}(context.rootType || ${this.alias("model")}, ${this.alias("model")})) {
+        context.referenceCache.set(id, this);
+      }
     `);
     }
 
@@ -91,10 +96,16 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     const defineClassStatement = `
       class ${className} extends model {
         static createReadOnly = (snapshot, env) => {
+          // Lazily compute referenced types on first instantiation to handle circular late types
+          if (model._referencedTypes === null) {
+            model._referencedTypes = ${this.alias("computeReferencedTypes")}(model);
+          }
+          
           const context = {
             referenceCache: new Map(),
             referencesToResolve: [],
             env,
+            rootType: ${className},
           };
 
           const instance = new ${className}(snapshot, context, null);
@@ -155,7 +166,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     `;
 
     const aliasFuncBody = `
-    const { QuickMap, QuickArray, $identifier, $context, $parent, $notYetMemoized, $readOnly, $type, snapshottedViews } = imports;
+    const { QuickMap, QuickArray, $identifier, $context, $parent, $notYetMemoized, $readOnly, $type, snapshottedViews, shouldTrackInReferenceCache, computeReferencedTypes } = imports;
 
     ${Array.from(this.aliases.entries())
       .map(([expression, alias]) => `const ${alias} = ${expression};`)
@@ -194,6 +205,8 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
         QuickMap,
         QuickArray,
         snapshottedViews: this.model.snapshottedViews,
+        shouldTrackInReferenceCache,
+        computeReferencedTypes,
       }) as T;
     } catch (e) {
       console.warn("failed to build fast instantiator for", this.model.name);

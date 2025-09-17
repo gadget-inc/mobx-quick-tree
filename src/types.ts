@@ -258,6 +258,8 @@ export interface TreeContext {
   referenceCache: Map<string, Instance<IAnyNodeModelType>>;
   referencesToResolve: (() => void)[];
   env?: unknown;
+  /** @hidden - The root type that initiated this createReadOnly call */
+  rootType?: IAnyType;
 }
 
 /**

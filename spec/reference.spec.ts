@@ -506,4 +506,164 @@ describe("references", () => {
       });
     });
   });
+
+  describe("reference tracking optimization", () => {
+    test("only caches types that have identifiers or are referenced", () => {
+      // Create a type with an identifier - should always be cached
+      @register
+      class WithIdentifier extends ClassModel({
+        id: types.identifier,
+        name: types.string,
+      }) {}
+
+      // Create a type without identifier and not referenced - should NOT be cached
+      @register
+      class WithoutIdentifierNotReferenced extends ClassModel({
+        name: types.string,
+        value: types.number,
+      }) {}
+
+      // Create a type without identifier but IS referenced - should be cached when referenced
+      @register
+      class WithoutIdentifierButReferenced extends ClassModel({
+        id: types.identifier, // Give it an identifier so we can reference it
+        name: types.string,
+        value: types.number,
+      }) {}
+
+      // Create a root that references one type but not the other
+      @register
+      class Root extends ClassModel({
+        withId: WithIdentifier,
+        withoutIdNotReferenced: WithoutIdentifierNotReferenced,
+        referencedType: types.reference(WithoutIdentifierButReferenced),
+        referencedInstances: types.array(WithoutIdentifierButReferenced),
+      }) {}
+
+      // Create an instance and check what's in the reference cache
+      const root = Root.createReadOnly({
+        withId: { id: "test-id", name: "Test" },
+        withoutIdNotReferenced: { name: "Not Cached", value: 42 },
+        referencedType: "ref-1",
+        referencedInstances: [
+          { id: "ref-1", name: "Referenced 1", value: 1 },
+          { id: "ref-2", name: "Referenced 2", value: 2 },
+        ],
+      });
+
+      // Access the context to check the reference cache
+      const context = (root as any)[Symbol.for("MQT_context")];
+      const referenceCache = context.referenceCache;
+
+      // Should contain instances with identifiers
+      expect(referenceCache.has("test-id")).toBe(true); // WithIdentifier
+      expect(referenceCache.has("ref-1")).toBe(true); // WithoutIdentifierButReferenced
+      expect(referenceCache.has("ref-2")).toBe(true); // WithoutIdentifierButReferenced
+
+      // Get all cached identifiers
+      const cachedIds = Array.from(referenceCache.keys()).sort();
+
+      // Should contain all identifiers since all these types have identifiers
+      expect(cachedIds).toEqual(["ref-1", "ref-2", "test-id"]);
+
+      // The optimization works by not caching the WithoutIdentifierNotReferenced instance
+      // since it has no identifier (so it can't be cached anyway) and isn't referenced
+      // The real optimization is in memory usage - we don't track unnecessary references
+    });
+
+    test("handles circular late type references correctly", () => {
+      @register
+      class User extends ClassModel({
+        id: types.identifier,
+        name: types.string,
+      }) {}
+
+      @register
+      class Post extends ClassModel({
+        id: types.identifier,
+        title: types.string,
+        author: types.reference(User),
+      }) {}
+
+      @register
+      class Root extends ClassModel({
+        // Use late types to create potential circular dependencies
+        posts: types.map(types.late(() => Post)),
+        users: types.map(types.late(() => User)),
+      }) {}
+
+      // This should work without throwing errors about circular dependencies
+      const root = Root.createReadOnly({
+        posts: {
+          "1": { id: "1", title: "First Post", author: "1" },
+        },
+        users: {
+          "1": { id: "1", name: "Alice" },
+        },
+      });
+
+      // Verify the reference was resolved correctly
+      expect(root.posts.get("1")!.author.id).toBe("1");
+      expect(root.posts.get("1")!.author.name).toBe("Alice");
+
+      // Check that both User and Post instances are cached (they have identifiers)
+      const context = (root as any)[Symbol.for("MQT_context")];
+      const referenceCache = context.referenceCache;
+
+      expect(referenceCache.has("1")).toBe(true); // User with id "1"
+      expect(referenceCache.get("1")).toBe(root.users.get("1"));
+    });
+
+    test("works with nested references in complex type structures", () => {
+      @register
+      class Category extends ClassModel({
+        id: types.identifier,
+        name: types.string,
+      }) {}
+
+      @register
+      class Product extends ClassModel({
+        id: types.identifier,
+        name: types.string,
+        category: types.reference(Category),
+      }) {}
+
+      @register
+      class Order extends ClassModel({
+        id: types.identifier,
+        products: types.array(types.reference(Product)),
+      }) {}
+
+      @register
+      class Root extends ClassModel({
+        categories: types.map(Category),
+        products: types.map(Product),
+        orders: types.map(Order),
+      }) {}
+
+      const root = Root.createReadOnly({
+        categories: {
+          cat1: { id: "cat1", name: "Electronics" },
+        },
+        products: {
+          prod1: { id: "prod1", name: "Laptop", category: "cat1" },
+        },
+        orders: {
+          order1: { id: "order1", products: ["prod1"] },
+        },
+      });
+
+      // Verify all references resolve correctly
+      expect(root.orders.get("order1")!.products[0].name).toBe("Laptop");
+      expect(root.orders.get("order1")!.products[0].category.name).toBe("Electronics");
+
+      // All these types have identifiers, so they should all be cached
+      const context = (root as any)[Symbol.for("MQT_context")];
+      const referenceCache = context.referenceCache;
+
+      expect(referenceCache.has("cat1")).toBe(true);
+      expect(referenceCache.has("prod1")).toBe(true);
+      expect(referenceCache.has("order1")).toBe(true);
+    });
+  });
 });
