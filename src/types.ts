@@ -30,7 +30,7 @@ export interface IType<InputType, OutputType, InstanceType> {
   instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, parent: IStateTreeNode | null): this["InstanceType"];
 
   /** Get a string hash for the schema of this type */
-  schemaHash(): Promise<string>;
+  schemaHash(): string;
 }
 
 /**
@@ -168,7 +168,7 @@ export interface IClassModelType<
   createReadOnly<T extends IAnyType>(this: T, snapshot?: SnapshotIn<T>, env?: any): Instance<T>;
 
   /** Get a string hash for the schema of this class model */
-  schemaHash(): Promise<string>;
+  schemaHash(): string;
 
   isMQTClassModel: true;
 

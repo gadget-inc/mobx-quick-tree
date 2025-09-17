@@ -20,7 +20,7 @@ export class CustomType<InputType, OutputType> extends BaseType<InputType, Outpu
     return this.mstType.is(value);
   }
 
-  async schemaHash() {
+  schemaHash() {
     return `custom:${this.options.name}`;
   }
 }

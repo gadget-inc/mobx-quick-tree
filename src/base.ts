@@ -55,5 +55,5 @@ export abstract class BaseType<InputType, OutputType, InstanceType> {
 
   abstract instantiate(snapshot: this["InputType"] | undefined, context: TreeContext, parent: IStateTreeNode | null): this["InstanceType"];
 
-  abstract schemaHash(): Promise<string>;
+  abstract schemaHash(): string;
 }

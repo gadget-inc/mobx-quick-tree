@@ -55,8 +55,8 @@ export class OptionalType<
     return this.type.is(value);
   }
 
-  async schemaHash() {
-    return `optional:${await this.type.schemaHash()}`;
+  schemaHash() {
+    return `optional:${this.type.schemaHash()}`;
   }
 
   private get defaultValue(): T["InputType"] {

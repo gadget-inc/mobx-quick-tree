@@ -23,7 +23,7 @@ class EnumerationType<EnumOptions extends string> extends BaseType<EnumOptions, 
     return this.options.includes(value);
   }
 
-  schemaHash: () => Promise<string> = memoize(async () => {
+  schemaHash: () => string = memoize(() => {
     return `enum:${this.options.join("|")}`;
   });
 }

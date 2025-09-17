@@ -277,9 +277,9 @@ export function register<Instance, Klass extends { new (...args: any[]): Instanc
 
   // conform to the API that the other MQT types expect for creating instances
   klass.create = (snapshot, env) => klass.mstType.create(snapshot, env);
-  klass.schemaHash = memoize(async () => {
+  klass.schemaHash = memoize(() => {
     const props = Object.entries(klass.properties as Record<string, IAnyType>).sort(([key1], [key2]) => key1.localeCompare(key2));
-    const propHashes = await Promise.all(props.map(async ([key, prop]) => `${key}:${await prop.schemaHash()}`));
+    const propHashes = props.map(([key, prop]) => `${key}:${prop.schemaHash()}`);
     return `model:${klass.name}:${cyrb53(propHashes.join("|"))}`;
   });
 
