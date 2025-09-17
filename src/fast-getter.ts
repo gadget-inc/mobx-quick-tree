@@ -1,4 +1,3 @@
-import { snapshotProcessor } from "mobx-state-tree/dist/internal";
 import type { PropertyMetadata, SnapshottedViewMetadata, ViewMetadata } from "./class-model";
 import { getPropertyDescriptor } from "./class-model";
 import { RegistrationError } from "./errors";
@@ -22,7 +21,7 @@ export class FastGetBuilder {
       }
       return descriptor.get !== undefined;
     });
-    
+
     this.memoizableProperties = viewMetadatas.map((metadata) => metadata.property);
     this.snapshottedViewProperties = viewMetadatas
       .filter((metadata): metadata is SnapshottedViewMetadata => metadata.type === "snapshotted-view" && !!metadata.options.createReadOnly)
@@ -30,20 +29,18 @@ export class FastGetBuilder {
   }
 
   outerClosureStatements(className: string) {
-    const memoStatements = this.memoizableProperties
-      .map(
-        (property) => `
+    const memoStatements = this.memoizableProperties.map(
+      (property) => `
           ${className}.prototype._${property}_memo = $notYetMemoized;
         `,
-      );
-    
-    const snapshotStatements = this.snapshottedViewProperties
-      .map(
-        (property) => `
+    );
+
+    const snapshotStatements = this.snapshottedViewProperties.map(
+      (property) => `
           ${className}.prototype._${property}_snapshot = undefined;
         `,
-      );
-    
+    );
+
     return [...memoStatements, ...snapshotStatements].join("\n");
   }
 
