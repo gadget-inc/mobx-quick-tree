@@ -1,38 +1,24 @@
 import { benchmarker } from "./benchmark";
 import { TestModel, BigTestModelSnapshot } from "../spec/fixtures/TestModel";
-import { getSymbolPoolSize, clearSymbolPool } from "../src/symbol-pool";
-import { getClassCacheSize, clearClassCache } from "../src/class-cache";
 
 export default benchmarker(async (suite) => {
   suite
-    .add("optimization: symbol pool usage", function () {
-      clearSymbolPool();
+    .add("memory profiling: small model instantiation", function () {
       const instances: any[] = [];
       for (let i = 0; i < 100; i++) {
         instances.push(TestModel.createReadOnly(BigTestModelSnapshot));
-      }
-      const poolSize = getSymbolPoolSize();
-      return { instances, poolSize };
-    })
-    .add("optimization: class template caching", function () {
-      clearClassCache();
-      const instances: any[] = [];
-      for (let i = 0; i < 50; i++) {
-        instances.push(TestModel.createReadOnly(BigTestModelSnapshot));
-      }
-      const cacheSize = getClassCacheSize();
-      return { instances, cacheSize };
-    })
-    .add("optimization: reference cache efficiency", function () {
-      const instances: any[] = [];
-      for (let i = 0; i < 100; i++) {
-        const instance = TestModel.createReadOnly({
-          ...BigTestModelSnapshot,
-          nested: { key: `test-${i}`, name: `Test ${i}` }
-        });
-        instances.push(instance);
       }
       return instances;
+    })
+    .add("memory profiling: property access patterns", function () {
+      const instance = TestModel.createReadOnly(BigTestModelSnapshot);
+      const results: any[] = [];
+      for (let i = 0; i < 1000; i++) {
+        results.push(instance.notBool);
+        results.push(instance.arrayLength);
+        results.push(instance.nested.lowerCasedName());
+      }
+      return results;
     });
 
   return suite;

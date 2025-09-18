@@ -11,8 +11,6 @@ import { ReferenceType, SafeReferenceType } from "./reference";
 import { DateType, IntegerType, LiteralType, SimpleType } from "./simple";
 import { $context, $identifier, $notYetMemoized, $parent, $readOnly, $type } from "./symbols";
 import type { IAnyType, IClassModelType, ValidOptionalValue } from "./types";
-import { OptimizedReferenceCache } from "./reference-cache";
-import { getPooledSymbol } from "./symbol-pool";
 
 type DirectlyAssignableType = SimpleType<any> | IntegerType | LiteralType<any> | DateType;
 const isDirectlyAssignableType = (type: IAnyType): type is DirectlyAssignableType => {
@@ -94,7 +92,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
       class ${className} extends model {
         static createReadOnly = (snapshot, env) => {
           const context = {
-            referenceCache: new OptimizedReferenceCache(),
+            referenceCache: new Map(),
             referencesToResolve: [],
             env,
           };
@@ -157,7 +155,7 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     `;
 
     const aliasFuncBody = `
-    const { QuickMap, QuickArray, $identifier, $context, $parent, $notYetMemoized, $readOnly, $type, snapshottedViews, getPooledSymbol, OptimizedReferenceCache } = imports;
+    const { QuickMap, QuickArray, $identifier, $context, $parent, $notYetMemoized, $readOnly, $type, snapshottedViews } = imports;
 
     ${Array.from(this.aliases.entries())
       .map(([expression, alias]) => `const ${alias} = ${expression};`)
@@ -196,8 +194,6 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
         QuickMap,
         QuickArray,
         snapshottedViews: this.model.snapshottedViews,
-        getPooledSymbol,
-        OptimizedReferenceCache,
       }) as T;
     } catch (e) {
       console.warn("failed to build fast instantiator for", this.model.name);
@@ -386,10 +382,10 @@ export class InstantiatorBuilder<T extends IClassModelType<Record<string, IAnyTy
     let destinationProp;
     if (snapshottedView.options.createReadOnly) {
       // we're using a hydrator, so we don't store it right at the memo, and instead stash it where we'll lazily hydrate it in the getter
-      destinationProp = this.alias(`getPooledSymbol("${this.getters.snapshottedViewInputSymbolName(snapshottedView.property)}")`);
+      destinationProp = this.alias(`Symbol.for("${this.getters.snapshottedViewInputSymbolName(snapshottedView.property)}")`);
     } else {
       // we're not using a hydrator, so we can stash the snapshotted value right into the memoized spot
-      destinationProp = this.alias(`getPooledSymbol("${this.getters.memoSymbolName(snapshottedView.property)}")`);
+      destinationProp = this.alias(`Symbol.for("${this.getters.memoSymbolName(snapshottedView.property)}")`);
     }
 
     const valueExpression = `snapshot?.["${snapshottedView.property}"]`;

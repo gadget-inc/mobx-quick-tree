@@ -3,7 +3,6 @@ import type { PropertyMetadata, SnapshottedViewMetadata, ViewMetadata } from "./
 import { getPropertyDescriptor } from "./class-model";
 import { RegistrationError } from "./errors";
 import { $notYetMemoized, $readOnly } from "./symbols";
-import { getPooledSymbol } from "./symbol-pool";
 
 /** Assemble a function for getting the value of a readonly instance very quickly with static dispatch to properties */
 export class FastGetBuilder {
@@ -38,7 +37,7 @@ export class FastGetBuilder {
     return this.memoizableProperties
       .map(
         (property) => `
-          const ${property}Memo = getPooledSymbol("${this.memoSymbolName(property)}");
+          const ${property}Memo = Symbol.for("${this.memoSymbolName(property)}");
           ${className}.prototype[${property}Memo] = $notYetMemoized;
         `,
       )
@@ -47,13 +46,13 @@ export class FastGetBuilder {
 
   buildViewGetter(metadata: ViewMetadata | SnapshottedViewMetadata, descriptor: PropertyDescriptor) {
     const property = metadata.property;
-    const $memo = getPooledSymbol(this.memoSymbolName(property));
+    const $memo = Symbol.for(this.memoSymbolName(property));
 
     let source;
     let args;
 
     if (metadata.type === "snapshotted-view" && metadata.options.createReadOnly) {
-      const $snapshotValue = getPooledSymbol(this.snapshottedViewInputSymbolName(property));
+      const $snapshotValue = Symbol.for(this.snapshottedViewInputSymbolName(property));
 
       // this snapshotted view has a hydrator, so we need a special view function for readonly instances that lazily hydrates the snapshotted value
       source = `
