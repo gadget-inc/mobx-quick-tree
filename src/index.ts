@@ -18,6 +18,9 @@ export * from "./api";
 export * from "./types";
 export { $type } from "./symbols";
 export { setDefaultShouldEmitPatchOnChange } from "./class-model";
+export * from "./symbol-pool";
+export * from "./reference-cache";
+export * from "./class-cache";
 
 export const types = {
   boolean: SimpleType.for("boolean", mstTypes.boolean),

@@ -93,6 +93,12 @@ const runBenchmark = async (fn: BenchmarkGenerator) => {
       default: false,
       describe: "track event loop blocking time during each iteration, which changes the stats",
       type: "boolean",
+    })
+    .option("m", {
+      alias: "memory",
+      default: false,
+      describe: "profile memory allocations during each benchmarked case, writing heap snapshots and allocation data to disk",
+      type: "boolean",
     }).argv;
 
   let suite = createSuite(fn.options);
@@ -116,6 +122,42 @@ const runBenchmark = async (fn: BenchmarkGenerator) => {
         await oldAfterAll?.call(this);
         const { profile } = (await post("Profiler.stop")) as Profiler.StopReturnType;
         await writeFile(`./bench-${event.task.name}-${key}.cpuprofile`, JSON.stringify(profile));
+      };
+    });
+  }
+
+  if (args.memory) {
+    const key = formatDateForFile();
+
+    const { post } = newInspectorSession();
+    await post("HeapProfiler.enable");
+    await post("HeapProfiler.startSampling", { samplingInterval: 32768 });
+
+    suite.addEventListener("add", (event) => {
+      const oldBeforeAll = event.task.opts.beforeAll;
+      const oldAfterAll = event.task.opts.afterAll;
+
+      event.task.opts.beforeAll = async function () {
+        await post("HeapProfiler.takeHeapSnapshot");
+        const beforeMemory = process.memoryUsage();
+        (this as any).beforeMemory = beforeMemory;
+        await oldBeforeAll?.call(this);
+      };
+      
+      event.task.opts.afterAll = async function () {
+        await oldAfterAll?.call(this);
+        const afterMemory = process.memoryUsage();
+        const { profile } = await post("HeapProfiler.stopSampling");
+        
+        const memoryDelta = {
+          heapUsed: afterMemory.heapUsed - (this as any).beforeMemory.heapUsed,
+          heapTotal: afterMemory.heapTotal - (this as any).beforeMemory.heapTotal,
+          external: afterMemory.external - (this as any).beforeMemory.external,
+          rss: afterMemory.rss - (this as any).beforeMemory.rss,
+        };
+        
+        await writeFile(`./bench-${event.task.name}-${key}.heapprofile`, JSON.stringify(profile));
+        await writeFile(`./bench-${event.task.name}-${key}.memory.json`, JSON.stringify(memoryDelta));
       };
     });
   }
